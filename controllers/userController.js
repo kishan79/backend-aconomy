@@ -75,7 +75,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
           res.status(201).json({
             success: true,
             token,
-            verificationStatus: user.termOfService
+            verificationStatus: user.termOfService,
           });
         } else {
           res.status(400).json({
@@ -105,24 +105,18 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
 exports.onboardUser = asyncHandler(async (req, res, next) => {
   try {
     const { name, username, term } = req.body;
-    if (name.length && username.length && term) {
-      UserModel.findOneAndUpdate(
-        { wallet_address: req.user.wallet_address },
-        { name, username, termOfService: term },
-        {
-          new: true,
-        },
-        (err, docs) => {
-          if (err) {
-            res.status(400).json({ success: false });
-          } else {
-            res.status(200).json({ success: true });
-          }
+    UserModel.findOneAndUpdate(
+      { wallet_address: req.user.wallet_address },
+      { name, username, termOfService: term },
+      null,
+      (err, docs) => {
+        if (err) {
+          res.status(400).json({ success: false });
+        } else {
+          res.status(200).json({ success: true });
         }
-      );
-    } else {
-      res.status(400).json({success: false, error: "Provide valid inputs"})
-    }
+      }
+    );
   } catch (err) {
     res.status(400).json({ success: false });
   }

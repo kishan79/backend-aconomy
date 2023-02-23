@@ -27,7 +27,17 @@ const ValidatorSchema = new mongoose.Schema(
     signatureMessage: {
       type: String,
     },
-    // address:
+    address: {
+      country: String,
+      area: String,
+    },
+    document: String,
+    socialLinks: {
+      website: String,
+      twitter: String,
+      discord: String,
+      other: String,
+    },
   },
   { timestamps: true }
 );

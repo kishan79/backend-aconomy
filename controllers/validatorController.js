@@ -73,6 +73,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
           res.status(201).json({
             success: true,
             token,
+            verificationStatus: validator.username ? true : false,
           });
         } else {
           res.status(400).json({
@@ -101,7 +102,18 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
 
 exports.onboardValidator = asyncHandler(async (req, res, next) => {
   try {
-    
+    ValidatorModel.findOneAndUpdate(
+      { wallet_address: req.user.wallet_address },
+      { ...req.body },
+      null,
+      (err, docs) => {
+        if (err) {
+          res.status(400).json({ success: false });
+        } else {
+          res.status(201).json({ success: true });
+        }
+      }
+    );
   } catch (err) {
     res.status(400).json({ success: false });
   }
