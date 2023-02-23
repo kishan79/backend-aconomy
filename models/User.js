@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
   },
   name: String,
+  username: String,
   email: {
     type: String,
     // required: [true, "Please add an email"],
@@ -20,6 +21,10 @@ const UserSchema = new mongoose.Schema({
   },
   signatureMessage: {
     type: String,
+  },
+  termOfService: {
+    type: Boolean,
+    default: false
   }
 }, {timestamps: true});
 

@@ -9,6 +9,7 @@ const userController = require("../controllers/userController");
 
 router.route('/auth/:wallet_address/nonce').get(userController.generateNonce);
 router.route('/auth/:wallet_address/signature').post(userController.validateSignature)
+router.route('/onboard').post(protect, authorize("user"), userController.onboardUser);
 router.route('/update').post(protect, authorize("user"), userController.updateUser);
 
 module.exports = router;
