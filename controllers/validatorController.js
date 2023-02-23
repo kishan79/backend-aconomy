@@ -9,32 +9,31 @@ exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.params;
 
-    const user = await UserModel.findOne({wallet_address});
+    const user = await UserModel.findOne({ wallet_address });
 
-    if(!user){
-
-    const validator = await ValidatorModel.findOne({
-      wallet_address,
-    });
-
-    const signatureMessage = crypto.randomBytes(32).toString("hex");
-
-    if (!validator) {
-      await ValidatorModel.create({
+    if (!user) {
+      const validator = await ValidatorModel.findOne({
         wallet_address,
-        signatureMessage,
       });
-    } else {
-      await ValidatorModel.findOneAndUpdate(
-        { wallet_address },
-        { signatureMessage }
-      );
-    }
 
-    res.status(201).json({ success: true, signatureMessage });
-  } else{
-    res.status(400).json({success: false, error: "Please login as user"})
-  }
+      const signatureMessage = crypto.randomBytes(32).toString("hex");
+
+      if (!validator) {
+        await ValidatorModel.create({
+          wallet_address,
+          signatureMessage,
+        });
+      } else {
+        await ValidatorModel.findOneAndUpdate(
+          { wallet_address },
+          { signatureMessage }
+        );
+      }
+
+      res.status(201).json({ success: true, signatureMessage });
+    } else {
+      res.status(400).json({ success: false, error: "Please login as user" });
+    }
   } catch (err) {
     res.status(400).json({ success: false });
   }
@@ -64,9 +63,13 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
         }
 
         if (signerAddr === wallet_address) {
-          const token = jwt.sign({ id: validator._id, wallet_address, role: validator.role }, process.env.JWT_SECRET, {
-            expiresIn: 60 * 60,
-          });
+          const token = jwt.sign(
+            { id: validator._id, wallet_address, role: validator.role },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: 60 * 60,
+            }
+          );
           res.status(201).json({
             success: true,
             token,
@@ -93,6 +96,14 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
     res.status(400).json({
       success: false,
     });
+  }
+});
+
+exports.onboardValidator = asyncHandler(async (req, res, next) => {
+  try {
+    
+  } catch (err) {
+    res.status(400).json({ success: false });
   }
 });
 
