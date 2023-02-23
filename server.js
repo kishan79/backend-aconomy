@@ -13,7 +13,6 @@ dotenv.config({ path: "./.env" });
 connectDB();
 
 const pool = require("./routes/pool");
-// const auth = require("./routes/auth");
 const user = require("./routes/user");
 const validator = require("./routes/validator");
 
@@ -36,7 +35,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/pool", pool);
-// app.use("/api/v1/auth", auth);
 app.use("/api/v1/user", user);
 app.use("/api/v1/validator", validator);
 
