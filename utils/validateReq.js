@@ -19,7 +19,7 @@ const validatorOnBoardReqSchema = [
 const userOnBoardReqSchema = [
   body("name", "The name field is required").notEmpty(),
   body("username", "The username field is required").notEmpty(),
-  body("term", "The term field must be true").toBoolean().isIn([true]),
+  body("termOfService", "The term field must be true").toBoolean().isIn([true]),
 ];
 
 module.exports = {

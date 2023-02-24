@@ -121,8 +121,25 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
 
 exports.updateValidator = asyncHandler(async (req, res, next) => {
   try {
-    res.status(201).json({ success: true });
+    ValidatorModel.findOneAndUpdate(
+      { wallet_address: req.user.wallet_address },
+      { ...req.body },
+      null,
+      (err, docs) => {
+        if (err) {
+          res
+            .status(400)
+            .json({ success: false, message: "Profile failed to update" });
+        } else {
+          res
+            .status(201)
+            .json({ success: true, message: "Profile successfully updated" });
+        }
+      }
+    );
   } catch (err) {
-    res.status(400).json({ success: false });
+    res
+      .status(400)
+      .json({ success: false, message: "Profile failed to update" });
   }
 });
