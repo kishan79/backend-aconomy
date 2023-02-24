@@ -104,10 +104,9 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
 
 exports.onboardUser = asyncHandler(async (req, res, next) => {
   try {
-    const { name, username, term } = req.body;
     UserModel.findOneAndUpdate(
       { wallet_address: req.user.wallet_address },
-      { name, username, termOfService: term },
+      { ...req.body },
       null,
       (err, docs) => {
         if (err) {
@@ -124,8 +123,25 @@ exports.onboardUser = asyncHandler(async (req, res, next) => {
 
 exports.updateUser = asyncHandler(async (req, res, next) => {
   try {
-    res.status(201).json({ success: true });
+    UserModel.findOneAndUpdate(
+      { wallet_address: req.user.wallet_address },
+      { ...req.body },
+      null,
+      (err, docs) => {
+        if (err) {
+          res
+            .status(400)
+            .json({ success: false, message: "Profile failed to update" });
+        } else {
+          res
+            .status(201)
+            .json({ success: true, message: "Profile successfully updated" });
+        }
+      }
+    );
   } catch (err) {
-    res.status(400).json({ success: false });
+    res
+      .status(400)
+      .json({ success: false, message: "Profile failed to update" });
   }
 });
