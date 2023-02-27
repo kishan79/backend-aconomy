@@ -1,4 +1,4 @@
-const advancedResults = (model, populate) => async (req, res, next) => {
+const advancedResults = (model, selectFields, populate) => async (req, res, next) => {
   let query;
 
   // Copy req.query
@@ -23,9 +23,13 @@ const advancedResults = (model, populate) => async (req, res, next) => {
   query = model.find(JSON.parse(queryStr));
 
   // Select Fields
-  if (req.query.select) {
-    const fields = req.query.select.split(",").join(" ");
-    query = query.select(fields);
+  // if (req.query.select) {
+  //   const fields = req.query.select.split(",").join(" ");
+  //   query = query.select(fields);
+  // }
+
+  if(selectFields){
+    query = query.select(selectFields);
   }
 
   // Sort
@@ -45,6 +49,7 @@ const advancedResults = (model, populate) => async (req, res, next) => {
 
   query = query.skip(startIndex).limit(limit);
 
+  console.log(populate,"12");
   if (populate) {
     query = query.populate(populate);
   }

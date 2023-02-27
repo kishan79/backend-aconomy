@@ -6,7 +6,7 @@ const userValidSignature = [
 
 const validatorValidSignature = [
   body("signature", "The signature field is required").notEmpty(),
-]
+];
 
 const validatorOnBoardReqSchema = [
   body("email", "Enter valid email").isEmail().normalizeEmail(),
@@ -22,9 +22,15 @@ const userOnBoardReqSchema = [
   body("termOfService", "The term field must be true").toBoolean().isIn([true]),
 ];
 
+const collectionCreateReqSchema = [
+  body("name", "The name field is required").notEmpty(),
+  body("assetType", "The assetType field is required").notEmpty(),
+];
+
 module.exports = {
   userValidSignature,
   validatorValidSignature,
   validatorOnBoardReqSchema,
   userOnBoardReqSchema,
+  collectionCreateReqSchema
 };

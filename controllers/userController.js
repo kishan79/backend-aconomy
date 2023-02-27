@@ -121,21 +121,61 @@ exports.onboardUser = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.fetchUsers = asyncHandler(async (req, res, next) => {
+  try {
+    res.status(200).json(res.advancedResults);
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.fetchUserByAddress = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.params;
+    UserModel.findOne({ wallet_address }, (err, doc) => {
+      if (err) {
+        res.status(400).json({ success: false, data: {} });
+      } else {
+        if (!!doc) {
+          res.status(200).json({ success: true, data: doc });
+        } else {
+          res
+            .status(400)
+            .json({
+              success: false,
+              data: {},
+              message: "Wrong wallet address",
+            });
+        }
+      }
+    }).select("-signatureMessage -createdAt -updatedAt -__v");
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
 exports.updateUser = asyncHandler(async (req, res, next) => {
   try {
+    const { wallet_address } = req.params;
     UserModel.findOneAndUpdate(
-      { wallet_address: req.user.wallet_address },
+      { wallet_address },
       { ...req.body },
       null,
-      (err, docs) => {
+      (err, doc) => {
         if (err) {
           res
             .status(400)
             .json({ success: false, message: "Profile failed to update" });
         } else {
-          res
-            .status(201)
-            .json({ success: true, message: "Profile successfully updated" });
+          if (!!doc) {
+            res
+              .status(201)
+              .json({ success: true, message: "Profile successfully updated" });
+          } else {
+            res
+              .status(400)
+              .json({ success: false, message: "Wrong wallet address" });
+          }
         }
       }
     );

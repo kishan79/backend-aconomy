@@ -15,6 +15,7 @@ connectDB();
 const pool = require("./routes/pool");
 const user = require("./routes/user");
 const validator = require("./routes/validator");
+const collection = require("./routes/collection");
 
 const app = express();
 app.use(cors());
@@ -28,7 +29,6 @@ if (process.env.NODE_ENV === "development") {
 app.use(mongoSanitize());
 app.use(helmet());
 app.use(hpp());
-app.use(cors());
 
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to Aconomy application." });
@@ -37,6 +37,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/pool", pool);
 app.use("/api/v1/user", user);
 app.use("/api/v1/validator", validator);
+app.use("/api/v1/collection", collection);
 
 // app.use(errorHandler);
 
