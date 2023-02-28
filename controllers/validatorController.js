@@ -22,6 +22,13 @@ exports.generateNonce = asyncHandler(async (req, res, next) => {
         await ValidatorModel.create({
           wallet_address,
           signatureMessage,
+          profileImage:"",
+          bannerImage: "",
+          name: "",
+          username: "",
+          bio:"",
+          email:"",
+          role:"validator"
         });
       } else {
         await ValidatorModel.findOneAndUpdate(

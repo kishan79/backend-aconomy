@@ -8,20 +8,22 @@ const jwt = require("jsonwebtoken");
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.params;
-
     const validator = await ValidatorModel.findOne({ wallet_address });
-
     if (!validator) {
       const user = await UserModel.findOne({
         wallet_address,
       });
-
       const signatureMessage = crypto.randomBytes(32).toString("hex");
 
       if (!user) {
         await UserModel.create({
           wallet_address,
           signatureMessage,
+          name:"",
+          username:"",
+          email: "",
+          role: "user",
+          termOfService: false,
         });
       } else {
         await UserModel.findOneAndUpdate(
@@ -139,13 +141,11 @@ exports.fetchUserByAddress = asyncHandler(async (req, res, next) => {
         if (!!doc) {
           res.status(200).json({ success: true, data: doc });
         } else {
-          res
-            .status(400)
-            .json({
-              success: false,
-              data: {},
-              message: "Wrong wallet address",
-            });
+          res.status(400).json({
+            success: false,
+            data: {},
+            message: "Wrong wallet address",
+          });
         }
       }
     }).select("-signatureMessage -createdAt -updatedAt -__v");
