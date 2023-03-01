@@ -8,19 +8,22 @@ const UserSchema = new mongoose.Schema({
   username: String,
   email: {
     type: String,
-    // required: [true, "Please add an email"],
-    // unique: true,
-    // match: [
-    //   /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-    //   "Please add a valid email",
-    // ],
   },
+  bio: String,
   role: {
     type: String,
     // default: "user",
   },
   signatureMessage: {
     type: String,
+  },
+  socialLinks: {
+    website: String,
+    twitter: String,
+    discord: String,
+    telegram: String,
+    instagram: String,
+    other: String,
   },
   termOfService: {
     type: Boolean,

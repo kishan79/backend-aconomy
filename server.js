@@ -16,6 +16,7 @@ const pool = require("./routes/pool");
 const user = require("./routes/user");
 const validator = require("./routes/validator");
 const collection = require("./routes/collection");
+const nft = require("./routes/nft");
 
 const app = express();
 app.use(cors());
@@ -38,6 +39,7 @@ app.use("/api/v1/pool", pool);
 app.use("/api/v1/user", user);
 app.use("/api/v1/validator", validator);
 app.use("/api/v1/collection", collection);
+app.use("/api/v1/nft", nft);
 
 // app.use(errorHandler);
 

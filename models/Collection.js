@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const CollectionSchema = new mongoose.Schema(
   {
-    collectionOwnerId: {
+    collectionOwner: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },
@@ -13,6 +13,7 @@ const CollectionSchema = new mongoose.Schema(
     bannerImage: String,
     name: String,
     description: String,
+    blockchain: String,
     assetType: [String],
     royalities: [
       {
@@ -24,6 +25,8 @@ const CollectionSchema = new mongoose.Schema(
       website: String,
       twitter: String,
       discord: String,
+      facebook: String,
+      instagram: String,
       other: String,
     },
     blockchain: String,

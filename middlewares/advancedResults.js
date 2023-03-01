@@ -49,7 +49,6 @@ const advancedResults = (model, selectFields, populate) => async (req, res, next
 
   query = query.skip(startIndex).limit(limit);
 
-  console.log(populate,"12");
   if (populate) {
     query = query.populate(populate);
   }

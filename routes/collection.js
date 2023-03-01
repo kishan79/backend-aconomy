@@ -28,4 +28,6 @@ router
   .route("/:collectionId")
   .get(protect, authorize("user"), collectionController.fetchCollection);
 
+router.route("/:collectionId/nft").get(collectionController.fetchAllCollectionNfts);
+
 module.exports = router;

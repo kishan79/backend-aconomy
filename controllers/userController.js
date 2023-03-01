@@ -4,6 +4,7 @@ const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
 const jwt = require("jsonwebtoken");
+const { userSelectQuery } = require("../utils/selectQuery")
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -148,7 +149,7 @@ exports.fetchUserByAddress = asyncHandler(async (req, res, next) => {
           });
         }
       }
-    }).select("-signatureMessage -createdAt -updatedAt -__v");
+    }).select(userSelectQuery);
   } catch (err) {
     res.status(400).json({ success: false });
   }
