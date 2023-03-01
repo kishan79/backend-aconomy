@@ -7,7 +7,7 @@ const {
   userValidSignature,
   userOnBoardReqSchema,
 } = require("../utils/validateReq");
-const { protect, authorize } = require("../middlewares/auth");
+const { protect, authorize, validateOwner } = require("../middlewares/auth");
 const { userSelectQuery } = require("../utils/selectQuery");
 
 //import controllers
@@ -36,7 +36,7 @@ router
 
 router
   .route("/profile/:wallet_address")
-  .get(protect, authorize("user"), userController.fetchUserByAddress)
-  .put(protect, authorize("user"), userController.updateUser);
+  .get(protect, authorize("user"), validateOwner, userController.fetchUserByAddress)
+  .put(protect, authorize("user"), validateOwner, userController.updateUser);
 
 module.exports = router;

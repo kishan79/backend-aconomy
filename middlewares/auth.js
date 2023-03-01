@@ -45,3 +45,12 @@ exports.authorize = (...roles) => {
     next();
   };
 };
+
+exports.validateOwner = asyncHandler(async (req, res, next) => {
+  const { wallet_address } = req.params;
+  if (wallet_address === req.user.wallet_address) {
+    next();
+  } else {
+    return next(new ErrorResponse("Forbidden Action", 403));
+  }
+});

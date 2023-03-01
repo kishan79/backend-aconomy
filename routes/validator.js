@@ -7,7 +7,7 @@ const {
   validatorValidSignature,
   validatorOnBoardReqSchema,
 } = require("../utils/validateReq");
-const { protect, authorize } = require("../middlewares/auth");
+const { protect, authorize, validateOwner } = require("../middlewares/auth");
 const { validatorSelectQuery } = require("../utils/selectQuery");
 
 //import controllers
@@ -43,8 +43,14 @@ router
   .get(
     protect,
     authorize("validator"),
+    validateOwner,
     validatorController.fetchValidatorByAddress
   )
-  .put(protect, authorize("validator"), validatorController.updateValidator);
+  .put(
+    protect,
+    authorize("validator"),
+    validateOwner,
+    validatorController.updateValidator
+  );
 
 module.exports = router;
