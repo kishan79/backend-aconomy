@@ -1,5 +1,5 @@
 const CollectionModel = require("../models/Collection");
-const NftModel = require("../models/Nft");
+const NftModel = require("../models/NFT");
 const asyncHandler = require("../middlewares/async");
 const { collectionSelectQuery, nftSelectQuery } = require("../utils/selectQuery");
 

@@ -3,7 +3,7 @@ const router = express.Router();
 const validate = require("../middlewares/validateReqSchema");
 const { protect, authorize } = require("../middlewares/auth");
 const advancedResults = require("../middlewares/advancedResults");
-const NftModel = require("../models/Nft");
+const NftModel = require("../models/NFT");
 const { nftSelectQuery, userSelectQuery, collectionSelectQuery } = require("../utils/selectQuery");
 
 const nftController = require("../controllers/nftController");

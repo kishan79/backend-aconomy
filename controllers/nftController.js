@@ -1,4 +1,4 @@
-const NftModel = require("../models/Nft");
+const NftModel = require("../models/NFT");
 const asyncHandler = require("../middlewares/async");
 const { nftSelectQuery } = require("../utils/selectQuery");
 
