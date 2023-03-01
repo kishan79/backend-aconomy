@@ -7,6 +7,7 @@ const NftSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "User"
     },
+    tokenId: Number,
     name: String,
     summary: String,
     blockchain: String,
