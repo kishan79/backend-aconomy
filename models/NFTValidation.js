@@ -12,23 +12,29 @@ const NftValidationSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },
-    requeststate: {
+    requestState: {
       type: String,
-      enum: ["unvalidated", "pending", "validated", "cancelled"],
-      default: "unvalidated",
+      enum: ["pending", "validated", "cancelled"],
+      default: "pending",
     },
     validator: {
       type: mongoose.Schema.ObjectId,
       ref: "Validator",
     },
     validatorAddress: "String",
-    validation: {
-        Type: String,
-        Amount: Number,
-        Duration: Number,
-        Royality: Number,
-        Document: String
-    }
+    // validation: {
+    //   Type: String,
+    //   Amount: Number,
+    //   Duration: Number,
+    //   Royality: Number,
+    //   Documents: [String],
+    // },
+    validationType: String,
+    validationAmount: Number,
+    validationDuration: Number,
+    validationRoyality: Number,
+    validationDocuments: [String],
+    requestExpiresOn: Date,
   },
   { timestamps: true }
 );

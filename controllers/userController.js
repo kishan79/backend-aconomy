@@ -200,7 +200,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
   try {
     const { asset, assetName } = req.body;
-    const {wallet_address, id} = req.user;
+    const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findOne({
       assetOwnerAddress: wallet_address,
       asset,
@@ -211,6 +211,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
           ...req.body,
           assetOwnerAddress: wallet_address,
           assetOwner: id,
+          validationState: "pending",
         },
         async (err, doc) => {
           if (err) {
@@ -239,6 +240,6 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
       res.status(401).json({ success: false, message: "Request already sent" });
     }
   } catch (err) {
-    res.status(401).json({ success: false});
+    res.status(401).json({ success: false });
   }
 });

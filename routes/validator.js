@@ -53,6 +53,19 @@ router
     validatorController.updateValidator
   );
 
-router.route("/validationRequests").get(protect, authorize("validator"),validatorController.fetchAllValidationRequest);
+router
+  .route("/validationRequests")
+  .get(
+    protect,
+    authorize("validator"),
+    validatorController.fetchAllValidationRequest
+  );
+router
+  .route("/validateAsset/:requestId")
+  .post(
+    protect,
+    authorize("validator"),
+    validatorController.validateAsset
+  );
 
 module.exports = router;
