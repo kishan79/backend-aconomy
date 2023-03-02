@@ -1,5 +1,6 @@
 const ValidatorModel = require("../models/Validator");
 const UserModel = require("../models/User");
+const NFTValidationModel = require("../models/NFTValidation");
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
@@ -189,3 +190,63 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
       .json({ success: false, message: "Profile failed to update" });
   }
 });
+
+exports.fetchAllValidationRequest = asyncHandler(async(req, res, next) => {
+  try {
+    let query;
+
+    const { sortby, search } = req.query;
+    
+    let queryStr = {
+      validatorAddress: req.user.wallet_address,
+      assetName: { $regex: search, $options: "i" }
+    };
+
+    query = NFTValidationModel.find(queryStr);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NFTValidationModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+})

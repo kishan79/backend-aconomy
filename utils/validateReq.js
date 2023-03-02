@@ -27,10 +27,18 @@ const collectionCreateReqSchema = [
   body("assetType", "The assetType field is required").notEmpty(),
 ];
 
+const sendValidationReqSchema = [
+  body("assetName", "The assetName field is required").notEmpty(),
+  body("asset", "The asset field is required").notEmpty(),
+  body("validator", "The validator field is required").notEmpty(),
+  body("validatorAddress", "The validatorAddress field is required").notEmpty(),
+]
+
 module.exports = {
   userValidSignature,
   validatorValidSignature,
   validatorOnBoardReqSchema,
   userOnBoardReqSchema,
-  collectionCreateReqSchema
+  collectionCreateReqSchema,
+  sendValidationReqSchema
 };

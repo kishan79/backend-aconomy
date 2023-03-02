@@ -53,4 +53,6 @@ router
     validatorController.updateValidator
   );
 
+router.route("/validationRequests").get(protect, authorize("validator"),validatorController.fetchAllValidationRequest);
+
 module.exports = router;

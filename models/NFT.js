@@ -38,7 +38,19 @@ const NftSchema = new mongoose.Schema(
     document: String,
     assetOriginationDate: Date,
     valueOfAsset: Number,
-    description: String
+    description: String,
+    // validationType: String,
+    // validationAmount: Number,
+    // validationDuration: Number,
+    // validationRoyality: Number,
+    // validationDocument: String
+    validation: {
+        Type: String,
+        Amount: Number,
+        Duration: Number,
+        Royality: Number,
+        Document: String
+    }
   },
   { timestamps: true }
 );

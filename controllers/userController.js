@@ -1,10 +1,12 @@
 const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
+const NFTValidationModel = require("../models/NFTValidation");
+const UserActivityModel = require("../models/UserActivity");
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
 const jwt = require("jsonwebtoken");
-const { userSelectQuery } = require("../utils/selectQuery")
+const { userSelectQuery } = require("../utils/selectQuery");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -20,8 +22,8 @@ exports.generateNonce = asyncHandler(async (req, res, next) => {
         await UserModel.create({
           wallet_address,
           signatureMessage,
-          name:"",
-          username:"",
+          name: "",
+          username: "",
           email: "",
           role: "user",
           termOfService: false,
@@ -184,5 +186,59 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
     res
       .status(400)
       .json({ success: false, message: "Profile failed to update" });
+  }
+});
+
+// exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
+//   try {
+//     res.status(200).json({ success: true });
+//   } catch (err) {
+//     res.status(400).json({ success: false });
+//   }
+// });
+
+exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
+  try {
+    const { asset, assetName } = req.body;
+    const {wallet_address, id} = req.user;
+    const data = await NFTValidationModel.findOne({
+      assetOwnerAddress: wallet_address,
+      asset,
+    });
+    if (!data) {
+      NFTValidationModel.create(
+        {
+          ...req.body,
+          assetOwnerAddress: wallet_address,
+          assetOwner: id,
+        },
+        async (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              let activity = await UserActivityModel.create({
+                userAddress: wallet_address,
+                userId: id,
+                asset,
+                assetName,
+                statusText: "Sent validation request",
+              });
+              if (activity) {
+                res
+                  .status(201)
+                  .json({ success: true, message: "Validation request sent" });
+              }
+            } else {
+              res.status(401).json({ success: false, message: "not done" });
+            }
+          }
+        }
+      );
+    } else {
+      res.status(401).json({ success: false, message: "Request already sent" });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false});
   }
 });

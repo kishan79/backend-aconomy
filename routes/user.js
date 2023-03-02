@@ -6,6 +6,7 @@ const validate = require("../middlewares/validateReqSchema");
 const {
   userValidSignature,
   userOnBoardReqSchema,
+  sendValidationReqSchema
 } = require("../utils/validateReq");
 const { protect, authorize, validateOwner } = require("../middlewares/auth");
 const { userSelectQuery } = require("../utils/selectQuery");
@@ -36,7 +37,20 @@ router
 
 router
   .route("/profile/:wallet_address")
-  .get(protect, authorize("user"), validateOwner, userController.fetchUserByAddress)
+  .get(
+    protect,
+    authorize("user"),
+    validateOwner,
+    userController.fetchUserByAddress
+  )
   .put(protect, authorize("user"), validateOwner, userController.updateUser);
+
+// router
+//   .route("/assetNFTs")
+//   .get(userController.fetchUserAssetNFTs);
+
+router
+  .route("/sendValidatonRequest")
+  .post(protect, authorize("user"), validate(sendValidationReqSchema), userController.sendValidationRequest);
 
 module.exports = router;
