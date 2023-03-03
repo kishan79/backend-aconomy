@@ -25,6 +25,16 @@ const userOnBoardReqSchema = [
 const collectionCreateReqSchema = [
   body("name", "The name field is required").notEmpty(),
   body("assetType", "The assetType field is required").notEmpty(),
+  body("symbol", "The symbol field is required").notEmpty(),
+];
+
+const nftCreateReqSchema = [
+  body("tokenId", "The field tokenId is required").notEmpty(),
+  body("name", "The field name is required").notEmpty(),
+  body("blockchain", "The field blockchain is required").notEmpty(),
+  body("assetType", "The field assetType is required").notEmpty(),
+  body("nftCollection", "The field nftCollection is required").notEmpty(),
+  body("mediaLinks", "The field mediaLinks is required").notEmpty(),
 ];
 
 const sendValidationReqSchema = [
@@ -32,7 +42,7 @@ const sendValidationReqSchema = [
   body("asset", "The asset field is required").notEmpty(),
   body("validator", "The validator field is required").notEmpty(),
   body("validatorAddress", "The validatorAddress field is required").notEmpty(),
-]
+];
 
 module.exports = {
   userValidSignature,
@@ -40,5 +50,6 @@ module.exports = {
   validatorOnBoardReqSchema,
   userOnBoardReqSchema,
   collectionCreateReqSchema,
-  sendValidationReqSchema
+  nftCreateReqSchema,
+  sendValidationReqSchema,
 };

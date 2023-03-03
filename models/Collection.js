@@ -12,6 +12,7 @@ const CollectionSchema = new mongoose.Schema(
     profileImage: String,
     bannerImage: String,
     name: String,
+    symbol: String,
     description: String,
     blockchain: String,
     assetType: [String],
