@@ -2,6 +2,7 @@ const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
 const NFTValidationModel = require("../models/NFTValidation");
 const UserActivityModel = require("../models/UserActivity");
+const NftModel = require("../models/NFT");
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
@@ -189,13 +190,85 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   }
 });
 
-// exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
-//   try {
-//     res.status(200).json({ success: true });
-//   } catch (err) {
-//     res.status(400).json({ success: false });
-//   }
-// });
+exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby, search, assetType, blockchain, validationState } =
+      req.query;
+    let queryStr = {
+      nftOwnerAddress: req.user.wallet_address,
+      // name: { $regex: search, $options: "i" },
+      // assetType: { $all: assetType },
+      // blockchain,
+      // validationState
+    };
+
+    // if (search) {
+    //   queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    // }
+
+    // if (blockchain) {
+    //   queryStr = { ...queryStr, blockchain };
+    // }
+
+    // if (assetType) {
+    //   queryStr = { ...queryStr, assetType: { $all: assetType.split(",") } };
+    // }
+
+    // if (validationState) {
+    //   queryStr = { ...queryStr, validationState };
+    // }
+
+    query = NftModel.find(queryStr);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+      err,
+    });
+  }
+});
 
 exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
   try {

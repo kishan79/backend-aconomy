@@ -6,7 +6,7 @@ const validate = require("../middlewares/validateReqSchema");
 const {
   userValidSignature,
   userOnBoardReqSchema,
-  sendValidationReqSchema
+  sendValidationReqSchema,
 } = require("../utils/validateReq");
 const { protect, authorize, validateOwner } = require("../middlewares/auth");
 const { userSelectQuery } = require("../utils/selectQuery");
@@ -45,12 +45,17 @@ router
   )
   .put(protect, authorize("user"), validateOwner, userController.updateUser);
 
-// router
-//   .route("/assetNFTs")
-//   .get(userController.fetchUserAssetNFTs);
+router
+  .route("/assetNFTs")
+  .get(protect, authorize("user"), userController.fetchUserAssetNFTs);
 
 router
   .route("/sendValidatonRequest")
-  .post(protect, authorize("user"), validate(sendValidationReqSchema), userController.sendValidationRequest);
+  .post(
+    protect,
+    authorize("user"),
+    validate(sendValidationReqSchema),
+    userController.sendValidationRequest
+  );
 
 module.exports = router;
