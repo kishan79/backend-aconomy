@@ -9,6 +9,7 @@ const CollectionSchema = new mongoose.Schema(
     collectionOwnerAddress: {
       type: String,
     },
+    collectionAddress: String,
     profileImage: String,
     bannerImage: String,
     name: String,

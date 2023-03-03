@@ -26,15 +26,16 @@ const collectionCreateReqSchema = [
   body("name", "The name field is required").notEmpty(),
   body("assetType", "The assetType field is required").notEmpty(),
   body("symbol", "The symbol field is required").notEmpty(),
+  body("collectionAddress", "The collectionAddress field is required").notEmpty()
 ];
 
 const nftCreateReqSchema = [
-  body("tokenId", "The field tokenId is required").notEmpty(),
-  body("name", "The field name is required").notEmpty(),
-  body("blockchain", "The field blockchain is required").notEmpty(),
-  body("assetType", "The field assetType is required").notEmpty(),
-  body("nftCollection", "The field nftCollection is required").notEmpty(),
-  body("mediaLinks", "The field mediaLinks is required").notEmpty(),
+  body("tokenId", "The tokenId field is required").notEmpty(),
+  body("name", "The name field is required").notEmpty(),
+  body("blockchain", "The blockchain field is required").notEmpty(),
+  body("assetType", "The assetType field is required").notEmpty(),
+  body("nftCollection", "The nftCollection field is required").notEmpty(),
+  body("mediaLinks", "The mediaLinks field is required").notEmpty(),
 ];
 
 const sendValidationReqSchema = [
