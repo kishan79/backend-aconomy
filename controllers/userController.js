@@ -7,7 +7,11 @@ const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
 const jwt = require("jsonwebtoken");
-const { userSelectQuery } = require("../utils/selectQuery");
+const {
+  userSelectQuery,
+  activitySelectQuery,
+  nftActivitySelectQuery,
+} = require("../utils/selectQuery");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -293,7 +297,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
             if (!!doc) {
               let activity = await UserActivityModel.create({
                 userAddress: wallet_address,
-                userId: id,
+                user: id,
                 asset,
                 assetName,
                 statusText: "Sent validation request",
@@ -314,5 +318,66 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(401).json({ success: false });
+  }
+});
+
+exports.fetchActivites = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      userAddress: req.user.wallet_address,
+    };
+
+    query = UserActivityModel.find(queryStr)
+      .select(activitySelectQuery)
+      .populate({ path: "asset", select: nftActivitySelectQuery });
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await UserActivityModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });

@@ -68,4 +68,6 @@ router
     validatorController.validateAsset
   );
 
+router.route("/activities").get(protect, authorize("validator"), validatorController.fetchActivites);
+
 module.exports = router;

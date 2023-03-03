@@ -31,7 +31,6 @@ const CollectionSchema = new mongoose.Schema(
       instagram: String,
       other: String,
     },
-    blockchain: String,
     paymentToken: String,
   },
   { timestamps: true }

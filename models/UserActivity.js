@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const UserActivity = new mongoose.Schema(
   {
     userAddress: String,
-    userId: {
+    user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },

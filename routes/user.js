@@ -58,4 +58,8 @@ router
     userController.sendValidationRequest
   );
 
+router
+  .route("/activities")
+  .get(protect, authorize("user"), userController.fetchActivites);
+
 module.exports = router;
