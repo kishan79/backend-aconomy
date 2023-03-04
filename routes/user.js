@@ -9,7 +9,7 @@ const {
   sendValidationReqSchema,
 } = require("../utils/validateReq");
 const { protect, authorize, validateOwner } = require("../middlewares/auth");
-const { userSelectQuery } = require("../utils/selectQuery");
+const { userSelectQuery, collectionSelectQuery } = require("../utils/selectQuery");
 
 //import controllers
 const userController = require("../controllers/userController");
@@ -61,5 +61,7 @@ router
 router
   .route("/activities")
   .get(protect, authorize("user"), userController.fetchActivites);
+
+router.route("/collections").get(protect, authorize("user"), userController.fetchCollections);
 
 module.exports = router;

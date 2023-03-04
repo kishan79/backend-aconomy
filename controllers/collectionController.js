@@ -1,7 +1,10 @@
 const CollectionModel = require("../models/Collection");
 const NftModel = require("../models/NFT");
 const asyncHandler = require("../middlewares/async");
-const { collectionSelectQuery, nftSelectQuery } = require("../utils/selectQuery");
+const {
+  collectionSelectQuery,
+  nftSelectQuery,
+} = require("../utils/selectQuery");
 
 exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {

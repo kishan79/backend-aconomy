@@ -2,6 +2,7 @@ const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
 const NFTValidationModel = require("../models/NFTValidation");
 const UserActivityModel = require("../models/UserActivity");
+const CollectionModel = require("../models/Collection");
 const NftModel = require("../models/NFT");
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
@@ -11,6 +12,7 @@ const {
   userSelectQuery,
   activitySelectQuery,
   nftActivitySelectQuery,
+  collectionSelectQuery,
 } = require("../utils/selectQuery");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
@@ -379,5 +381,21 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
       data: [],
       message: "Failed to execute",
     });
+  }
+});
+
+exports.fetchCollections = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.user;
+    const data = await CollectionModel.find({
+      collectionOwnerAddress: wallet_address,
+    }).select(collectionSelectQuery);
+    if (data) {
+      res.status(200).json({ success: true, data });
+    } else {
+      res.status(200).json({ success: true, data: [] });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
   }
 });
