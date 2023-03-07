@@ -64,4 +64,6 @@ router
 
 router.route("/collections").get(protect, authorize("user"), userController.fetchCollections);
 
+router.route("/checkUsername").get(protect, authorize("user","validator"), userController.checkUsernameAvailability);
+
 module.exports = router;
