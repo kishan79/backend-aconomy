@@ -149,7 +149,37 @@ exports.fetchUserByAddress = asyncHandler(async (req, res, next) => {
         res.status(400).json({ success: false, data: {} });
       } else {
         if (!!doc) {
-          res.status(200).json({ success: true, data: doc });
+          NftModel.find(
+            {
+              nftOwnerAddress: wallet_address,
+            },
+            (err, assetData) => {
+              if (err) {
+                res.status(400).json({ success: false, data: {} });
+              } else {
+                NftModel.find(
+                  {
+                    nftOwnerAddress: wallet_address,
+                    validationState: "validated",
+                  },
+                  (err, validatedData) => {
+                    if (err) {
+                      res.status(400).json({ success: false, data: {} });
+                    } else {
+                      res.status(200).json({
+                        success: true,
+                        data: {
+                          ...doc,
+                          totalAssets: assetData.length,
+                          validatedAssets: validatedData.length,
+                        },
+                      });
+                    }
+                  }
+                ).lean();
+              }
+            }
+          ).lean();
         } else {
           res.status(400).json({
             success: false,
@@ -158,7 +188,9 @@ exports.fetchUserByAddress = asyncHandler(async (req, res, next) => {
           });
         }
       }
-    }).select(userSelectQuery);
+    })
+      .select(userSelectQuery)
+      .lean();
   } catch (err) {
     res.status(400).json({ success: false });
   }
