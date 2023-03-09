@@ -435,34 +435,38 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
 exports.checkUsernameAvailability = asyncHandler(async (req, res, next) => {
   try {
     const { username } = req.body;
-    UserModel.findOne({ username }, (err, userData) => {
-      if (err) {
-        res.status(400).json({ success: false });
-      } else {
-        if (userData) {
-          res
-            .status(200)
-            .json({ success: false, message: "username is taken" });
+    if (username === "") {
+      res.status(200).json({ success: false, message: "Invalid username" });
+    } else {
+      UserModel.findOne({ username }, (err, userData) => {
+        if (err) {
+          res.status(400).json({ success: false });
         } else {
-          ValidatorModel.findOne({ username }, (err, validatorData) => {
-            if (err) {
-              res.status(400).json({ success: false });
-            } else {
-              if (validatorData) {
-                res
-                  .status(200)
-                  .json({ success: false, message: "username is taken" });
+          if (userData) {
+            res
+              .status(200)
+              .json({ success: false, message: "username is taken" });
+          } else {
+            ValidatorModel.findOne({ username }, (err, validatorData) => {
+              if (err) {
+                res.status(400).json({ success: false });
               } else {
-                res
-                  .status(200)
-                  .json({ success: true, message: "username is available" });
+                if (validatorData) {
+                  res
+                    .status(200)
+                    .json({ success: false, message: "username is taken" });
+                } else {
+                  res
+                    .status(200)
+                    .json({ success: true, message: "username is available" });
+                }
               }
-            }
-          });
+            });
+          }
         }
-      }
-    });
+      });
+    }
   } catch (err) {
-    res.status(400).json({success: false});
+    res.status(400).json({ success: false });
   }
 });
