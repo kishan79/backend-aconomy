@@ -25,7 +25,7 @@ const userOnBoardReqSchema = [
 const collectionCreateReqSchema = [
   body("name", "The name field is required").notEmpty(),
   body("assetType", "The assetType field is required").notEmpty(),
-  body("symbol", "The symbol field is required").notEmpty(),
+  // body("symbol", "The symbol field is required").notEmpty(),
   body("collectionAddress", "The collectionAddress field is required").notEmpty()
 ];
 
