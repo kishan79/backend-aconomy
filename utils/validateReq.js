@@ -32,7 +32,7 @@ const collectionCreateReqSchema = [
 const nftCreateReqSchema = [
   body("tokenId", "The tokenId field is required").notEmpty(),
   body("name", "The name field is required").notEmpty(),
-  body("blockchain", "The blockchain field is required").notEmpty(),
+  // body("blockchain", "The blockchain field is required").notEmpty(),
   body("assetType", "The assetType field is required").notEmpty(),
   body("nftCollection", "The nftCollection field is required").notEmpty(),
   body("mediaLinks", "The mediaLinks field is required").notEmpty(),

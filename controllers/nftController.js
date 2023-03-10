@@ -31,7 +31,6 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
 
 exports.createNft = asyncHandler(async (req, res, next) => {
   try {
-    console.log("12",req.user, req.body);
     NftModel.create(
       {
         ...req.body,
