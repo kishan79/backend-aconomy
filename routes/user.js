@@ -58,6 +58,13 @@ router
     userController.sendValidationRequest
   );
 
+router.route("/sendExtendValidationRequest").post(
+  protect,
+  authorize("user"),
+  validate(sendValidationReqSchema),
+  userController.sendExtendValidationRequest
+)
+
 router
   .route("/activities")
   .get(protect, authorize("user"), userController.fetchActivites);

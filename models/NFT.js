@@ -5,7 +5,7 @@ const NftSchema = new mongoose.Schema(
     nftOwnerAddress: String,
     nftOwner: {
       type: mongoose.Schema.ObjectId,
-      ref: "User"
+      ref: "User",
     },
     tokenId: Number,
     name: String,
@@ -15,7 +15,7 @@ const NftSchema = new mongoose.Schema(
     assetType: [String],
     nftCollection: {
       type: mongoose.Schema.ObjectId,
-      ref: "Collection"
+      ref: "Collection",
     },
     properties: [
       {
@@ -27,7 +27,7 @@ const NftSchema = new mongoose.Schema(
       {
         address: String,
         percent: Number,
-      }
+      },
     ],
     externalLink: String,
     unlockableContent: String,
@@ -46,9 +46,17 @@ const NftSchema = new mongoose.Schema(
     validationDocuments: [String],
     validationState: {
       type: String,
-      enum: ["unvalidated", "pending", "validated", "cancelled"],
+      enum: [
+        "unvalidated",
+        "pending",
+        "validated",
+        "cancelled",
+        "revalidation",
+        "revalidated",
+      ],
       default: "unvalidated",
-    }
+    },
+    validationExpired: Boolean,
     // validation: {
     //     Type: String,
     //     Amount: Number,

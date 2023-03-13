@@ -62,12 +62,18 @@ router
   );
 router
   .route("/validateAsset/:requestId")
-  .post(
-    protect,
-    authorize("validator"),
-    validatorController.validateAsset
-  );
+  .post(protect, authorize("validator"), validatorController.validateAsset);
 
-router.route("/activities").get(protect, authorize("validator"), validatorController.fetchActivites);
+router
+  .route("/revalidateAsset/:requestId")
+  .post(protect, authorize("validator"), validatorController.reValidateAsset);
+
+router
+  .route("/addfunds/:assetId")
+  .post(protect, authorize("validator"), validatorController.addMoreFunds);
+
+router
+  .route("/activities")
+  .get(protect, authorize("validator"), validatorController.fetchActivites);
 
 module.exports = router;

@@ -14,6 +14,7 @@ const {
   nftActivitySelectQuery,
   collectionSelectQuery,
 } = require("../utils/selectQuery");
+const { isBefore } = require("date-fns");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -349,6 +350,56 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
       );
     } else {
       res.status(401).json({ success: false, message: "Request already sent" });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
+  try {
+    const { asset, assetName } = req.body;
+    const { wallet_address, id } = req.user;
+    const data = await NFTValidationModel.findOne({
+      assetOwnerAddress: wallet_address,
+      asset,
+    });
+    if (isBefore(data.requestExpiresOn, new Date()) & data.validationExpired) {
+      NFTValidationModel.findOneAndUpdate(
+        { _id: data._id },
+        { requestState: "revalidation" },
+        null,
+        async (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              const nftData = await NftModel.findOneAndUpdate(
+                { _id: asset },
+                { validationState: "revalidation" },
+                {
+                  new: true,
+                }
+              );
+              if (nftData) {
+                res.status(201).json({
+                  success: true,
+                  message: "Extend validation request sent",
+                });
+              }
+            } else {
+              res.status(201).json({
+                success: false,
+                message: "Failed to send validation request",
+              });
+            }
+          }
+        }
+      );
+    } else {
+      res
+        .status(400)
+        .json({ success: false, message: "Asset validity is not expired" });
     }
   } catch (err) {
     res.status(401).json({ success: false });
