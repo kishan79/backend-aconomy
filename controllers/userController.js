@@ -323,13 +323,17 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
           ...req.body,
           assetOwnerAddress: wallet_address,
           assetOwner: id,
-          validationState: "pending",
+          requestState: "pending",
         },
         async (err, doc) => {
           if (err) {
             res.status(401).json({ success: false });
           } else {
             if (!!doc) {
+              let nftData = await NftModel.findOneAndUpdate(
+                { _id: asset },
+                { validationState: "pending" }
+              );
               let activity = await UserActivityModel.create({
                 userAddress: wallet_address,
                 user: id,
@@ -382,10 +386,19 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                 }
               );
               if (nftData) {
-                res.status(201).json({
-                  success: true,
-                  message: "Extend validation request sent",
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset,
+                  assetName,
+                  statusText: "Sent revalidation request",
                 });
+                if (activity) {
+                  res.status(201).json({
+                    success: true,
+                    message: "Extend validation request sent",
+                  });
+                }
               }
             } else {
               res.status(201).json({

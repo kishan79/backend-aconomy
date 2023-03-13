@@ -56,7 +56,10 @@ const NftSchema = new mongoose.Schema(
       ],
       default: "unvalidated",
     },
-    validationExpired: Boolean,
+    validationExpired: {
+      type: Boolean,
+      default: false
+    },
     // validation: {
     //     Type: String,
     //     Amount: Number,

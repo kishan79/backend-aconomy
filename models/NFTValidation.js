@@ -41,7 +41,10 @@ const NftValidationSchema = new mongoose.Schema(
     validationRoyality: Number,
     validationDocuments: [String],
     requestExpiresOn: Date,
-    validationExpired: Boolean,
+    validationExpired: {
+      type: Boolean,
+      default: false
+    },
   },
   { timestamps: true }
 );

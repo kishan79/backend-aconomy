@@ -339,13 +339,14 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { amount } = req.body;
-    const data = await NFTValidationModel.find({ asset: assetId });
-    if (data.length) {
+    const { wallet_address, id } = req.user;
+    const data = await NFTValidationModel.findOne({ asset: assetId });
+    if (data) {
       NFTValidationModel.findOneAndUpdate(
-        { _id: data[0]._id },
-        { validationAmount: data[0].validationAmount + amount },
+        { _id: data._id },
+        { validationAmount: data.validationAmount + amount },
         null,
-        (err, doc) => {
+        async (err, doc) => {
           if (err) {
             res.status(401).json({
               success: false,
@@ -354,10 +355,20 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
             });
           } else {
             if (!!doc) {
-              res.status(201).json({
-                success: true,
-                message: "Successfully added more funds",
+              let activity = await ValidatorActivityModel.create({
+                validatorAddress: wallet_address,
+                validator: id,
+                asset: data.asset,
+                assetOwner: data.assetOwnerAddress,
+                assetName: data.assetName,
+                statusText: "Added more funds",
               });
+              if (activity) {
+                res.status(201).json({
+                  success: true,
+                  message: "Successfully added more funds",
+                });
+              }
             } else {
               res
                 .status(400)
@@ -385,9 +396,9 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
     validationRoyality,
     validationDocuments,
   } = req.body;
-  const {wallet_address, id} = req.user;
+  const { wallet_address, id } = req.user;
   const data = await NFTValidationModel.findById(requestId);
-  if(data.validatorAddress === wallet_address) {
+  if (data.validatorAddress === wallet_address) {
     NFTValidationModel.findOneAndUpdate(
       { _id: requestId },
       {
@@ -398,6 +409,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
         validationDocuments,
         requestExpiresOn: addDays(new Date(), validationDuration),
         requestState: "revalidated",
+        validationExpired: false,
       },
       async (err, doc) => {
         if (err) {
@@ -408,12 +420,13 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
               { _id: data.asset },
               {
                 validationType,
-                validationAmount,
+                validationAmount: data.validationAmount + validationAmount,
                 validationDuration,
                 validationRoyality,
                 validationDocuments,
                 requestExpiresOn: addDays(new Date(), validationDuration),
                 validationState: "revalidated",
+                validationExpired: false,
               },
               async (err, item) => {
                 if (!!item) {
@@ -437,15 +450,13 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
               }
             );
           } else {
-            res
-              .status(401)
-              .json({ success: false, message: "Wrong request" });
+            res.status(401).json({ success: false, message: "Wrong request" });
           }
         }
       }
     );
   } else {
-    res.status(403).json({success: false, message: "Forbidden Action"});
+    res.status(403).json({ success: false, message: "Forbidden Action" });
   }
 });
 
