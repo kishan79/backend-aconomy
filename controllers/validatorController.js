@@ -385,10 +385,15 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
             res.status(401).json({
               success: false,
               message: "Failed to add more funds",
-              err,
             });
           } else {
             if (!!doc) {
+              let nftData = await NftModel.findOneAndUpdate(
+                { _id: assetId },
+                {
+                  validationAmount: data.validationAmount + amount,
+                }
+              );
               let activity = await ValidatorActivityModel.create({
                 validatorAddress: wallet_address,
                 validator: id,

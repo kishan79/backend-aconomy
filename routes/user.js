@@ -57,13 +57,17 @@ router
   .get(protect, authorize("user"), userController.fetchUserAssetNFTs);
 
 router
-  .route("/sendValidatonRequest")
+  .route("/sendValidationRequest")
   .post(
     protect,
     authorize("user"),
     validate(sendValidationReqSchema),
     userController.sendValidationRequest
   );
+
+router
+  .route("/cancelValidationRequest/:assetId")
+  .delete(protect, authorize("user"), userController.cancelValidationRequest);
 
 router
   .route("/sendExtendValidationRequest")

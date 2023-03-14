@@ -145,13 +145,15 @@ exports.fetchUsers = asyncHandler(async (req, res, next) => {
 exports.fetchUserById = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.params;
-    UserModel.findById(id).select(userSelectQuery).exec(function (err, user) {
-      if (err) {
-        res.status(400).json({ success: false, data: {} });
-      } else {
-        res.status(200).json({ success: true, data: user });
-      }
-    });
+    UserModel.findById(id)
+      .select(userSelectQuery)
+      .exec(function (err, user) {
+        if (err) {
+          res.status(400).json({ success: false, data: {} });
+        } else {
+          res.status(200).json({ success: true, data: user });
+        }
+      });
   } catch (err) {
     res.status(400).json({ success: false });
   }
@@ -549,6 +551,30 @@ exports.checkUsernameAvailability = asyncHandler(async (req, res, next) => {
         }
       });
     }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    NFTValidationModel.findOneAndDelete({ asset: assetId }, (err, doc) => {
+      if (err) {
+        res.status(200).json({ success: false, data: {} });
+      } else {
+        if (!!doc) {
+          res
+            .status(200)
+            .json({ success: true, message: "Validation request cancelled" });
+        } else {
+          res.status(400).json({
+            success: false,
+            message: "Wrong inputs",
+          });
+        }
+      }
+    });
   } catch (err) {
     res.status(400).json({ success: false });
   }
