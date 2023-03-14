@@ -368,6 +368,7 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
       assetOwnerAddress: wallet_address,
       asset,
     });
+    console.log(data.requestExpiresOn, new Date());
     if (isBefore(data.requestExpiresOn, new Date()) & data.validationExpired) {
       NFTValidationModel.findOneAndUpdate(
         { _id: data._id },
