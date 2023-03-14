@@ -11,6 +11,7 @@ const { addDays } = require("date-fns");
 const {
   activitySelectQuery,
   nftActivitySelectQuery,
+  validatorSelectQuery,
 } = require("../utils/selectQuery");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
@@ -138,6 +139,21 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
 exports.fetchValidators = asyncHandler(async (req, res, next) => {
   try {
     res.status(200).json(res.advancedResults);
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.fetchValidatorById = asyncHandler(async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    ValidatorModel.findById(id).select(validatorSelectQuery).exec(function (err, validator) {
+      if (err) {
+        res.status(400).json({ success: false, data: {} });
+      } else {
+        res.status(200).json({ success: true, data: validator });
+      }
+    });
   } catch (err) {
     res.status(400).json({ success: false });
   }

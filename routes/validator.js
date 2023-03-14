@@ -38,6 +38,15 @@ router
     advancedResults(ValidatorModel, validatorSelectQuery),
     validatorController.fetchValidators
   );
+
+router
+  .route("/profile/:id")
+  .get(
+    protect,
+    authorize("user", "validator"),
+    validatorController.fetchValidatorById
+  );
+
 router
   .route("/profile/:wallet_address")
   .get(

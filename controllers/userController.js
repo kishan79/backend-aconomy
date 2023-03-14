@@ -142,6 +142,21 @@ exports.fetchUsers = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.fetchUserById = asyncHandler(async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    UserModel.findById(id).select(userSelectQuery).exec(function (err, user) {
+      if (err) {
+        res.status(400).json({ success: false, data: {} });
+      } else {
+        res.status(200).json({ success: true, data: user });
+      }
+    });
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
 exports.fetchUserByAddress = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.params;

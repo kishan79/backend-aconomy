@@ -9,7 +9,10 @@ const {
   sendValidationReqSchema,
 } = require("../utils/validateReq");
 const { protect, authorize, validateOwner } = require("../middlewares/auth");
-const { userSelectQuery, collectionSelectQuery } = require("../utils/selectQuery");
+const {
+  userSelectQuery,
+  collectionSelectQuery,
+} = require("../utils/selectQuery");
 
 //import controllers
 const userController = require("../controllers/userController");
@@ -36,6 +39,10 @@ router
   );
 
 router
+  .route("/profile/:id")
+  .get(protect, authorize("user", "validator"), userController.fetchUserById);
+
+router
   .route("/profile/:wallet_address")
   .get(
     protect,
@@ -58,19 +65,29 @@ router
     userController.sendValidationRequest
   );
 
-router.route("/sendExtendValidationRequest").post(
-  protect,
-  authorize("user"),
-  validate(sendValidationReqSchema),
-  userController.sendExtendValidationRequest
-)
+router
+  .route("/sendExtendValidationRequest")
+  .post(
+    protect,
+    authorize("user"),
+    validate(sendValidationReqSchema),
+    userController.sendExtendValidationRequest
+  );
 
 router
   .route("/activities")
   .get(protect, authorize("user"), userController.fetchActivites);
 
-router.route("/collections").get(protect, authorize("user"), userController.fetchCollections);
+router
+  .route("/collections")
+  .get(protect, authorize("user"), userController.fetchCollections);
 
-router.route("/checkUsername").post(protect, authorize("user","validator"), userController.checkUsernameAvailability);
+router
+  .route("/checkUsername")
+  .post(
+    protect,
+    authorize("user", "validator"),
+    userController.checkUsernameAvailability
+  );
 
 module.exports = router;
