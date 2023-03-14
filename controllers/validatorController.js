@@ -147,13 +147,15 @@ exports.fetchValidators = asyncHandler(async (req, res, next) => {
 exports.fetchValidatorById = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.params;
-    ValidatorModel.findById(id).select(validatorSelectQuery).exec(function (err, validator) {
-      if (err) {
-        res.status(400).json({ success: false, data: {} });
-      } else {
-        res.status(200).json({ success: true, data: validator });
-      }
-    });
+    ValidatorModel.findById(id)
+      .select(validatorSelectQuery)
+      .exec(function (err, validator) {
+        if (err) {
+          res.status(400).json({ success: false, data: {} });
+        } else {
+          res.status(200).json({ success: true, data: validator });
+        }
+      });
   } catch (err) {
     res.status(400).json({ success: false });
   }
@@ -328,6 +330,13 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                         assetName: data.assetName,
                         statusText: "Asset validated",
                       });
+                      let nftData = await NftModel.findOneAndUpdate(
+                        { _id: data.asset },
+                        {
+                          validator: id,
+                          validatorAddress: wallet_address,
+                        }
+                      );
                       if (activity) {
                         res.status(201).json({
                           success: true,

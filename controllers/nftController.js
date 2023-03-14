@@ -35,11 +35,14 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
 
 exports.createNft = asyncHandler(async (req, res, next) => {
   try {
+    const { id, wallet_address } = req.user;
     NftModel.create(
       {
         ...req.body,
-        nftOwner: req.user.id,
-        nftOwnerAddress: req.user.wallet_address,
+        nftOwner: id,
+        nftOwnerAddress: wallet_address,
+        nftCreator: id,
+        nftCreatorAddress: wallet_address
       },
       (err, doc) => {
         if (err) {

@@ -58,8 +58,18 @@ const NftSchema = new mongoose.Schema(
     },
     validationExpired: {
       type: Boolean,
-      default: false
+      default: false,
     },
+    validator: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Validator",
+    },
+    validatorAddress: String,
+    nftCreator: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+    nftCreatorAddress: String
     // validation: {
     //     Type: String,
     //     Amount: Number,
