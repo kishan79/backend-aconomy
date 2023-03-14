@@ -166,7 +166,7 @@ exports.fetchValidatorByAddress = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.params;
     ValidatorModel.findOne({ wallet_address }, (err, doc) => {
       if (err) {
-        res.status(400).json({ success: false, data: {} });
+        res.status(200).json({ success: false, data: {} });
       } else {
         if (!!doc) {
           res.status(200).json({ success: true, data: doc });
@@ -178,7 +178,9 @@ exports.fetchValidatorByAddress = asyncHandler(async (req, res, next) => {
           });
         }
       }
-    }).select("-signatureMessage -__v -createdAt -updatedAt");
+    })
+      .select("-signatureMessage -__v -createdAt -updatedAt")
+      .lean();
   } catch (err) {
     res.status(400).json({ success: false });
   }

@@ -40,7 +40,7 @@ router
   );
 
 router
-  .route("/profile/:id")
+  .route("/:id")
   .get(
     protect,
     authorize("user", "validator"),
