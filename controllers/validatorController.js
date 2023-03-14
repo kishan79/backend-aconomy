@@ -13,6 +13,7 @@ const {
   nftActivitySelectQuery,
   validatorSelectQuery,
 } = require("../utils/selectQuery");
+const UserActivityModel = require("../models/UserActivity");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -569,7 +570,38 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
   try {
     const { requestId } = req.params;
-    // NFTValidationModel.findOneAndDelete({_id:requestId})
+    const { wallet_address } = req.user;
+    NFTValidationModel.findOneAndDelete(
+      { _id: requestId },
+      async (err, doc) => {
+        if (err) {
+          res.status(200).json({ success: false, data: {} });
+        } else {
+          if (!!doc) {
+            let activity = await UserActivityModel.create({
+              userAddress: doc.assetOwnerAddress,
+              user: doc.assetOwner,
+              asset: doc.asset,
+              assetName: doc.assetName,
+              statusText: `Validation request rejected by validator ${wallet_address}`,
+            });
+            if (activity) {
+              res
+                .status(200)
+                .json({
+                  success: true,
+                  message: "Validation request rejected",
+                });
+            }
+          } else {
+            res.status(400).json({
+              success: false,
+              message: "Wrong inputs",
+            });
+          }
+        }
+      }
+    );
   } catch (err) {
     res.status(400).json({ success: false });
   }
