@@ -39,7 +39,7 @@ router
   );
 
 router
-  .route("/:id")
+  .route("/account/:id")
   .get(protect, authorize("user", "validator"), userController.fetchUserById);
 
 router

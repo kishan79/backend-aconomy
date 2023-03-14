@@ -40,7 +40,7 @@ router
   );
 
 router
-  .route("/:id")
+  .route("/account/:id")
   .get(
     protect,
     authorize("user", "validator"),
@@ -69,6 +69,15 @@ router
     authorize("validator"),
     validatorController.fetchAllValidationRequest
   );
+
+router
+  .route("/rejectValidationRequest/:requestId")
+  .delete(
+    protect,
+    authorize("validator"),
+    validatorController.rejectValidationRequest
+  );
+
 router
   .route("/validateAsset/:requestId")
   .post(protect, authorize("validator"), validatorController.validateAsset);

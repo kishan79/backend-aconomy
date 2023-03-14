@@ -565,3 +565,12 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
+  try {
+    const { requestId } = req.params;
+    // NFTValidationModel.findOneAndDelete({_id:requestId})
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
