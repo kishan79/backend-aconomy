@@ -5,30 +5,43 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
     const { price, duration } = req.body;
     const { assetId } = req.params;
-    NftModel.findOneAndUpdate(
-      { _id: assetId },
-      {
-        listingPrice: price,
-        listedOnMarketplace: true,
-        nftOccupied: true,
-        listingDate: new Date(),
-        listingDuration: duration,
-      },
-      null,
-      (err, doc) => {
-        if (err) {
-          res.status(401).json({ success: false });
-        } else {
-          if (!!doc) {
-            res
-              .status(201)
-              .json({ success: true, message: "Asset listed successfully" });
-          } else {
+    const { id } = req.user;
+    let data = await NftModel.findOne({ _id: assetId });
+    if (!data.listedOnMarketplace) {
+      NftModel.findOneAndUpdate(
+        { _id: assetId },
+        {
+          listingPrice: price,
+          listedOnMarketplace: true,
+          nftOccupied: true,
+          listingDate: new Date(),
+          listingDuration: duration,
+          $push: {
+            history: {
+              action: "Listed",
+              user: id,
+              amount: price,
+            },
+          },
+        },
+        null,
+        (err, doc) => {
+          if (err) {
             res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              res
+                .status(201)
+                .json({ success: true, message: "Asset listed successfully" });
+            } else {
+              res.status(401).json({ success: false });
+            }
           }
         }
-      }
-    );
+      );
+    } else {
+      res.status(401).json({ success: false, message: "Asset already listed" });
+    }
   } catch (err) {
     res.status(401).json({ success: false });
   }
@@ -37,22 +50,46 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
 exports.buyNft = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const data = await NftModel.findOneAndUpdate(
-      { _id: assetId },
-      {
-        listingPrice: 0,
-        listedOnMarketplace: false,
-        nftOccupied: false,
-        listingDate: undefined,
-        listingDuration: 0,
-      }
-    );
-    if (data) {
-
-      // Add to nft histroy
-      res.status(201).json({ success: true });
+    const { id } = req.user;
+    let data = await NftModel.findOne({ _id: assetId });
+    if (data.listedOnMarketplace) {
+      NftModel.findOneAndUpdate(
+        { _id: assetId },
+        {
+          listingPrice: 0,
+          listedOnMarketplace: false,
+          nftOccupied: false,
+          listingDate: undefined,
+          listingDuration: 0,
+          $push: {
+            history: {
+              action: "bought",
+              user: id,
+              amount: data.listingPrice,
+            },
+          },
+        },
+        null,
+        (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              res
+                .status(201)
+                .json({ success: true, message: "Asset bought successfully" });
+            } else {
+              res.status(401).json({ success: false });
+            }
+          }
+        }
+      );
+    } else {
+      res
+        .status(401)
+        .json({ success: false, message: "Asset not listed on marketplace" });
     }
   } catch (err) {
-    res.status(401).json({ success: false });
+    res.status(401).json({ success: false, err });
   }
 });

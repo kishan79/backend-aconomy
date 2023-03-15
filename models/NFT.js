@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+const HistorySchema = new mongoose.Schema(
+  {
+    action: String,
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+    validator: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Validator",
+    },
+    amount: Number
+  },
+  { timestamps: true }
+);
+
 const NftSchema = new mongoose.Schema(
   {
     nftOwnerAddress: String,
@@ -74,7 +90,7 @@ const NftSchema = new mongoose.Schema(
     listedOnMarketplace: Boolean,
     listingDate: Date,
     listingDuration: Number,
-    nftOccupied: Boolean 
+    nftOccupied: Boolean,
     // validation: {
     //     Type: String,
     //     Amount: Number,
@@ -82,6 +98,7 @@ const NftSchema = new mongoose.Schema(
     //     Royality: Number,
     //     Document: String
     // }
+    history: [HistorySchema],
   },
   { timestamps: true }
 );

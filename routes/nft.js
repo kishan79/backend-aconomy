@@ -8,6 +8,8 @@ const {
   nftSelectQuery,
   userSelectQuery,
   collectionSelectQuery,
+  userHistorySelectQuery,
+  validatorHistorySelectQuery
 } = require("../utils/selectQuery");
 const { nftCreateReqSchema } = require("../utils/validateReq");
 
@@ -22,6 +24,14 @@ router
         path: "nftOwner",
         select: userSelectQuery,
       },
+      {
+        path: "history.user",
+        select: userHistorySelectQuery
+      },
+      {
+        path: "history.validator",
+        select: validatorHistorySelectQuery
+      }
     ]),
     nftController.fetchNfts
   )

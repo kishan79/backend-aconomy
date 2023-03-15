@@ -1,6 +1,9 @@
 const NftModel = require("../models/NFT");
 const asyncHandler = require("../middlewares/async");
-const { nftSelectQuery, collectionSelectQuery } = require("../utils/selectQuery");
+const {
+  nftSelectQuery,
+  collectionSelectQuery,
+} = require("../utils/selectQuery");
 const { populate } = require("../models/User");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
@@ -21,10 +24,12 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
         } else {
           res.status(200).json({ success: true, data: doc });
         }
-      }).populate({
-        path: "nftCollection",
-        select: collectionSelectQuery,
-      }).select(nftSelectQuery);
+      })
+        .populate({
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        })
+        .select(nftSelectQuery);
     } else {
       res.status(400).json({ success: false });
     }
@@ -42,7 +47,13 @@ exports.createNft = asyncHandler(async (req, res, next) => {
         nftOwner: id,
         nftOwnerAddress: wallet_address,
         nftCreator: id,
-        nftCreatorAddress: wallet_address
+        nftCreatorAddress: wallet_address,
+        history: [
+          {
+            action: "Created",
+            user: id,
+          },
+        ],
       },
       (err, doc) => {
         if (err) {
