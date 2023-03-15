@@ -7,5 +7,6 @@ const buysellController = require("../controllers/buySellController");
 
 router.route("/listnft/:assetId").post(protect, authorize("user"), buysellController.fixPriceListNft);
 router.route("/buynft/:assetId").post(protect, authorize("user"), buysellController.buyNft);
+router.route('/editSale/:assetId').put(protect, authorize("user"), buysellController.editFixedPriceSale);
 
 module.exports = router;

@@ -93,3 +93,42 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
     res.status(401).json({ success: false, err });
   }
 });
+
+exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
+  try{
+    const {assetId} = req.params;
+    const {price, duration} = req.body;
+    let data = await NftModel.findOne({ _id: assetId });
+    if (data.listedOnMarketplace) {
+      NftModel.findOneAndUpdate(
+        { _id: assetId },
+        {
+          listingPrice: price,
+          listedOnMarketplace: true,
+          nftOccupied: true,
+          listingDuration: duration
+        },
+        null,
+        (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              res
+                .status(201)
+                .json({ success: true, message: "Asset sale edited successfully" });
+            } else {
+              res.status(401).json({ success: false });
+            }
+          }
+        }
+      );
+    } else {
+      res
+        .status(401)
+        .json({ success: false, message: "Asset not listed on marketplace" });
+    }
+  } catch(err){
+    res.status(401).json({success:false})
+  }
+});
