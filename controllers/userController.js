@@ -328,7 +328,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
 
 exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
   try {
-    const { asset, assetName } = req.body;
+    const { asset } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findOne({
       assetOwnerAddress: wallet_address,
@@ -355,7 +355,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                 userAddress: wallet_address,
                 user: id,
                 asset,
-                assetName,
+                assetName: nftData.name,
                 statusText: "Sent validation request",
               });
               if (activity) {
