@@ -322,6 +322,12 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                     validationDocuments,
                     requestExpiresOn: addDays(new Date(), validationDuration),
                     validationState: "validated",
+                    $push:{
+                      history: {
+                        action: "validated",
+                        validator: id
+                      }
+                    }
                   },
                   async (err, item) => {
                     if (!!item) {

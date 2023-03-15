@@ -45,6 +45,11 @@ const sendValidationReqSchema = [
   body("validatorAddress", "The validatorAddress field is required").notEmpty(),
 ];
 
+const buySellValidationReqSchema = [
+  body("price", "The price field is required").notEmpty(),
+  body("duration", "The Duration field is required").notEmpty()
+]
+
 module.exports = {
   userValidSignature,
   validatorValidSignature,
