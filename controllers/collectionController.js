@@ -124,3 +124,57 @@ exports.fetchAllCollectionNfts = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+exports.fetchPublicCollections = asyncHandler(async (req, res, next) => {
+  try {
+    
+    const { blockchain } = req.body;
+    let query;
+
+    let queryStr = {
+      $and: [{ isPublic: true }, { blockchain }],
+    };
+
+    query = CollectionModel.find(queryStr);
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await CollectionModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+      err,
+      hello: "world",
+    });
+  }
+});

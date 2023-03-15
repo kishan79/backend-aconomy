@@ -32,6 +32,10 @@ const CollectionSchema = new mongoose.Schema(
       other: String,
     },
     paymentToken: String,
+    isPublic: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

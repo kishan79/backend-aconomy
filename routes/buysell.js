@@ -5,6 +5,6 @@ const { protect, authorize } = require("../middlewares/auth");
 
 const buysellController = require("../controllers/buySellController");
 
-router.route("/listnft").post(buysellController.listNft);
+router.route("/listnft/:assetId").post(buysellController.fixPriceListNft);
 
 module.exports = router;

@@ -69,7 +69,10 @@ const NftSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },
-    nftCreatorAddress: String
+    nftCreatorAddress: String,
+    listingPrice: Number,
+    listedOnMarketplace: Boolean,
+    nftOccupied: Boolean 
     // validation: {
     //     Type: String,
     //     Amount: Number,
