@@ -578,6 +578,12 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
           res.status(200).json({ success: false, data: {} });
         } else {
           if (!!doc) {
+            let nftData = await NftModel.findOneAndUpdate(
+              { _id: doc.asset },
+              {
+                validationState: "unvalidated",
+              }
+            );
             let activity = await UserActivityModel.create({
               userAddress: doc.assetOwnerAddress,
               user: doc.assetOwner,
@@ -586,12 +592,10 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
               statusText: `Validation request rejected by validator ${wallet_address}`,
             });
             if (activity) {
-              res
-                .status(200)
-                .json({
-                  success: true,
-                  message: "Validation request rejected",
-                });
+              res.status(200).json({
+                success: true,
+                message: "Validation request rejected",
+              });
             }
           } else {
             res.status(400).json({

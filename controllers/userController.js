@@ -559,22 +559,36 @@ exports.checkUsernameAvailability = asyncHandler(async (req, res, next) => {
 exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    NFTValidationModel.findOneAndDelete({ asset: assetId }, (err, doc) => {
-      if (err) {
-        res.status(200).json({ success: false, data: {} });
-      } else {
-        if (!!doc) {
-          res
-            .status(200)
-            .json({ success: true, message: "Validation request cancelled" });
+    NFTValidationModel.findOneAndDelete(
+      { asset: assetId },
+      async (err, doc) => {
+        if (err) {
+          res.status(200).json({ success: false, data: {} });
         } else {
-          res.status(400).json({
-            success: false,
-            message: "Wrong inputs",
-          });
+          if (!!doc) {
+            let nftData = await NftModel.findOneAndUpdate(
+              { _id: assetId },
+              {
+                validationState: "unvalidated",
+              }
+            );
+            if (nftData) {
+              res.status(200).json({
+                success: true,
+                message: "Validation request cancelled",
+              });
+            } else {
+              res.status(400).json({ success: false });
+            }
+          } else {
+            res.status(400).json({
+              success: false,
+              message: "Wrong inputs",
+            });
+          }
         }
       }
-    });
+    );
   } catch (err) {
     res.status(400).json({ success: false });
   }
