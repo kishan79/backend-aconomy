@@ -9,7 +9,7 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     const { id } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
-    if (!data.listedOnMarketplace) {
+    if (!data.listedOnMarketplace || !data.nftOccupied) {
       NftModel.findOneAndUpdate(
         { _id: assetId },
         {
@@ -42,7 +42,7 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
         }
       );
     } else {
-      res.status(401).json({ success: false, message: "Asset already listed" });
+      res.status(401).json({ success: false, message: "Asset Occupied" });
     }
   } catch (err) {
     res.status(401).json({ success: false });
@@ -140,33 +140,42 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
   try {
     const { id, wallet_address } = req.user;
     const { assetId, duration } = req.body;
-    AuctionModel.create(
-      {
-        auctionOwner: id,
-        auctionOwnerAddress: wallet_address,
-        asset: assetId,
-        duration,
-      },
-      async(err, doc) => {
-        if (err) {
-          res.status(401).json({ success: false });
-        } else {
-          if (!!doc) {
-            let nftData = await NftModel.findOneAndUpdate({_id: assetId},{
-              listedForAuction: true,
-              nftOccupied: true
-            })
-            res.status(201).json({
-              success: true,
-              message: "Asset listed for auction successfully",
-              auctionId: doc._id
-            });
+    if (!data.listedForAuction || !data.nftOccupied) {
+      AuctionModel.create(
+        {
+          auctionOwner: id,
+          auctionOwnerAddress: wallet_address,
+          asset: assetId,
+          duration,
+        },
+        async (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
           } else {
-            res.status(401).json({ success: false, message: "failed to list" });
+            if (!!doc) {
+              let nftData = await NftModel.findOneAndUpdate(
+                { _id: assetId },
+                {
+                  listedForAuction: true,
+                  nftOccupied: true,
+                }
+              );
+              res.status(201).json({
+                success: true,
+                message: "Asset listed for auction successfully",
+                auctionId: doc._id,
+              });
+            } else {
+              res
+                .status(401)
+                .json({ success: false, message: "failed to list" });
+            }
           }
         }
-      }
-    );
+      );
+    } else {
+      res.status(401).json({ success: false, message: "Asset Occupied" });
+    }
   } catch (err) {
     res.status(401).json({ success: false });
   }
@@ -243,16 +252,32 @@ exports.fetchAuctionbyId = asyncHandler(async (req, res, next) => {
   try {
     const { auctionId } = req.params;
     let data = await AuctionModel.findOne({ _id: auctionId });
-    res.status(200).json({ success: true, data });
+    if (data) {
+      res.status(200).json({ success: true, data });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "No asset found with requested auctionId",
+      });
+    }
   } catch (err) {
     res.status(400).json({ success: false });
   }
 });
 
-// exports.fetchAuctionByAsset = asyncHandler(async(req,res,next) => {
-//   try{
-
-//   } catch(err){
-
-//   }
-// })
+exports.fetchAuctionByAsset = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    let data = await AuctionModel.findOne({ asset: assetId });
+    if (data) {
+      res.status(200).json({ success: true, data });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "No asset found with requested assetId",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
