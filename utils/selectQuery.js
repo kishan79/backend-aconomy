@@ -7,6 +7,7 @@ const activitySelectQuery = "-_id -updatedAt -__v";
 const nftActivitySelectQuery = "name assetType mediaLinks -_id";
 const userHistorySelectQuery = "_id name";
 const validatorHistorySelectQuery = "_id name";
+const validatedAssetSelectQuery = "-updatedAt -__v -assetJurisdiction";
 
 module.exports = {
   userSelectQuery,
@@ -16,5 +17,6 @@ module.exports = {
   activitySelectQuery,
   nftActivitySelectQuery,
   userHistorySelectQuery,
-  validatorHistorySelectQuery
+  validatorHistorySelectQuery,
+  validatedAssetSelectQuery
 };

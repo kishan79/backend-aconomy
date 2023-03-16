@@ -94,4 +94,11 @@ router
   .route("/activities")
   .get(protect, authorize("validator"), validatorController.fetchActivites);
 
+router
+  .route("/validatedAssets")
+  .get(
+    protect,
+    authorize("validator"),
+    validatorController.fetchValidatedAssets
+  );
 module.exports = router;
