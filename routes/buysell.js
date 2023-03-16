@@ -26,4 +26,14 @@ router
     buysellController.editFixedPriceSale
   );
 
+router
+  .route("/listforAuction")
+  .post(protect, authorize("user"), buysellController.listNftForAuction);
+router
+  .route("/placeBid/:auctionId")
+  .post(protect, authorize("user"), buysellController.placebid);
+router
+  .route("/editAuction/:auctionId")
+  .put(protect, authorize("user"), buysellController.editAuction);
+router.route("/auctionbyId/:auctionId").get(buysellController.fetchAuctionbyId);
 module.exports = router;

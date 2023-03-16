@@ -335,40 +335,46 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
       asset,
     });
     if (!data) {
-      NFTValidationModel.create(
-        {
-          ...req.body,
-          assetOwnerAddress: wallet_address,
-          assetOwner: id,
-          requestState: "pending",
-        },
-        async (err, doc) => {
-          if (err) {
-            res.status(401).json({ success: false });
-          } else {
-            if (!!doc) {
-              let nftData = await NftModel.findOneAndUpdate(
-                { _id: asset },
-                { validationState: "pending" }
-              );
-              let activity = await UserActivityModel.create({
-                userAddress: wallet_address,
-                user: id,
-                asset,
-                assetName: nftData.name,
-                statusText: "Sent validation request",
-              });
-              if (activity) {
-                res
-                  .status(201)
-                  .json({ success: true, message: "Validation request sent" });
-              }
+      let nftData = await NftModel.findOneAndUpdate(
+        { _id: asset },
+        { validationState: "pending" }
+      );
+      if (nftData) {
+        NFTValidationModel.create(
+          {
+            ...req.body,
+            assetOwnerAddress: wallet_address,
+            assetOwner: id,
+            assetName: nftData.name,
+            requestState: "pending",
+          },
+          async (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
             } else {
-              res.status(401).json({ success: false, message: "not done" });
+              if (!!doc) {
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset,
+                  assetName: nftData.name,
+                  statusText: "Sent validation request",
+                });
+                if (activity) {
+                  res.status(201).json({
+                    success: true,
+                    message: "Validation request sent",
+                  });
+                }
+              } else {
+                res.status(401).json({ success: false, message: "not done" });
+              }
             }
           }
-        }
-      );
+        );
+      } else {
+        res.status(401).json({ success: false });
+      }
     } else {
       res.status(401).json({ success: false, message: "Request already sent" });
     }

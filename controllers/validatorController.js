@@ -295,7 +295,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findById(requestId);
     if (data.validatorAddress === wallet_address) {
-      if (data.validationState === "pending") {
+      if (data.requestState === "pending") {
         NFTValidationModel.findOneAndUpdate(
           { _id: requestId },
           {

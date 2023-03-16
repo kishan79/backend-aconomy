@@ -39,7 +39,7 @@ const nftCreateReqSchema = [
 ];
 
 const sendValidationReqSchema = [
-  body("assetName", "The assetName field is required").notEmpty(),
+  // body("assetName", "The assetName field is required").notEmpty(),
   body("asset", "The asset field is required").notEmpty(),
   body("validator", "The validator field is required").notEmpty(),
   body("validatorAddress", "The validatorAddress field is required").notEmpty(),

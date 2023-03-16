@@ -90,6 +90,7 @@ const NftSchema = new mongoose.Schema(
     listedOnMarketplace: Boolean,
     listingDate: Date,
     listingDuration: Number,
+    listedForAuction: Boolean,
     nftOccupied: Boolean,
     // validation: {
     //     Type: String,
