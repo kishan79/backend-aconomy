@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const validate = require("../middlewares/validateReqSchema");
 const { protect, authorize } = require("../middlewares/auth");
-const { buySellValidationReqSchema } = require("../utils/validateReq");
+const { buySellValidationReqSchema, editFixedPriceSellValidationReqSchema } = require("../utils/validateReq");
 
 const buysellController = require("../controllers/buySellController");
 
@@ -22,7 +22,7 @@ router
   .put(
     protect,
     authorize("user"),
-    validate(buySellValidationReqSchema),
+    validate(editFixedPriceSellValidationReqSchema),
     buysellController.editFixedPriceSale
   );
 

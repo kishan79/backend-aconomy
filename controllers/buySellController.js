@@ -5,7 +5,7 @@ const { addDays } = require("date-fns");
 
 exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
-    const { price, duration } = req.body;
+    const { price, duration, saleId } = req.body;
     const { assetId } = req.params;
     const { id } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
@@ -18,6 +18,7 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
           nftOccupied: true,
           listingDate: new Date(),
           listingDuration: duration,
+          saleId,
           $push: {
             history: {
               action: "Listed",
@@ -52,44 +53,53 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
 exports.buyNft = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { id } = req.user;
+    const { id, wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
-    if (data.listedOnMarketplace) {
-      NftModel.findOneAndUpdate(
-        { _id: assetId },
-        {
-          listingPrice: 0,
-          listedOnMarketplace: false,
-          nftOccupied: false,
-          listingDate: undefined,
-          listingDuration: 0,
-          $push: {
-            history: {
-              action: "bought",
-              user: id,
-              amount: data.listingPrice,
+    if (data.nftOwnerAddress !== wallet_address) {
+      if (data.listedOnMarketplace && data.nftOccupied) {
+        NftModel.findOneAndUpdate(
+          { _id: assetId },
+          {
+            nftOwnerAddress: wallet_address,
+            nftOwner: id,
+            listingPrice: 0,
+            listedOnMarketplace: false,
+            nftOccupied: false,
+            listingDate: undefined,
+            listingDuration: 0,
+            $push: {
+              history: {
+                action: "bought",
+                user: id,
+                amount: data.listingPrice,
+              },
             },
           },
-        },
-        null,
-        (err, doc) => {
-          if (err) {
-            res.status(401).json({ success: false });
-          } else {
-            if (!!doc) {
-              res
-                .status(201)
-                .json({ success: true, message: "Asset bought successfully" });
-            } else {
+          null,
+          (err, doc) => {
+            if (err) {
               res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                res.status(201).json({
+                  success: true,
+                  message: "Asset bought successfully",
+                });
+              } else {
+                res.status(401).json({ success: false });
+              }
             }
           }
-        }
-      );
+        );
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset not listed on marketplace" });
+      }
     } else {
       res
         .status(401)
-        .json({ success: false, message: "Asset not listed on marketplace" });
+        .json({ success: false, message: "Owner cannot buy the asset" });
     }
   } catch (err) {
     res.status(401).json({ success: false, err });
@@ -100,36 +110,46 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { price, duration } = req.body;
+    const { wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
-    if (data.listedOnMarketplace) {
-      NftModel.findOneAndUpdate(
-        { _id: assetId },
-        {
-          listingPrice: price,
-          listedOnMarketplace: true,
-          nftOccupied: true,
-          listingDuration: duration,
-        },
-        null,
-        (err, doc) => {
-          if (err) {
-            res.status(401).json({ success: false });
-          } else {
-            if (!!doc) {
-              res.status(201).json({
-                success: true,
-                message: "Asset sale edited successfully",
-              });
-            } else {
+    if (data.nftOwnerAddress === wallet_address) {
+      if (data.listedOnMarketplace && data.nftOccupied) {
+        NftModel.findOneAndUpdate(
+          { _id: assetId },
+          {
+            listingPrice: price,
+            listedOnMarketplace: true,
+            nftOccupied: true,
+            listingDuration: duration,
+          },
+          null,
+          (err, doc) => {
+            if (err) {
               res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                res.status(201).json({
+                  success: true,
+                  message: "Asset sale edited successfully",
+                });
+              } else {
+                res.status(401).json({ success: false });
+              }
             }
           }
-        }
-      );
+        );
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset not listed on marketplace" });
+      }
     } else {
       res
         .status(401)
-        .json({ success: false, message: "Asset not listed on marketplace" });
+        .json({
+          success: false,
+          message: "Only asset owner can edit the sale",
+        });
     }
   } catch (err) {
     res.status(401).json({ success: false });

@@ -26,7 +26,10 @@ const collectionCreateReqSchema = [
   body("name", "The name field is required").notEmpty(),
   body("assetType", "The assetType field is required").notEmpty(),
   // body("symbol", "The symbol field is required").notEmpty(),
-  body("collectionAddress", "The collectionAddress field is required").notEmpty()
+  body(
+    "collectionAddress",
+    "The collectionAddress field is required"
+  ).notEmpty(),
 ];
 
 const nftCreateReqSchema = [
@@ -47,8 +50,14 @@ const sendValidationReqSchema = [
 
 const buySellValidationReqSchema = [
   body("price", "The price field is required").notEmpty(),
-  body("duration", "The Duration field is required").notEmpty()
-]
+  body("duration", "The Duration field is required").notEmpty(),
+  body("saleId", "The saleId field is required").notEmpty(),
+];
+
+const editFixedPriceSellValidationReqSchema = [
+  body("price", "The price field is required").notEmpty(),
+  body("duration", "The Duration field is required").notEmpty(),
+];
 
 module.exports = {
   userValidSignature,
@@ -58,4 +67,6 @@ module.exports = {
   collectionCreateReqSchema,
   nftCreateReqSchema,
   sendValidationReqSchema,
+  buySellValidationReqSchema,
+  editFixedPriceSellValidationReqSchema
 };

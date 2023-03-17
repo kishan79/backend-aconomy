@@ -11,7 +11,7 @@ const HistorySchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Validator",
     },
-    amount: Number
+    amount: Number,
   },
   { timestamps: true }
 );
@@ -87,11 +87,21 @@ const NftSchema = new mongoose.Schema(
     },
     nftCreatorAddress: String,
     listingPrice: Number,
-    listedOnMarketplace: Boolean,
+    listedOnMarketplace: {
+      type: Boolean,
+      default: false,
+    },
     listingDate: Date,
     listingDuration: Number,
-    listedForAuction: Boolean,
-    nftOccupied: Boolean,
+    listedForAuction: {
+      type: Boolean,
+      default: false,
+    },
+    nftOccupied: {
+      type: Boolean,
+      default: false,
+    },
+    saleId: Number,
     // validation: {
     //     Type: String,
     //     Amount: Number,
