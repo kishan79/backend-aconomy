@@ -443,7 +443,7 @@ exports.withdrawBid = asyncHandler(async (req, res, next) => {
           .status(401)
           .json({
             success: false,
-            message: "Bidder can withdrawn the accepted bid",
+            message: "Bidder can't withdrawn the accepted bid",
           });
       }
     } else {

@@ -59,6 +59,32 @@ const editFixedPriceSellValidationReqSchema = [
   body("duration", "The Duration field is required").notEmpty(),
 ];
 
+const listAuctionValidationReqSchema = [
+  body("price", "The price field is required").notEmpty(),
+  body("duration", "The duration field is required").notEmpty(),
+  body("saleId", "The saleId field is required").notEmpty(),
+]
+
+const placeBidValidationReqSchema = [
+  body("amount", "The amount field is required").notEmpty(),
+  body("duration", "The duration field is required").notEmpty(),
+  body("bidId", "The bidId field is required").notEmpty(),
+]
+
+const editAuctionValidationReqSchema = [
+  body("price", "The price field is required").notEmpty(),
+  body("duration", "The duration field is required").notEmpty(),
+]
+
+const acceptBidValidationReqSchema = [
+  body("bidId", "The bidId field is required").notEmpty(),
+];
+
+const withdrawBidValidationReqSchema = [
+  body("auctionId", "The auctionId field is required").notEmpty(),
+  body("bidId", "The bidId field is required").notEmpty(),
+];
+
 module.exports = {
   userValidSignature,
   validatorValidSignature,
@@ -68,5 +94,10 @@ module.exports = {
   nftCreateReqSchema,
   sendValidationReqSchema,
   buySellValidationReqSchema,
-  editFixedPriceSellValidationReqSchema
+  listAuctionValidationReqSchema,
+  placeBidValidationReqSchema,
+  editFixedPriceSellValidationReqSchema,
+  editAuctionValidationReqSchema,
+  acceptBidValidationReqSchema,
+  withdrawBidValidationReqSchema,
 };
