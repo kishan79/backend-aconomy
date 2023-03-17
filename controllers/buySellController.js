@@ -1,7 +1,7 @@
 const asyncHandler = require("../middlewares/async");
 const NftModel = require("../models/NFT");
 const AuctionModel = require("../models/Auction");
-const { addDays } = require("date-fns");
+const { addDays, isBefore } = require("date-fns");
 
 exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
@@ -165,7 +165,7 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
 exports.listNftForAuction = asyncHandler(async (req, res, next) => {
   try {
     const { id, wallet_address } = req.user;
-    const { duration, price } = req.body;
+    const { duration, price, saleId } = req.body;
     const { assetId } = req.params;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
@@ -175,6 +175,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
             auctionOwner: id,
             auctionOwnerAddress: wallet_address,
             asset: assetId,
+            saleId,
             duration,
             baseAuctionPrice: price,
           },
@@ -219,11 +220,14 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
 
 exports.placeBid = asyncHandler(async (req, res, next) => {
   try {
-    const { amount, duration } = req.body;
+    const { amount, duration, bidId } = req.body;
     // const { auctionId } = req.params;
-    const {wallet_address} = req.user;
-    const {assetId} = req.params;
-    let auctionData = await AuctionModel.findOne({ asset: assetId, status:"active"});
+    const { wallet_address, id } = req.user;
+    const { assetId } = req.params;
+    let auctionData = await AuctionModel.findOne({
+      asset: assetId,
+      status: "active",
+    });
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress !== wallet_address) {
       if (data.listedForAuction && data.nftOccupied) {
@@ -234,6 +238,9 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
               $push: {
                 bids: {
                   auctionId: auctionData._id,
+                  bidderAddress: wallet_address,
+                  bidder: id,
+                  bidId,
                   amount,
                   duration,
                   expireOn: addDays(new Date(), duration),
@@ -282,7 +289,10 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     const { price, duration } = req.body;
     const { wallet_address } = req.user;
-    let auctionData = await AuctionModel.findOne({ asset: assetId, status:"active"});
+    let auctionData = await AuctionModel.findOne({
+      asset: assetId,
+      status: "active",
+    });
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
       if (data.listedForAuction && data.nftOccupied) {
@@ -326,7 +336,121 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
 
 exports.acceptBid = asyncHandler(async (req, res, next) => {
   try {
-    
+    const { assetId } = req.params;
+    const { bidId } = req.body;
+    const { wallet_address } = req.user;
+    let auctionData = await AuctionModel.findOne({
+      asset: assetId,
+      status: "active",
+    });
+    if (auctionData.status === "active") {
+      if (auctionData.auctionOwnerAddress === wallet_address) {
+        let bid = auctionData.bids.filter((item) => item.bidId === bidId);
+        if (isBefore(new Date(), bid[0].expireOn)) {
+          let data = await AuctionModel.findOneAndUpdate(
+            // { "bids.bidId": bidId },
+            { _id: auctionData._id, "bids.bidId": bidId },
+            {
+              $set: {
+                "bids.$.status": "accepted",
+                status: "inactive",
+              },
+            }
+          );
+          if (data) {
+            let nftData = await NftModel.findOneAndUpdate(
+              { _id: assetId },
+              {
+                listedForAuction: false,
+                nftOccupied: false,
+                nftOwnerAddress: bid[0].bidderAddress,
+                nftOwner: bid[0].bidder,
+              }
+            );
+            if (nftData) {
+              res
+                .status(201)
+                .json({ success: true, message: "Bid accepted successfully" });
+            } else {
+              res
+                .status(401)
+                .json({ success: false, message: "Failed to accept the bid" });
+            }
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to accept the bid" });
+          }
+        } else {
+          res.status(401).json({ success: false, message: "Bid is expired" });
+        }
+      } else {
+        res.status(401).json({
+          success: false,
+          message: "Only Asset owner can accept the bid",
+        });
+      }
+    } else {
+      res.status(401).json({ success: false, message: "Auction is closed" });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false, message: "Auction is closed" });
+  }
+});
+
+exports.withdrawBid = asyncHandler(async (req, res, next) => {
+  try {
+    const { auctionId, bidId } = req.body;
+    const {wallet_address} = req.user;
+    let auctionData = await AuctionModel.findOne({
+      _id: auctionId,
+    });
+    let bid = auctionData.bids.filter((item) => item.bidId === bidId);
+    if (auctionData.auctionOwnerAddress !== wallet_address) {
+      if (
+        bid[0].bidderAddress === wallet_address &&
+        bid[0].status !== "accepted"
+      ) {
+        if (bid[0].status !== "accepted" && bid[0].status !== "withdrawn") {
+          let data = await AuctionModel.findOneAndUpdate(
+            {
+              _id: auctionId,
+              "bids.bidId": bidId,
+            },
+            {
+              $set: {
+                "bids.$.status": "withdrawn",
+              },
+            }
+          );
+          if (data) {
+            res
+              .status(201)
+              .json({ success: true, message: "Bid successfully withdrawn" });
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Bid failed to withdraw" });
+          }
+        } else {
+          res.status(401).json({
+            success: false,
+            message: "Bid already accepted or withdrawn",
+          });
+        }
+      } else {
+        res
+          .status(401)
+          .json({
+            success: false,
+            message: "Bidder can withdrawn the accepted bid",
+          });
+      }
+    } else {
+      res
+        .status(401)
+        .json({ success: false, message: "Auction owner can't withdraw bid" });
+    }
   } catch (err) {
     res.status(401).json({ success: false });
   }
@@ -349,10 +473,27 @@ exports.fetchAuctionbyId = asyncHandler(async (req, res, next) => {
   }
 });
 
-exports.fetchAuctionByAsset = asyncHandler(async (req, res, next) => {
+exports.fetchAllAuctionsByAsset = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     let data = await AuctionModel.find({ asset: assetId });
+    if (data) {
+      res.status(200).json({ success: true, data });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "No asset found with requested assetId",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.fetchLastestAuctionByAsset = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    let data = await AuctionModel.findOne({ asset: assetId, status: "active" });
     if (data) {
       res.status(200).json({ success: true, data });
     } else {

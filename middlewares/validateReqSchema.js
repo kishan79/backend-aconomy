@@ -5,7 +5,7 @@ const validate = (schemas) => {
     await Promise.all(schemas.map((schema) => schema.run(req)));
 
     const result = validationResult(req);
-    console.log("result", result);
+
     if (result.isEmpty()) {
       return next();
     }

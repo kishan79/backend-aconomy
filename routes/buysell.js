@@ -38,8 +38,17 @@ router
 router
   .route("/editAuction/:assetId")
   .put(protect, authorize("user"), buysellController.editAuction);
+router
+  .route("/acceptBid/:assetId")
+  .post(protect, authorize("user"), buysellController.acceptBid);
+router
+  .route("/withdrawBid")
+  .post(protect, authorize("user"), buysellController.withdrawBid);
 router.route("/auctionbyId/:auctionId").get(buysellController.fetchAuctionbyId);
 router
+  .route("/allauctionsbyAsset/:assetId")
+  .get(buysellController.fetchAllAuctionsByAsset);
+router
   .route("/auctionbyAsset/:assetId")
-  .get(buysellController.fetchAuctionByAsset);
+  .get(buysellController.fetchLastestAuctionByAsset);
 module.exports = router;

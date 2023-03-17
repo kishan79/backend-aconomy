@@ -6,12 +6,19 @@ const BidBuySellSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Auction",
     },
+    bidder: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User"
+    },
+    bidderAddress: String,
+    bidId: Number,
+    // saleId: Number,
     amount: {
       type: Number,
     },
     status: {
       type: String,
-      enum: ["none", "accepted", "rejected"],
+      enum: ["none", "accepted", "withdrawn"],
       default: "none",
     },
     duration: {
@@ -39,6 +46,7 @@ const AuctionSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Nft",
     },
+    saleId: Number,
     baseAuctionPrice: Number,
     duration: Number,
     bids: [BidBuySellSchema],
