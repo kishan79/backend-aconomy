@@ -41,7 +41,12 @@ const AuctionSchema = new mongoose.Schema(
     },
     baseAuctionPrice: Number,
     duration: Number,
-    bids: [BidBuySellSchema]
+    bids: [BidBuySellSchema],
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
   },
   { timestamps: true }
 );

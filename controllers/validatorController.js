@@ -12,7 +12,7 @@ const {
   activitySelectQuery,
   nftActivitySelectQuery,
   validatorSelectQuery,
-  validatedAssetSelectQuery
+  validatedAssetSelectQuery,
 } = require("../utils/selectQuery");
 const UserActivityModel = require("../models/UserActivity");
 
@@ -234,7 +234,10 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
       queryStr = { ...queryStr, assetName: { $regex: search, $options: "i" } };
     }
 
-    query = NFTValidationModel.find(queryStr);
+    query = NFTValidationModel.find(queryStr).populate([
+      { path: "asset", select: "name mediaLinks assetType" },
+      { path: "assetOwner", select: "name profileImage bannerImage" },
+    ]);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -631,7 +634,7 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
     query = NftModel.find(queryStr);
 
     query = query.select(validatedAssetSelectQuery);
-    
+
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
       query = query.sort(sortBy);
