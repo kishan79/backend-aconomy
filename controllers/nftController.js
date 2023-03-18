@@ -1,4 +1,5 @@
 const NftModel = require("../models/NFT");
+const UserModel = require("../models/User");
 const asyncHandler = require("../middlewares/async");
 const {
   nftSelectQuery,
@@ -74,5 +75,40 @@ exports.createNft = asyncHandler(async (req, res, next) => {
     );
   } catch (err) {
     res.status(401).json({ success: false, message: "Failed to create NFT" });
+  }
+});
+
+exports.transferNft = asyncHandler(async (req, res, next) => {
+  try {
+    const { receiver_address } = req.body;
+    const { assetId } = req.params;
+    const { wallet_address } = req.user;
+    let userData = await UserModel.findOne({
+      wallet_address: receiver_address,
+    });
+    if (userData) {
+      let data = await NftModel.findOneAndUpdate(
+        { _id: assetId, nftOwnerAddress: wallet_address },
+        {
+          nftOwnerAddress: receiver_address,
+          nftOwner: userData._id,
+        }
+      );
+      if (data) {
+        res
+          .status(201)
+          .json({ success: true, message: "Asset transferred successfully" });
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset failed to transfer" });
+      }
+    } else {
+      res
+        .status(401)
+        .json({ success: false, message: "Receiver address is not a user" });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
   }
 });

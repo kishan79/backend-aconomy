@@ -9,7 +9,7 @@ const {
   userSelectQuery,
   collectionSelectQuery,
   userHistorySelectQuery,
-  validatorHistorySelectQuery
+  validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const { nftCreateReqSchema } = require("../utils/validateReq");
 
@@ -26,12 +26,12 @@ router
       },
       {
         path: "history.user",
-        select: userHistorySelectQuery
+        select: userHistorySelectQuery,
       },
       {
         path: "history.validator",
-        select: validatorHistorySelectQuery
-      }
+        select: validatorHistorySelectQuery,
+      },
     ]),
     nftController.fetchNfts
   )
@@ -42,5 +42,8 @@ router
     nftController.createNft
   );
 router.route("/:nftId").get(nftController.fetchNft);
+router
+  .route("/transfer/:assetId")
+  .post(protect, authorize("user"), nftController.transferNft);
 
 module.exports = router;
