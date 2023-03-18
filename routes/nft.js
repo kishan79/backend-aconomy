@@ -45,5 +45,5 @@ router.route("/:nftId").get(nftController.fetchNft);
 router
   .route("/transfer/:assetId")
   .post(protect, authorize("user"), nftController.transferNft);
-
+router.route("/delete/:assetId").post(protect, authorize("user"), nftController.deleteNft);
 module.exports = router;
