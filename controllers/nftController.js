@@ -7,7 +7,6 @@ const {
   nftSelectQuery,
   collectionSelectQuery,
 } = require("../utils/selectQuery");
-const { populate } = require("../models/User");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
   try {
@@ -58,11 +57,18 @@ exports.createNft = asyncHandler(async (req, res, next) => {
           },
         ],
       },
-      (err, doc) => {
+      async (err, doc) => {
         if (err) {
           res.status(401).json({ success: false });
         } else {
           if (!!doc) {
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              asset: doc._id,
+              assetName: doc.name,
+              statusText: "NFT Created",
+            });
             res.status(201).json({
               success: true,
               message: "NFT successfully created",
@@ -84,7 +90,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
   try {
     const { receiver_address } = req.body;
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let userData = await UserModel.findOne({
       wallet_address: receiver_address,
     });
@@ -97,6 +103,22 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
         }
       );
       if (data) {
+        let activity = await UserActivityModel.insertMany([
+          {
+            userAddress: wallet_address,
+            user: id,
+            asset: data._id,
+            assetName: data.name,
+            statusText: "NFT Transfered",
+          },
+          {
+            userAddress: userData.wallet_address,
+            user: userData._id,
+            asset: data._id,
+            assetName: data.name,
+            statusText: "NFT Recieved",
+          },
+        ]);
         res
           .status(201)
           .json({ success: true, message: "Asset transferred successfully" });
@@ -118,7 +140,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
 exports.deleteNft = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (
@@ -134,6 +156,13 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              asset: data._id,
+              assetName: data.name,
+              statusText: "NFT Deleted",
+            });
             res
               .status(201)
               .json({ success: true, message: "Asset successfully deleted" });
@@ -172,7 +201,6 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
     });
     if (userData) {
       let nftData = await NftModel.findOne({ _id: assetId });
-      console.log(nftData.nftOwnerAddress, wallet_address,"qwe");
       if (nftData.nftOwnerAddress === wallet_address) {
         if (
           nftData.validationState === "validated" ||
