@@ -1,5 +1,7 @@
 const NftModel = require("../models/NFT");
 const UserModel = require("../models/User");
+const NFTValidationModel = require("../models/NFTValidation");
+const UserActivityModel = require("../models/UserActivity");
 const asyncHandler = require("../middlewares/async");
 const {
   nftSelectQuery,
@@ -153,6 +155,98 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
       res.status(401).json({
         success: false,
         message: "Only asset owner can perform this action",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.burnNft = asyncHandler(async (req, res, next) => {
+  try {
+    const { receiver_address } = req.body;
+    const { assetId } = req.params;
+    const { wallet_address, id } = req.user;
+    let userData = await UserModel.findOne({
+      wallet_address: receiver_address,
+    });
+    if (userData) {
+      let nftData = await NftModel.findOne({ _id: assetId });
+      console.log(nftData.nftOwnerAddress, wallet_address,"qwe");
+      if (nftData.nftOwnerAddress === wallet_address) {
+        if (
+          nftData.validationState === "validated" ||
+          nftData.validationState === "revalidated"
+        ) {
+          if (!nftData.nftOccupied) {
+            let validationData = await NFTValidationModel.findOneAndDelete({
+              asset: assetId,
+            });
+            if (validationData) {
+              let data = await NftModel.findOneAndUpdate(
+                { _id: assetId },
+                {
+                  nftOwnerAddress: validationData.validatorAddress,
+                  nftOwner: validationData.validator,
+                  validationType: null,
+                  validationAmount: null,
+                  validationDuration: null,
+                  validationRoyality: null,
+                  validationDocuments: null,
+                  requestExpiresOn: null,
+                  validationState: "unvalidated",
+                  $push: {
+                    history: {
+                      action: "burned",
+                      user: id,
+                    },
+                  },
+                }
+              );
+              if (data) {
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset: nftData._id,
+                  assetName: nftData.name,
+                  statusText: "Burned",
+                });
+                res.status(201).json({
+                  success: true,
+                  message: "Asset burned successfully",
+                });
+              } else {
+                res
+                  .status(401)
+                  .json({ success: false, message: "Failed to burn asset" });
+              }
+            } else {
+              res.status(401).json({
+                success: false,
+                message: "Failed to delete validation",
+              });
+            }
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Forbidden Action" });
+          }
+        } else {
+          res.status(401).json({
+            success: false,
+            message: "This action is forbidden on validated asset",
+          });
+        }
+      } else {
+        res.status(401).json({
+          success: false,
+          message: "Only asset owner can perform this action",
+        });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Receiver address is not a valid user",
       });
     }
   } catch (err) {

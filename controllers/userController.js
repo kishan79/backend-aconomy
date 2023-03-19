@@ -385,13 +385,12 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
 
 exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
   try {
-    const { asset, assetName } = req.body;
+    const { asset } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findOne({
       assetOwnerAddress: wallet_address,
       asset,
     });
-    console.log(data.requestExpiresOn, new Date());
     if (isBefore(data.requestExpiresOn, new Date()) & data.validationExpired) {
       NFTValidationModel.findOneAndUpdate(
         { _id: data._id },
@@ -414,7 +413,7 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                   userAddress: wallet_address,
                   user: id,
                   asset,
-                  assetName,
+                  assetName: nftData.name,
                   statusText: "Sent revalidation request",
                 });
                 if (activity) {
