@@ -14,6 +14,7 @@ const {
 
 const buysellController = require("../controllers/buySellController");
 
+router.route("/listednfts").get(buysellController.fetchAllListedNfts);
 router
   .route("/listnft/:assetId")
   .post(
@@ -33,7 +34,13 @@ router
     validate(editFixedPriceSellValidationReqSchema),
     buysellController.editFixedPriceSale
   );
+router
+  .route("/cancelSale/:assetId")
+  .put(protect, authorize("user"), buysellController.cancelFixedPriceSale);
 
+router
+  .route("/auctionListednfts")
+  .get(buysellController.fetchAllAuctionListedNfts);
 router
   .route("/listforAuction/:assetId")
   .post(
@@ -57,6 +64,13 @@ router
     authorize("user"),
     validate(editAuctionValidationReqSchema),
     buysellController.editAuction
+  );
+router
+  .route("/cancelAuction/:assetId")
+  .put(
+    protect,
+    authorize("user"),
+    buysellController.cancelAuction
   );
 router
   .route("/acceptBid/:assetId")

@@ -3,6 +3,7 @@ const NftModel = require("../models/NFT");
 const UserActivityModel = require("../models/UserActivity");
 const AuctionModel = require("../models/Auction");
 const { addDays, isBefore } = require("date-fns");
+const { nftSelectQuery } = require("../utils/selectQuery");
 
 exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
@@ -186,6 +187,54 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { wallet_address } = req.user;
+    let data = await NftModel.findOne({ _id: assetId });
+    if (data.nftOwnerAddress === wallet_address) {
+      if (data.listedOnMarketplace && data.nftOccupied) {
+        NftModel.findOneAndUpdate(
+          { _id: assetId },
+          {
+            listingPrice: null,
+            listedOnMarketplace: false,
+            nftOccupied: false,
+            listingDuration: null,
+            saleId: null,
+          },
+          null,
+          (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                res.status(201).json({
+                  success: true,
+                  message: "Asset sale cancelled successfully",
+                });
+              } else {
+                res.status(401).json({ success: false });
+              }
+            }
+          }
+        );
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset not listed on marketplace" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only asset owner can cancel the sale",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
 exports.listNftForAuction = asyncHandler(async (req, res, next) => {
   try {
     const { id, wallet_address } = req.user;
@@ -279,7 +328,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
               },
             },
             null,
-            async(err, doc) => {
+            async (err, doc) => {
               if (err) {
                 res.status(401).json({ success: false });
               } else {
@@ -365,6 +414,64 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
       res.status(401).json({
         success: false,
         message: "Only owner can edit auction",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.cancelAuction = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { wallet_address } = req.user;
+    let auctionData = await AuctionModel.findOne({
+      asset: assetId,
+      status: "active",
+    });
+    let data = await NftModel.findOne({ _id: assetId });
+    if (data.nftOwnerAddress === wallet_address) {
+      if (data.listedForAuction && data.nftOccupied) {
+        AuctionModel.findOneAndDelete(
+          { _id: auctionData._id },
+          async (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                let nftData = await NftModel.findOneAndUpdate(
+                  { _id: assetId },
+                  {
+                    listedForAuction: false,
+                    nftOccupied: false,
+                  }
+                );
+                if (nftData) {
+                  res.status(201).json({
+                    success: true,
+                    message: "Auction cancelled successfully",
+                  });
+                } else {
+                  res.status(401).json({
+                    success: false,
+                    message: "Failed to cancel auction",
+                  });
+                }
+              } else {
+                res.status(401).json({ success: false });
+              }
+            }
+          }
+        );
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset not listed for auction" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only owner can cancel auction",
       });
     }
   } catch (err) {
@@ -540,5 +647,123 @@ exports.fetchLastestAuctionByAsset = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(400).json({ success: false });
+  }
+});
+
+exports.fetchAllListedNfts = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      listedOnMarketplace: true,
+    };
+
+    query = NftModel.find(queryStr).select(nftSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
+
+exports.fetchAllAuctionListedNfts = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      listedForAuction: true,
+    };
+
+    query = NftModel.find(queryStr).select(nftSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });
