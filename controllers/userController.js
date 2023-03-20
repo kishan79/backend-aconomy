@@ -82,7 +82,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
             { id: user._id, wallet_address, role: user.role },
             process.env.JWT_SECRET,
             {
-              expiresIn: 60 * 60,
+              expiresIn: process.env.JWT_EXPIRE,
             }
           );
           res.status(201).json({
@@ -598,3 +598,60 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
     res.status(400).json({ success: false });
   }
 });
+
+// exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
+//   try {
+//     const { asset } = req.body;
+//     const { wallet_address, id } = req.user;
+//     const data = await NFTValidationModel.findOne({
+//       assetOwnerAddress: wallet_address,
+//       asset,
+//     });
+//     if (!data) {
+//       let nftData = await NftModel.findOneAndUpdate(
+//         { _id: asset },
+//         { validationState: "pending" }
+//       );
+//       if (nftData) {
+//         NFTValidationModel.create(
+//           {
+//             ...req.body,
+//             assetOwnerAddress: wallet_address,
+//             assetOwner: id,
+//             assetName: nftData.name,
+//             requestState: "pending",
+//           },
+//           async (err, doc) => {
+//             if (err) {
+//               res.status(401).json({ success: false });
+//             } else {
+//               if (!!doc) {
+//                 let activity = await UserActivityModel.create({
+//                   userAddress: wallet_address,
+//                   user: id,
+//                   asset,
+//                   assetName: nftData.name,
+//                   statusText: "Sent validation request",
+//                 });
+//                 if (activity) {
+//                   res.status(201).json({
+//                     success: true,
+//                     message: "Validation request sent",
+//                   });
+//                 }
+//               } else {
+//                 res.status(401).json({ success: false, message: "not done" });
+//               }
+//             }
+//           }
+//         );
+//       } else {
+//         res.status(401).json({ success: false });
+//       }
+//     } else {
+//       res.status(401).json({ success: false, message: "Request already sent" });
+//     }
+//   } catch (err) {
+//     res.status(401).json({ success: false });
+//   }
+// });

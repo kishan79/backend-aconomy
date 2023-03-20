@@ -86,7 +86,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
             { id: validator._id, wallet_address, role: validator.role },
             process.env.JWT_SECRET,
             {
-              expiresIn: 60 * 60,
+              expiresIn: process.env.JWT_EXPIRE,
             }
           );
           res.status(201).json({

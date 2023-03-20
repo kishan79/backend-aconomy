@@ -93,5 +93,6 @@ router
     authorize("user", "validator"),
     userController.checkUsernameAvailability
   );
+// router.route("/sendRedeemRequest").post(userController.sendRedeemRequest)
 
 module.exports = router;
