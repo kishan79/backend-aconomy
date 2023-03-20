@@ -102,6 +102,11 @@ const NftSchema = new mongoose.Schema(
       default: false,
     },
     saleId: Number,
+    redeemRequest: {
+      type: String,
+      enum: ["false", "true", "accepted", "redeemed", "rejected"],
+      default: "false",
+    },
     // validation: {
     //     Type: String,
     //     Amount: Number,

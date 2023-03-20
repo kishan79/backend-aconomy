@@ -101,4 +101,25 @@ router
     authorize("validator"),
     validatorController.fetchValidatedAssets
   );
+router
+  .route("/redeemRequests")
+  .get(
+    protect,
+    authorize("validator"),
+    validatorController.fetchAllRedeemRequests
+  );
+router
+  .route("/acceptRedeemRequest/:assetId")
+  .post(
+    protect,
+    authorize("validator"),
+    validatorController.acceptRedeemRequest
+  );
+router
+  .route("/cancelRedeemRequest/:assetId")
+  .post(
+    protect,
+    authorize("validator"),
+    validatorController.cancelRedeemRequest
+  );
 module.exports = router;

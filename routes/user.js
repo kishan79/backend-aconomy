@@ -93,6 +93,13 @@ router
     authorize("user", "validator"),
     userController.checkUsernameAvailability
   );
-// router.route("/sendRedeemRequest").post(userController.sendRedeemRequest)
-
+router
+  .route("/sendRedeemRequest/:assetId")
+  .post(protect, authorize("user"), userController.sendRedeemRequest);
+router
+  .route("/cancelRedeemRequest/:assetId")
+  .post(protect, authorize("user"), userController.cancelRedeemRequest);
+router
+  .route("/redeemAsset/:assetId")
+  .post(protect, authorize("user"), userController.redeemAsset);
 module.exports = router;

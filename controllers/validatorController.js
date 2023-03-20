@@ -13,6 +13,7 @@ const {
   nftActivitySelectQuery,
   validatorSelectQuery,
   validatedAssetSelectQuery,
+  nftSelectQuery,
 } = require("../utils/selectQuery");
 const UserActivityModel = require("../models/UserActivity");
 
@@ -680,5 +681,184 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
       message: "Failed to execute",
       err,
     });
+  }
+});
+
+exports.fetchAllRedeemRequests = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      validatorAddress: req.user.wallet_address,
+      redeemRequest: "true",
+    };
+
+    query = NftModel.find(queryStr).select(nftSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+      err,
+    });
+  }
+});
+
+exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { wallet_address, id } = req.user;
+    const data = await NftModel.findOne({
+      _id: assetId,
+    });
+    if (data.validatorAddress === wallet_address) {
+      if (
+        data.validationState === "validated" ||
+        data.validationState === "revalidated"
+      ) {
+        if (data.redeemRequest === "true") {
+          let nftData = await NftModel.findOneAndUpdate(
+            { _id: assetId },
+            {
+              redeemRequest: "accepted",
+            }
+          );
+          if (nftData) {
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset,
+            //   assetName: nftData.name,
+            //   statusText: "Sent redeem request",
+            // });
+            res.status(201).json({
+              success: true,
+              message: "Redeem request accepted successfully",
+            });
+          } else {
+            res.status(401).json({
+              success: false,
+              message: "Failed to accept redeem request",
+            });
+          }
+        } else {
+          res.status(401).json({
+            success: false,
+            message: "Redeem process already initiated",
+          });
+        }
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset is not validated" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only asset validator can accept redeem request",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { wallet_address } = req.user;
+    const data = await NftModel.findOne({
+      _id: assetId,
+    });
+    if (data.validatorAddress === wallet_address) {
+      if (
+        data.validationState === "validated" ||
+        data.validationState === "revalidated"
+      ) {
+        if (data.redeemRequest === "true") {
+          let nftData = await NftModel.findOneAndUpdate(
+            { _id: assetId },
+            {
+              redeemRequest: "rejected",
+            }
+          );
+          if (nftData) {
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset,
+            //   assetName: nftData.name,
+            //   statusText: "Sent redeem request",
+            // });
+            res.status(201).json({
+              success: true,
+              message: "Redeem request cancelled successfully",
+            });
+          } else {
+            res.status(401).json({
+              success: false,
+              message: "Failed to cancel redeem request",
+            });
+          }
+        } else {
+          res.status(401).json({
+            success: false,
+            message: "Redeem process already initiated",
+          });
+        }
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset is not validated" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only asset validator can cancel redeem request",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
   }
 });
