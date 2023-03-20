@@ -262,6 +262,10 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                   {
                     listedForAuction: true,
                     nftOccupied: true,
+                    listingPrice: price,
+                    listingDate: new Date(),
+                    listingDuration: duration,
+                    saleId,
                   }
                 );
                 let activity = await UserActivityModel.create({
@@ -390,11 +394,18 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
             duration,
           },
           null,
-          (err, doc) => {
+          async(err, doc) => {
             if (err) {
               res.status(401).json({ success: false });
             } else {
               if (!!doc) {
+                let nftData = await NftModel.findOneAndUpdate(
+                  { _id: assetId },
+                  {
+                    listingPrice: price,
+                    listingDuration: duration,
+                  }
+                );
                 res.status(201).json({
                   success: true,
                   message: "Auction edited successfully",
@@ -444,6 +455,10 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                   {
                     listedForAuction: false,
                     nftOccupied: false,
+                    listingPrice: null,
+                    listingDate: null,
+                    listingDuration: null,
+                    saleId: null,
                   }
                 );
                 if (nftData) {
