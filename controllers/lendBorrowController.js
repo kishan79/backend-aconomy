@@ -14,10 +14,18 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
+            state: "lendborrow",
             offer: { price, apy, duration, expiration, bidid: null },
           }
         );
         if (data) {
+          let activity = await UserActivityModel.create({
+            userAddress: wallet_address,
+            user: id,
+            asset: nftData._id,
+            assetName: nftData.name,
+            statusText: "Proposed an offer",
+          });
           res
             .status(201)
             .json({ success: true, message: "Offer proposed successfully" });
@@ -43,17 +51,25 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
 exports.removefromBorrow = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
+            state: "none",
             offer: null,
           }
         );
         if (data) {
+          let activity = await UserActivityModel.create({
+            userAddress: wallet_address,
+            user: id,
+            asset: nftData._id,
+            assetName: nftData.name,
+            statusText: "Remove an offer",
+          });
           res.status(201).json({
             success: true,
             message: "Offer removed from borrow successfully",
@@ -103,6 +119,13 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
+          let activity = await UserActivityModel.create({
+            userAddress: wallet_address,
+            user: id,
+            asset: nftData._id,
+            assetName: nftData.name,
+            statusText: "Made an offer",
+          });
           res
             .status(201)
             .json({ success: true, message: "Offer made successfully" });
@@ -135,7 +158,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { bidId } = req.body;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
@@ -159,6 +182,13 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              asset: nftData._id,
+              assetName: nftData.name,
+              statusText: "Accepted an offer",
+            });
             res
               .status(201)
               .json({ success: true, message: "Offer accepted successfully" });
@@ -187,30 +217,45 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { bidId } = req.body;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
         let bid = nftData.offers.filter((item) => item.bidId === bidId);
-        if (isBefore(new Date(), bid[0].expireOn)) {
-          let data = await NftModel.findOneAndUpdate(
-            { _id: assetId, "offers.bidId": bidId },
-            {
-              $set: {
-                "offers.$.status": "rejected",
-              },
+        if (bid[0].status !== "rejected") {
+          if (isBefore(new Date(), bid[0].expireOn)) {
+            let data = await NftModel.findOneAndUpdate(
+              { _id: assetId, "offers.bidId": bidId },
+              {
+                $set: {
+                  "offers.$.status": "rejected",
+                },
+              }
+            );
+            if (data) {
+              let activity = await UserActivityModel.create({
+                userAddress: wallet_address,
+                user: id,
+                asset: nftData._id,
+                assetName: nftData.name,
+                statusText: "Rejected an offer",
+              });
+              res.status(201).json({
+                success: true,
+                message: "Offer rejected successfully",
+              });
+            } else {
+              res.status(401).json({
+                success: false,
+                message: "Failed to accept the offer",
+              });
             }
-          );
-          if (data) {
-            res
-              .status(201)
-              .json({ success: true, message: "Offer accepted successfully" });
           } else {
-            res
-              .status(401)
-              .json({ success: false, message: "Failed to accept the offer" });
           }
         } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Offer already rejected" });
         }
       } else {
         res.status(401).json({ success: false, message: "Action forbidden" });
@@ -218,7 +263,7 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message: "Only asset owner can accept an offer",
+        message: "Only asset owner can reject an offer",
       });
     }
   } catch (err) {
@@ -229,10 +274,10 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
 exports.paybackLoan = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.offer.bidderAddress === wallet_address) {
-      if (bid.length) {
+    if (nftData.state === "lendborrow") {
+      if (nftData.offer.bidderAddress === wallet_address) {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
@@ -241,22 +286,29 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
+          let activity = await UserActivityModel.create({
+            userAddress: wallet_address,
+            user: id,
+            asset: nftData._id,
+            assetName: nftData.name,
+            statusText: "Loan paid back",
+          });
           res
             .status(201)
-            .json({ success: true, message: "Loan successfully paid" });
+            .json({ success: true, message: "Loan paid successfully" });
         } else {
           res
             .status(401)
             .json({ success: false, message: "Failed to payback the loan" });
         }
       } else {
-        res.status(401).json({ success: false, message: "Forbidden action" });
+        res.status(401).json({
+          success: false,
+          message: "Only accepted bidder can payback the loan",
+        });
       }
     } else {
-      res.status(401).json({
-        success: false,
-        message: "Only accepted bidder can payback the loan",
-      });
+      res.status(401).json({ success: false, message: "Forbidden Action" });
     }
   } catch (err) {
     res.status(401).json({ success: false });

@@ -87,6 +87,25 @@ const withdrawBidValidationReqSchema = [
   body("bidId", "The bidId field is required").notEmpty(),
 ];
 
+const proposeOfferValidationReqSchema = [
+  body("price", "The price field is required").notEmpty(),
+  body("apy", "The apy field is required").notEmpty(),
+  body("duration", "The duration field is required").notEmpty(),
+  body("expiration", "The expiration field is required").notEmpty(),
+];
+
+const makeOfferValidationReqSchema = [
+  body("price", "The price field is required").notEmpty(),
+  body("apy", "The apy field is required").notEmpty(),
+  body("duration", "The duration field is required").notEmpty(),
+  body("expiration", "The expiration field is required").notEmpty(),
+  body("bidId", "The bidId field is required").notEmpty(),
+];
+
+const offerValidationReqSchema = [
+  body("bidId", "The bidId field is required").notEmpty(),
+];
+
 module.exports = {
   userValidSignature,
   validatorValidSignature,
@@ -102,4 +121,7 @@ module.exports = {
   editAuctionValidationReqSchema,
   acceptBidValidationReqSchema,
   withdrawBidValidationReqSchema,
+  proposeOfferValidationReqSchema,
+  makeOfferValidationReqSchema,
+  offerValidationReqSchema
 };

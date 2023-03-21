@@ -106,20 +106,8 @@ const NftSchema = new mongoose.Schema(
     },
     nftCreatorAddress: String,
     listingPrice: Number,
-    // listedOnMarketplace: {
-    //   type: Boolean,
-    //   default: false,
-    // },
     listingDate: Date,
     listingDuration: Number,
-    // listedForAuction: {
-    //   type: Boolean,
-    //   default: false,
-    // },
-    // nftOccupied: {
-    //   type: Boolean,
-    //   default: false,
-    // },
     saleId: Number,
     redeemRequest: {
       type: String,
@@ -127,10 +115,6 @@ const NftSchema = new mongoose.Schema(
       default: "false",
     },
     nftContractAddress: String,
-    listForLendBorrow: {
-      type: Boolean,
-      default: false,
-    },
     state: {
       type: String,
       enum: ["none", "sale", "auction", "lendborrow"],
@@ -148,8 +132,6 @@ const NftSchema = new mongoose.Schema(
         type: mongoose.Schema.ObjectId,
         ref: "User",
       },
-      
-      // expireOn: Date,
     },
     // validation: {
     //     Type: String,
