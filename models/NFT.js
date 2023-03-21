@@ -16,6 +16,12 @@ const HistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const OfferSchema = new mongoose.Schema({
+  apy:Number,
+  duration: Number,
+  expiration: Number
+}, { timestamps: true });
+
 const NftSchema = new mongoose.Schema(
   {
     nftOwnerAddress: String,
@@ -107,6 +113,8 @@ const NftSchema = new mongoose.Schema(
       enum: ["false", "true", "accepted", "redeemed", "rejected"],
       default: "false",
     },
+    nftContractAddress: String,
+    offers: [OfferSchema],
     // validation: {
     //     Type: String,
     //     Amount: Number,

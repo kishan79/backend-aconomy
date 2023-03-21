@@ -7,7 +7,7 @@ const { nftSelectQuery } = require("../utils/selectQuery");
 
 exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
-    const { price, duration, saleId } = req.body;
+    const { price, duration, saleId, contractAddress } = req.body;
     const { assetId } = req.params;
     const { id, wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
@@ -22,6 +22,7 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
             listingDate: new Date(),
             listingDuration: duration,
             saleId,
+            nftContractAddress: contractAddress,
             $push: {
               history: {
                 action: "Listed",
@@ -79,11 +80,11 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
           {
             nftOwnerAddress: wallet_address,
             nftOwner: id,
-            listingPrice: 0,
+            listingPrice: null,
             listedOnMarketplace: false,
             nftOccupied: false,
-            listingDate: undefined,
-            listingDuration: 0,
+            listingDate: null,
+            listingDuration: null,
             $push: {
               history: {
                 action: "bought",
@@ -201,7 +202,6 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
             listedOnMarketplace: false,
             nftOccupied: false,
             listingDuration: null,
-            saleId: null,
           },
           null,
           (err, doc) => {
@@ -237,7 +237,7 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
 
 exports.listNftForAuction = asyncHandler(async (req, res, next) => {
   try {
-    const { id, wallet_address } = req.user;
+    const { id, wallet_address, contractAddress } = req.user;
     const { duration, price, saleId } = req.body;
     const { assetId } = req.params;
     let data = await NftModel.findOne({ _id: assetId });
@@ -266,6 +266,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                     listingDate: new Date(),
                     listingDuration: duration,
                     saleId,
+                    nftContractAddress: contractAddress
                   }
                 );
                 let activity = await UserActivityModel.create({
@@ -458,7 +459,6 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                     listingPrice: null,
                     listingDate: null,
                     listingDuration: null,
-                    saleId: null,
                   }
                 );
                 if (nftData) {
