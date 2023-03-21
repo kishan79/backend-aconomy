@@ -97,20 +97,20 @@ const NftSchema = new mongoose.Schema(
     },
     nftCreatorAddress: String,
     listingPrice: Number,
-    listedOnMarketplace: {
-      type: Boolean,
-      default: false,
-    },
+    // listedOnMarketplace: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     listingDate: Date,
     listingDuration: Number,
-    listedForAuction: {
-      type: Boolean,
-      default: false,
-    },
-    nftOccupied: {
-      type: Boolean,
-      default: false,
-    },
+    // listedForAuction: {
+    //   type: Boolean,
+    //   default: false,
+    // },
+    // nftOccupied: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     saleId: Number,
     redeemRequest: {
       type: String,

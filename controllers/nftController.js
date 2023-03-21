@@ -147,7 +147,7 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
         nftData.validationState !== "validated" &&
         nftData.validationState !== "revalidated"
       ) {
-        if (!nftData.nftOccupied) {
+        if (nftData.state === "none") {
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
             {
@@ -206,7 +206,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
           nftData.validationState === "validated" ||
           nftData.validationState === "revalidated"
         ) {
-          if (!nftData.nftOccupied) {
+          if (nftData.state === "none") {
             let validationData = await NFTValidationModel.findOneAndDelete({
               asset: assetId,
             });

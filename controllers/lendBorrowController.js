@@ -11,7 +11,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
     const { price, apy, duration, expiration } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
-      if (!nftData.nftOccupied) {
+      if (nftData.state === "none") {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
@@ -47,7 +47,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.nftOccupied) {
+      if (nftData.state === "lendborrow") {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
@@ -85,7 +85,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
     const { price, apy, duration, expiration } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress !== wallet_address) {
-      if (!nftData.nftOccupied) {
+      if (nftData.state === "lendborrow") {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {

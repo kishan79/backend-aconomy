@@ -12,13 +12,12 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
     const { id, wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
-      if (!data.listedOnMarketplace || !data.nftOccupied) {
+      if (data.state === "none") {
         NftModel.findOneAndUpdate(
           { _id: assetId },
           {
             listingPrice: price,
-            listedOnMarketplace: true,
-            nftOccupied: true,
+            state: "sale",
             listingDate: new Date(),
             listingDuration: duration,
             saleId,
@@ -74,15 +73,14 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
     const { id, wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress !== wallet_address) {
-      if (data.listedOnMarketplace && data.nftOccupied) {
+      if (data.state === "sale") {
         NftModel.findOneAndUpdate(
           { _id: assetId },
           {
             nftOwnerAddress: wallet_address,
             nftOwner: id,
             listingPrice: null,
-            listedOnMarketplace: false,
-            nftOccupied: false,
+            state: "none",
             listingDate: null,
             listingDuration: null,
             $push: {
@@ -147,13 +145,12 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
-      if (data.listedOnMarketplace && data.nftOccupied) {
+      if (data.state === "sale") {
         NftModel.findOneAndUpdate(
           { _id: assetId },
           {
             listingPrice: price,
-            listedOnMarketplace: true,
-            nftOccupied: true,
+            state: "sale",
             listingDuration: duration,
           },
           null,
@@ -194,13 +191,12 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
-      if (data.listedOnMarketplace && data.nftOccupied) {
+      if (data.state === "sale") {
         NftModel.findOneAndUpdate(
           { _id: assetId },
           {
             listingPrice: null,
-            listedOnMarketplace: false,
-            nftOccupied: false,
+            state: "none",
             listingDuration: null,
           },
           null,
@@ -242,7 +238,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
-      if (!data.listedForAuction || !data.nftOccupied) {
+      if (data.state === "none") {
         AuctionModel.create(
           {
             auctionOwner: id,
@@ -260,13 +256,12 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                 let nftData = await NftModel.findOneAndUpdate(
                   { _id: assetId },
                   {
-                    listedForAuction: true,
-                    nftOccupied: true,
+                    state: "auction",
                     listingPrice: price,
                     listingDate: new Date(),
                     listingDuration: duration,
                     saleId,
-                    nftContractAddress: contractAddress
+                    nftContractAddress: contractAddress,
                   }
                 );
                 let activity = await UserActivityModel.create({
@@ -315,7 +310,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
     });
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress !== wallet_address) {
-      if (data.listedForAuction && data.nftOccupied) {
+      if (data.state === "auction") {
         if (amount > auctionData.baseAuctionPrice) {
           AuctionModel.findOneAndUpdate(
             { _id: auctionData._id },
@@ -387,7 +382,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
     });
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
-      if (data.listedForAuction && data.nftOccupied) {
+      if (data.state === "auction") {
         AuctionModel.findOneAndUpdate(
           { _id: auctionData._id },
           {
@@ -395,7 +390,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
             duration,
           },
           null,
-          async(err, doc) => {
+          async (err, doc) => {
             if (err) {
               res.status(401).json({ success: false });
             } else {
@@ -443,7 +438,7 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
     });
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
-      if (data.listedForAuction && data.nftOccupied) {
+      if (data.state === "auction") {
         AuctionModel.findOneAndDelete(
           { _id: auctionData._id },
           async (err, doc) => {
@@ -454,8 +449,7 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                 let nftData = await NftModel.findOneAndUpdate(
                   { _id: assetId },
                   {
-                    listedForAuction: false,
-                    nftOccupied: false,
+                    state: "none",
                     listingPrice: null,
                     listingDate: null,
                     listingDuration: null,
@@ -521,8 +515,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
             let nftData = await NftModel.findOneAndUpdate(
               { _id: assetId },
               {
-                listedForAuction: false,
-                nftOccupied: false,
+                state: "none",
                 nftOwnerAddress: bid[0].bidderAddress,
                 nftOwner: bid[0].bidder,
               }
@@ -672,7 +665,7 @@ exports.fetchAllListedNfts = asyncHandler(async (req, res, next) => {
     const { sortby } = req.query;
 
     let queryStr = {
-      listedOnMarketplace: true,
+      state: "sale",
     };
 
     query = NftModel.find(queryStr).select(nftSelectQuery);
@@ -731,7 +724,7 @@ exports.fetchAllAuctionListedNfts = asyncHandler(async (req, res, next) => {
     const { sortby } = req.query;
 
     let queryStr = {
-      listedForAuction: true,
+      state: "auction",
     };
 
     query = NftModel.find(queryStr).select(nftSelectQuery);
