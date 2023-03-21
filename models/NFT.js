@@ -16,11 +16,15 @@ const HistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const OfferSchema = new mongoose.Schema({
-  apy:Number,
-  duration: Number,
-  expiration: Number
-}, { timestamps: true });
+const OfferSchema = new mongoose.Schema(
+  {
+    price: Number,
+    apy: Number,
+    duration: Number,
+    expiration: Number,
+  },
+  { timestamps: true }
+);
 
 const NftSchema = new mongoose.Schema(
   {
@@ -114,7 +118,23 @@ const NftSchema = new mongoose.Schema(
       default: "false",
     },
     nftContractAddress: String,
+    listForLendBorrow: {
+      type: Boolean,
+      default: false,
+    },
+    state: {
+      type: String,
+      enum: ["none", "sale", "auction", "lendborrow"],
+      default: "none",
+    },
     offers: [OfferSchema],
+    offer: {
+      price: Number,
+      apy: Number,
+      duration: Number,
+      expiration: Number,
+      // expireOn: Date,
+    },
     // validation: {
     //     Type: String,
     //     Amount: Number,
