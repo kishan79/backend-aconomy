@@ -22,6 +22,15 @@ const OfferSchema = new mongoose.Schema(
     apy: Number,
     duration: Number,
     expiration: Number,
+    bidId: Number,
+    expireOn: Date,
+    bidder: { type: mongoose.Schema.ObjectId, ref: "user" },
+    bidderAddress: String,
+    status: {
+      type: String,
+      enum: ["none", "accepted", "rejected"],
+      default: "none",
+    },
   },
   { timestamps: true }
 );
@@ -133,6 +142,13 @@ const NftSchema = new mongoose.Schema(
       apy: Number,
       duration: Number,
       expiration: Number,
+      bidId: Number,
+      bidderAddress: String,
+      bidder: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+      },
+      
       // expireOn: Date,
     },
     // validation: {

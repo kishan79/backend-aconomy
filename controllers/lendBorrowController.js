@@ -2,7 +2,6 @@ const asyncHandler = require("../middlewares/async");
 const NftModel = require("../models/NFT");
 const UserActivityModel = require("../models/UserActivity");
 const { addDays, isBefore } = require("date-fns");
-const { nftSelectQuery } = require("../utils/selectQuery");
 
 exports.proposeOffer = asyncHandler(async (req, res, next) => {
   try {
@@ -15,7 +14,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
-            offer: { price, apy, duration, expiration },
+            offer: { price, apy, duration, expiration, bidid: null },
           }
         );
         if (data) {
@@ -81,8 +80,8 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
 exports.makeOffer = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
-    const { price, apy, duration, expiration } = req.body;
+    const { wallet_address, id } = req.user;
+    const { price, apy, duration, expiration, bidId } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress !== wallet_address) {
       if (nftData.state === "lendborrow") {
@@ -95,6 +94,10 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
                 apy,
                 duration,
                 expiration,
+                bidId,
+                expireOn: addDays(new Date(), expiration),
+                bidder: id,
+                bidderAddress: wallet_address,
               },
             },
           }
@@ -121,15 +124,60 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
   }
 });
 
-exports.fetchOffers = asyncHandler(async (req, res, next) => {
-  try {
-  } catch (err) {
-    res.status(401).json({ success: false });
-  }
-});
+// exports.fetchOffers = asyncHandler(async (req, res, next) => {
+//   try {
+//   } catch (err) {
+//     res.status(401).json({ success: false });
+//   }
+// });
 
 exports.acceptOffer = asyncHandler(async (req, res, next) => {
   try {
+    const { assetId } = req.params;
+    const { bidId } = req.body;
+    const { wallet_address } = req.user;
+    let nftData = await NftModel.findOne({ _id: assetId });
+    if (nftData.nftOwnerAddress === wallet_address) {
+      if (nftData.state === "lendborrow") {
+        let bid = nftData.offers.filter((item) => item.bidId === bidId);
+        if (isBefore(new Date(), bid[0].expireOn)) {
+          let data = await NftModel.findOneAndUpdate(
+            { _id: assetId, "offers.bidId": bidId },
+            {
+              $set: {
+                "offers.$.status": "accepted",
+                offer: {
+                  price: bid[0].price,
+                  apy: bid[0].apy,
+                  duration: bid[0].duration,
+                  expiration: bid[0].expiration,
+                  bidId: bid[0].bidId,
+                  bidderAddress: bid[0].bidderAddress,
+                  bidder: bid[0].bidder,
+                },
+              },
+            }
+          );
+          if (data) {
+            res
+              .status(201)
+              .json({ success: true, message: "Offer accepted successfully" });
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to accept the offer" });
+          }
+        } else {
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Action forbidden" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only asset owner can accept an offer",
+      });
+    }
   } catch (err) {
     res.status(401).json({ success: false });
   }
@@ -137,6 +185,42 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
 
 exports.rejectOffer = asyncHandler(async (req, res, next) => {
   try {
+    const { assetId } = req.params;
+    const { bidId } = req.body;
+    const { wallet_address } = req.user;
+    let nftData = await NftModel.findOne({ _id: assetId });
+    if (nftData.nftOwnerAddress === wallet_address) {
+      if (nftData.state === "lendborrow") {
+        let bid = nftData.offers.filter((item) => item.bidId === bidId);
+        if (isBefore(new Date(), bid[0].expireOn)) {
+          let data = await NftModel.findOneAndUpdate(
+            { _id: assetId, "offers.bidId": bidId },
+            {
+              $set: {
+                "offers.$.status": "rejected",
+              },
+            }
+          );
+          if (data) {
+            res
+              .status(201)
+              .json({ success: true, message: "Offer accepted successfully" });
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to accept the offer" });
+          }
+        } else {
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Action forbidden" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only asset owner can accept an offer",
+      });
+    }
   } catch (err) {
     res.status(401).json({ success: false });
   }
@@ -144,6 +228,36 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
 
 exports.paybackLoan = asyncHandler(async (req, res, next) => {
   try {
+    const { assetId } = req.params;
+    const { wallet_address } = req.user;
+    let nftData = await NftModel.findOne({ _id: assetId });
+    if (nftData.offer.bidderAddress === wallet_address) {
+      if (bid.length) {
+        let data = await NftModel.findOneAndUpdate(
+          { _id: assetId },
+          {
+            offers: null,
+            state: "none",
+          }
+        );
+        if (data) {
+          res
+            .status(201)
+            .json({ success: true, message: "Loan successfully paid" });
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Failed to payback the loan" });
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Forbidden action" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only accepted bidder can payback the loan",
+      });
+    }
   } catch (err) {
     res.status(401).json({ success: false });
   }
