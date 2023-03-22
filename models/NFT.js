@@ -122,6 +122,8 @@ const NftSchema = new mongoose.Schema(
     },
     offers: [OfferSchema],
     offer: {
+      nftId: Number,
+      nftContractAddress: String,
       price: Number,
       apy: Number,
       duration: Number,

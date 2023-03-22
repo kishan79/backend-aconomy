@@ -7,7 +7,8 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
-    const { price, apy, duration, expiration } = req.body;
+    const { price, apy, duration, expiration, nftId, contractAddress } =
+      req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "none") {
@@ -15,7 +16,15 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
           { _id: assetId },
           {
             state: "lendborrow",
-            offer: { price, apy, duration, expiration, bidid: null },
+            offer: {
+              price,
+              apy,
+              duration,
+              expiration,
+              bidid: null,
+              nftId,
+              nftContractAddress: contractAddress,
+            },
           }
         );
         if (data) {
@@ -146,13 +155,6 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
     res.status(401).json({ success: false });
   }
 });
-
-// exports.fetchOffers = asyncHandler(async (req, res, next) => {
-//   try {
-//   } catch (err) {
-//     res.status(401).json({ success: false });
-//   }
-// });
 
 exports.acceptOffer = asyncHandler(async (req, res, next) => {
   try {
