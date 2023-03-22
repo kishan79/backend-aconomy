@@ -625,7 +625,7 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
             let activity = await UserActivityModel.create({
               userAddress: wallet_address,
               user: id,
-              asset:assetId,
+              asset: assetId,
               assetName: nftData.name,
               statusText: "Sent redeem request",
             });
@@ -680,7 +680,7 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
           let activity = await UserActivityModel.create({
             userAddress: wallet_address,
             user: id,
-            asset:assetId,
+            asset: assetId,
             assetName: nftData.name,
             statusText: "Cancelled redeem request",
           });
@@ -765,6 +765,136 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
       res.status(401).json({
         success: false,
         message: "Only asset owner can redeem asset",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.withdrawFunds = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { wallet_address, id } = req.user;
+    const { amount } = req.body;
+    let nftData = await NftModel.findOne({ _id: assetId });
+    if (nftData.nftOwnerAddress === wallet_address) {
+      if (
+        nftData.validationState === "validated" ||
+        nftData.validationState === "revalidated"
+      ) {
+        let availableBalance = nftData.fundBalance;
+        if (amount <= availableBalance) {
+          let balance = availableBalance - amount;
+          console.log(balance, "123");
+          let data = await NftModel.findOneAndUpdate(
+            { _id: assetId },
+            { fundBalance: balance }
+          );
+          if (data) {
+            let validationData = await NFTValidationModel.findOneAndUpdate(
+              {
+                assetOwnerAddress: wallet_address,
+                asset: assetId,
+              },
+              {
+                fundBalance: balance,
+              }
+            );
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              asset: nftData._id,
+              assetName: nftData.name,
+              statusText: "Withdrawn fund",
+            });
+            res.status(201).json({
+              success: true,
+              message: "Amount withdrawn successfully",
+            });
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to withdraw amount" });
+          }
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Insufficient balance" });
+        }
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset is not validated" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only asset owner can perform this action",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.repayFunds = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { wallet_address, id } = req.user;
+    const { amount } = req.body;
+    let nftData = await NftModel.findOne({ _id: assetId });
+    if (nftData.nftOwnerAddress === wallet_address) {
+      if (
+        nftData.validationState === "validated" ||
+        nftData.validationState === "revalidated"
+      ) {
+        let availableBalance = nftData.validationAmount - nftData.fundBalance;
+        if (amount > 0 && amount <= availableBalance) {
+          let data = await NftModel.findOneAndUpdate(
+            { _id: assetId },
+            { fundBalance: nftData.fundBalance + amount }
+          );
+          if (data) {
+            let validationData = await NFTValidationModel.findOneAndUpdate(
+              {
+                assetOwnerAddress: wallet_address,
+                asset: assetId,
+              },
+              {
+                fundBalance: nftData.fundBalance + amount,
+              }
+            );
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              asset: nftData._id,
+              assetName: nftData.name,
+              statusText: "Repaied fund",
+            });
+            res.status(201).json({
+              success: true,
+              message: "Amount repaid successfully",
+            });
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to repay amount" });
+          }
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Balance mismatch" });
+        }
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Asset is not validated" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only asset owner can perform this action",
       });
     }
   } catch (err) {

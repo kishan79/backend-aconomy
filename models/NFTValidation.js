@@ -35,6 +35,8 @@ const NftValidationSchema = new mongoose.Schema(
     //   Royality: Number,
     //   Documents: [String],
     // },
+    erc20ContractAddress: String,
+    fundBalance: Number,
     validationType: String,
     validationAmount: Number,
     validationDuration: Number,

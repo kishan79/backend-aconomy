@@ -102,4 +102,6 @@ router
 router
   .route("/redeemAsset/:assetId")
   .post(protect, authorize("user"), userController.redeemAsset);
+router.route("/withdrawFund/:assetId").post(protect, authorize("user"), userController.withdrawFunds);
+router.route("/repayFund/:assetId").post(protect, authorize("user"), userController.repayFunds);
 module.exports = router;

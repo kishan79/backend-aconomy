@@ -296,6 +296,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
       validationDuration,
       validationRoyality,
       validationDocuments,
+      contractAddress,
     } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findById(requestId);
@@ -311,6 +312,8 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
             validationDocuments,
             requestExpiresOn: addDays(new Date(), validationDuration),
             requestState: "validated",
+            erc20ContractAddress: contractAddress,
+            fundBalance: validationAmount,
           },
           async (err, doc) => {
             if (err) {
@@ -327,6 +330,8 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                     validationDocuments,
                     requestExpiresOn: addDays(new Date(), validationDuration),
                     validationState: "validated",
+                    erc20ContractAddress: contractAddress,
+                    fundBalance: validationAmount,
                     $push: {
                       history: {
                         action: "validated",
@@ -390,7 +395,10 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
     if (data) {
       NFTValidationModel.findOneAndUpdate(
         { _id: data._id },
-        { validationAmount: data.validationAmount + amount },
+        {
+          validationAmount: data.validationAmount + amount,
+          fundBalance: data.fundBalance + amount,
+        },
         null,
         async (err, doc) => {
           if (err) {
@@ -404,6 +412,7 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
                 { _id: assetId },
                 {
                   validationAmount: data.validationAmount + amount,
+                  fundBalance: data.fundBalance + amount,
                 }
               );
               let activity = await ValidatorActivityModel.create({
@@ -462,6 +471,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
           requestExpiresOn: addDays(new Date(), validationDuration),
           requestState: "revalidated",
           validationExpired: false,
+          fundBalance: data.fundBalance + validationAmount
         },
         async (err, doc) => {
           if (err) {
@@ -479,6 +489,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                   requestExpiresOn: addDays(new Date(), validationDuration),
                   validationState: "revalidated",
                   validationExpired: false,
+                  fundBalance: data.fundBalance + validationAmount
                 },
                 async (err, item) => {
                   if (!!item) {

@@ -74,6 +74,11 @@ const NftSchema = new mongoose.Schema(
     assetOriginationDate: Date,
     valueOfAsset: Number,
     description: String,
+    fundBalance: {
+      type: Number,
+      default: 0,
+    },
+    erc20ContractAddress: String,
     validationType: String,
     validationAmount: Number,
     validationDuration: Number,
