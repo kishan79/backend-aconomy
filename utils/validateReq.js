@@ -92,6 +92,8 @@ const proposeOfferValidationReqSchema = [
   body("apy", "The apy field is required").notEmpty(),
   body("duration", "The duration field is required").notEmpty(),
   body("expiration", "The expiration field is required").notEmpty(),
+  body("nftId", "The nftId field is required").notEmpty(),
+  body("contractAddress", "The contractAddress field is required").notEmpty(),
 ];
 
 const makeOfferValidationReqSchema = [
@@ -123,5 +125,5 @@ module.exports = {
   withdrawBidValidationReqSchema,
   proposeOfferValidationReqSchema,
   makeOfferValidationReqSchema,
-  offerValidationReqSchema
+  offerValidationReqSchema,
 };
