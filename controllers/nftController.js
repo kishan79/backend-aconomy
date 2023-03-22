@@ -143,10 +143,7 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
-      if (
-        nftData.validationState !== "validated" &&
-        nftData.validationState !== "revalidated"
-      ) {
+      if (nftData.validationState !== "validated") {
         if (nftData.state === "none") {
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
@@ -202,10 +199,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
     if (userData) {
       let nftData = await NftModel.findOne({ _id: assetId });
       if (nftData.nftOwnerAddress === wallet_address) {
-        if (
-          nftData.validationState === "validated" ||
-          nftData.validationState === "revalidated"
-        ) {
+        if (nftData.validationState === "validated") {
           if (nftData.state === "none") {
             let validationData = await NFTValidationModel.findOneAndDelete({
               asset: assetId,

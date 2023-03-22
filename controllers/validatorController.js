@@ -312,6 +312,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
             validationDocuments,
             requestExpiresOn: addDays(new Date(), validationDuration),
             requestState: "validated",
+            validationCount: 1,
             erc20ContractAddress: contractAddress,
             fundBalance: validationAmount,
           },
@@ -330,6 +331,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                     validationDocuments,
                     requestExpiresOn: addDays(new Date(), validationDuration),
                     validationState: "validated",
+                    validationCount: 1,
                     erc20ContractAddress: contractAddress,
                     fundBalance: validationAmount,
                     $push: {
@@ -459,7 +461,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
   const { wallet_address, id } = req.user;
   const data = await NFTValidationModel.findById(requestId);
   if (data.validatorAddress === wallet_address) {
-    if (data.validationState === "revalidation") {
+    if (data.validationState === "pending") {
       NFTValidationModel.findOneAndUpdate(
         { _id: requestId },
         {
@@ -469,9 +471,10 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
           validationRoyality,
           validationDocuments,
           requestExpiresOn: addDays(new Date(), validationDuration),
-          requestState: "revalidated",
+          requestState: "validated",
+          validationCount: data.validationCount + 1,
           validationExpired: false,
-          fundBalance: data.fundBalance + validationAmount
+          fundBalance: data.fundBalance + validationAmount,
         },
         async (err, doc) => {
           if (err) {
@@ -487,9 +490,10 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                   validationRoyality,
                   validationDocuments,
                   requestExpiresOn: addDays(new Date(), validationDuration),
-                  validationState: "revalidated",
+                  validationState: "validated",
+                  validationCount: data.validationCount + 1,
                   validationExpired: false,
-                  fundBalance: data.fundBalance + validationAmount
+                  fundBalance: data.fundBalance + validationAmount,
                 },
                 async (err, item) => {
                   if (!!item) {
@@ -764,10 +768,7 @@ exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
       _id: assetId,
     });
     if (data.validatorAddress === wallet_address) {
-      if (
-        data.validationState === "validated" ||
-        data.validationState === "revalidated"
-      ) {
+      if (data.validationState === "validated") {
         if (data.redeemRequest === "true") {
           let nftData = await NftModel.findOneAndUpdate(
             { _id: assetId },
@@ -823,10 +824,7 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
       _id: assetId,
     });
     if (data.validatorAddress === wallet_address) {
-      if (
-        data.validationState === "validated" ||
-        data.validationState === "revalidated"
-      ) {
+      if (data.validationState === "validated") {
         if (data.redeemRequest === "true") {
           let nftData = await NftModel.findOneAndUpdate(
             { _id: assetId },

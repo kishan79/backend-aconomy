@@ -394,7 +394,7 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
     if (isBefore(data.requestExpiresOn, new Date()) & data.validationExpired) {
       NFTValidationModel.findOneAndUpdate(
         { _id: data._id },
-        { requestState: "revalidation" },
+        { requestState: "pending" },
         null,
         async (err, doc) => {
           if (err) {
@@ -403,7 +403,7 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
             if (!!doc) {
               const nftData = await NftModel.findOneAndUpdate(
                 { _id: asset },
-                { validationState: "revalidation" },
+                { validationState: "pending" },
                 {
                   new: true,
                 }
@@ -607,10 +607,7 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
       _id: assetId,
     });
     if (data.nftOwnerAddress === wallet_address) {
-      if (
-        data.validationState === "validated" ||
-        data.validationState === "revalidated"
-      ) {
+      if (data.validationState === "validated") {
         if (
           data.redeemRequest === "false" ||
           data.redeemRequest === "redeemed"
@@ -719,10 +716,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
       _id: assetId,
     });
     if (data.nftOwnerAddress === wallet_address) {
-      if (
-        data.validationState === "validated" ||
-        data.validationState === "revalidated"
-      ) {
+      if (data.validationState === "validated") {
         if (data.redeemRequest === "accepted") {
           let nftData = await NftModel.findOneAndUpdate(
             { _id: assetId },
@@ -779,10 +773,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
     const { amount } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
-      if (
-        nftData.validationState === "validated" ||
-        nftData.validationState === "revalidated"
-      ) {
+      if (nftData.validationState === "validated") {
         let availableBalance = nftData.fundBalance;
         if (amount <= availableBalance) {
           let balance = availableBalance - amount;
@@ -845,10 +836,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
     const { amount } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
-      if (
-        nftData.validationState === "validated" ||
-        nftData.validationState === "revalidated"
-      ) {
+      if (nftData.validationState === "validated") {
         let availableBalance = nftData.validationAmount - nftData.fundBalance;
         if (amount > 0 && amount <= availableBalance) {
           let data = await NftModel.findOneAndUpdate(
@@ -882,9 +870,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
               .json({ success: false, message: "Failed to repay amount" });
           }
         } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Balance mismatch" });
+          res.status(401).json({ success: false, message: "Balance mismatch" });
         }
       } else {
         res

@@ -84,6 +84,7 @@ const NftSchema = new mongoose.Schema(
     validationDuration: Number,
     validationRoyality: Number,
     validationDocuments: [String],
+    validationCount: Number,
     validationState: {
       type: String,
       enum: [
@@ -91,8 +92,8 @@ const NftSchema = new mongoose.Schema(
         "pending",
         "validated",
         "cancelled",
-        "revalidation",
-        "revalidated",
+        // "revalidation",
+        // "revalidated",
       ],
       default: "unvalidated",
     },
