@@ -233,8 +233,8 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
 
 exports.listNftForAuction = asyncHandler(async (req, res, next) => {
   try {
-    const { id, wallet_address, contractAddress } = req.user;
-    const { duration, price, saleId } = req.body;
+    const { id, wallet_address } = req.user;
+    const { duration, price, saleId, contractAddress } = req.body;
     const { assetId } = req.params;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {

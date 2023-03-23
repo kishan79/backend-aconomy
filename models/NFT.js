@@ -24,8 +24,27 @@ const OfferSchema = new mongoose.Schema(
     expiration: Number,
     bidId: Number,
     expireOn: Date,
-    bidder: { type: mongoose.Schema.ObjectId, ref: "user" },
+    bidder: { type: mongoose.Schema.ObjectId, ref: "User" },
     bidderAddress: String,
+    status: {
+      type: String,
+      enum: ["none", "accepted", "rejected"],
+      default: "none",
+    },
+  },
+  { timestamps: true }
+);
+
+const SwapSchema = new mongoose.Schema(
+  {
+    asset: { type: mongoose.Schema.ObjectId, ref: "Nft" },
+    assetOwner: { type: mongoose.Schema.ObjectId, ref: "User" },
+    assetOwnerAddress: String,
+    nftContractAddress: String,
+    nftContractAddress2: String,
+    tokenId: Number,
+    tokenId2: Number,
+    swapId: Number,
     status: {
       type: String,
       enum: ["none", "accepted", "rejected"],
@@ -123,7 +142,7 @@ const NftSchema = new mongoose.Schema(
     nftContractAddress: String,
     state: {
       type: String,
-      enum: ["none", "sale", "auction", "lendborrow"],
+      enum: ["none", "sale", "auction", "lendborrow", "swap"],
       default: "none",
     },
     offers: [OfferSchema],
@@ -141,13 +160,7 @@ const NftSchema = new mongoose.Schema(
         ref: "User",
       },
     },
-    // validation: {
-    //     Type: String,
-    //     Amount: Number,
-    //     Duration: Number,
-    //     Royality: Number,
-    //     Document: String
-    // }
+    swapOffers: [SwapSchema],
     history: [HistorySchema],
   },
   { timestamps: true }
