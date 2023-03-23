@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const SwapOfferSchema = new mongoose.Schema(
   {
-    // asset: { type: mongoose.Schema.ObjectId, ref: "Nft" },
-    // assetOwner: { type: mongoose.Schema.ObjectId, ref: "User" },
-    // assetOwnerAddress: String,
+    asset: { type: mongoose.Schema.ObjectId, ref: "Nft" },
+    assetOwner: { type: mongoose.Schema.ObjectId, ref: "User" },
+    assetOwnerAddress: String,
     nftContractAddress: String,
     nftContractAddress2: String,
     tokenId: Number,
@@ -12,7 +12,7 @@ const SwapOfferSchema = new mongoose.Schema(
     swapId: Number,
     status: {
       type: String,
-      enum: ["none", "accepted", "rejected"],
+      enum: ["none", "accepted", "rejected", "cancelled"],
       default: "none",
     },
   },

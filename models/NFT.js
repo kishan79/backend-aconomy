@@ -35,25 +35,6 @@ const OfferSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const SwapSchema = new mongoose.Schema(
-  {
-    asset: { type: mongoose.Schema.ObjectId, ref: "Nft" },
-    assetOwner: { type: mongoose.Schema.ObjectId, ref: "User" },
-    assetOwnerAddress: String,
-    nftContractAddress: String,
-    nftContractAddress2: String,
-    tokenId: Number,
-    tokenId2: Number,
-    swapId: Number,
-    status: {
-      type: String,
-      enum: ["none", "accepted", "rejected"],
-      default: "none",
-    },
-  },
-  { timestamps: true }
-);
-
 const NftSchema = new mongoose.Schema(
   {
     nftOwnerAddress: String,
@@ -160,7 +141,6 @@ const NftSchema = new mongoose.Schema(
         ref: "User",
       },
     },
-    swapOffers: [SwapSchema],
     history: [HistorySchema],
   },
   { timestamps: true }
