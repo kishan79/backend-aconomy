@@ -311,7 +311,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress !== wallet_address) {
       if (data.state === "auction") {
-        if (amount > auctionData.baseAuctionPrice) {
+        if (amount >= auctionData.baseAuctionPrice) {
           AuctionModel.findOneAndUpdate(
             { _id: auctionData._id },
             {
