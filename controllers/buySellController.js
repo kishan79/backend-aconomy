@@ -3,7 +3,7 @@ const NftModel = require("../models/NFT");
 const UserActivityModel = require("../models/UserActivity");
 const AuctionModel = require("../models/Auction");
 const { addDays, isBefore } = require("date-fns");
-const { nftSelectQuery } = require("../utils/selectQuery");
+const { nftSelectQuery, userSelectQuery } = require("../utils/selectQuery");
 
 exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
@@ -627,7 +627,16 @@ exports.fetchAuctionbyId = asyncHandler(async (req, res, next) => {
 exports.fetchAllAuctionsByAsset = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    let data = await AuctionModel.find({ asset: assetId });
+    let data = await AuctionModel.find({ asset: assetId }).populate([
+      {
+        path: "auctionOwner",
+        select: userSelectQuery,
+      },
+      {
+        path: "bids.bidder",
+        select: userSelectQuery,
+      },
+    ]);
     if (data) {
       res.status(200).json({ success: true, data });
     } else {
@@ -644,7 +653,19 @@ exports.fetchAllAuctionsByAsset = asyncHandler(async (req, res, next) => {
 exports.fetchLastestAuctionByAsset = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    let data = await AuctionModel.findOne({ asset: assetId, status: "active" });
+    let data = await AuctionModel.findOne({
+      asset: assetId,
+      status: "active",
+    }).populate([
+      {
+        path: "auctionOwner",
+        select: userSelectQuery,
+      },
+      {
+        path: "bids.bidder",
+        select: userSelectQuery,
+      },
+    ]);
     if (data) {
       res.status(200).json({ success: true, data });
     } else {

@@ -6,6 +6,8 @@ const asyncHandler = require("../middlewares/async");
 const {
   nftSelectQuery,
   collectionSelectQuery,
+  userSelectQuery,
+  validatorSelectQuery,
 } = require("../utils/selectQuery");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
@@ -27,10 +29,15 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
           res.status(200).json({ success: true, data: doc });
         }
       })
-        .populate({
-          path: "nftCollection",
-          select: collectionSelectQuery,
-        })
+        .populate([
+          {
+            path: "nftCollection",
+            select: collectionSelectQuery,
+          },
+          { path: "nftOwner", select: userSelectQuery },
+          { path: "nftCreator", select: userSelectQuery },
+          { path: "validator", select: validatorSelectQuery },
+        ])
         .select(nftSelectQuery);
     } else {
       res.status(400).json({ success: false });
