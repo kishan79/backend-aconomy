@@ -7,5 +7,20 @@ const { protect, authorize } = require("../middlewares/auth");
 
 const swapController = require("../controllers/swapController");
 
-// router.route()
+router
+  .route("/listForSwap/:assetId")
+  .post(protect, authorize("user"), swapController.listForSwap);
+router
+  .route("/requestForSwap/:assetId")
+  .post(protect, authorize("user"), swapController.requestForSwap);
+router
+  .route("/acceptSwapRequest/:assetId")
+  .post(protect, authorize("user"), swapController.acceptSwapRequest);
+router
+  .route("/rejectSwapRequest/:assetId")
+  .post(protect, authorize("user"), swapController.rejectSwapRequest);
+router
+  .route("/cancelSwapRequest/:assetId")
+  .post(protect, authorize("user"), swapController.cancelSwapRequest);
+
 module.exports = router;

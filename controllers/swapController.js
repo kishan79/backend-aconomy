@@ -25,8 +25,8 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
           );
           if (data) {
             res
-              .status(401)
-              .json({ success: false, message: "Listed for swap" });
+              .status(201)
+              .json({ success: true, message: "Listed for swap" });
           } else {
             res.status(401).json({
               success: false,
@@ -40,7 +40,7 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
         }
       } else if (nftData.state === "swap") {
         let swapData = await SwapModel.findOneAndDelete({
-          _id: assetId,
+          asset: assetId,
           status: "active",
         });
         if (swapData) {
@@ -52,8 +52,8 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
           );
           if (data) {
             res
-              .status(401)
-              .json({ success: false, message: "Unlisted for swap" });
+              .status(201)
+              .json({ success: true, message: "Unlisted for swap" });
           } else {
             res.status(401).json({
               success: false,
@@ -95,7 +95,7 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
   if (nftData.nftOwnerAddress !== wallet_address) {
     if (nftData.state === "swap") {
       let swapNftData = await NftModel.findOne({ _id: swapAsset });
-      if (swapNftData) {
+      if (swapNftData && swapNftData.nftOwnerAddress === wallet_address) {
         let swapData = await SwapModel.findOneAndUpdate(
           {
             asset: assetId,
@@ -128,7 +128,7 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
       } else {
         res
           .status(401)
-          .json({ success: false, message: "Not a valid swap asset" });
+          .json({ success: false, message: "Not a valid swap asset owner" });
       }
     } else {
       res
@@ -158,22 +158,22 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
           let request = swapData.offers.filter(
             (item) => item.swapId === swapId
           );
-          if (request.status === "none") {
+          if (request[0].status === "none") {
             let swapNftData = await NftModel.findOne({
-              _id: request.asset,
+              _id: request[0].asset,
             });
             if (swapNftData.state === "none" || swapNftData.state === "swap") {
               let data = await NftModel.findOneAndUpdate(
                 { _id: assetId },
                 {
                   state: "none",
-                  nftOwner: request.assetOwner,
-                  nftOwnerAddress: request.nftContractAddress2,
+                  nftOwner: request[0].assetOwner,
+                  nftOwnerAddress: request[0].assetOwnerAddress,
                 }
               );
               if (data) {
                 let data2 = await NftModel.findOneAndUpdate(
-                  { _id: request.asset },
+                  { _id: request[0].asset },
                   {
                     state: "none",
                     nftOwner: nftData.nftOwner,
