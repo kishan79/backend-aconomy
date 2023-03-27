@@ -24,7 +24,7 @@ router
     collectionController.createCollection
   );
 
-router.route("/public").post(collectionController.fetchPublicCollections);
+router.route("/public").get(collectionController.fetchPublicCollections);
 
 router
   .route("/:collectionId")
