@@ -500,7 +500,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
     if (auctionData.status === "active") {
       if (auctionData.auctionOwnerAddress === wallet_address) {
         let bid = auctionData.bids.filter((item) => item.bidId === bidId);
-        if (isBefore(new Date(), bid[0].expireOn)) {
+        // if (isBefore(new Date(), bid[0].expireOn)) {
           let data = await AuctionModel.findOneAndUpdate(
             // { "bids.bidId": bidId },
             { _id: auctionData._id, "bids.bidId": bidId },
@@ -534,9 +534,9 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
               .status(401)
               .json({ success: false, message: "Failed to accept the bid" });
           }
-        } else {
-          res.status(401).json({ success: false, message: "Bid is expired" });
-        }
+        // } else {
+        //   res.status(401).json({ success: false, message: "Bid is expired" });
+        // }
       } else {
         res.status(401).json({
           success: false,
