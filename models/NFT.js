@@ -141,6 +141,11 @@ const NftSchema = new mongoose.Schema(
         ref: "User",
       },
     },
+    borrowState:{
+      type: String,
+      enum: ["none", "active"],
+      default: "none"
+    },
     history: [HistorySchema],
   },
   { timestamps: true }

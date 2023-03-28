@@ -180,6 +180,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                   bidderAddress: bid[0].bidderAddress,
                   bidder: bid[0].bidder,
                 },
+                borrowState: "active",
               },
             }
           );
@@ -285,6 +286,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
           {
             offers: null,
             state: "none",
+            borrowState: "none",
           }
         );
         if (data) {
