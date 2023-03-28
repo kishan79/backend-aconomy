@@ -3,6 +3,7 @@ const NftModel = require("../models/NFT");
 const SwapModel = require("../models/Swap");
 const UserActivityModel = require("../models/UserActivity");
 const { addDays, isBefore } = require("date-fns");
+const { userSelectQuery } = require("../utils/selectQuery");
 
 exports.listForSwap = asyncHandler(async (req, res, next) => {
   try {
@@ -24,9 +25,7 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
-            res
-              .status(201)
-              .json({ success: true, message: "Listed for swap" });
+            res.status(201).json({ success: true, message: "Listed for swap" });
           } else {
             res.status(401).json({
               success: false,
@@ -343,5 +342,30 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(401).json({ success: false });
+  }
+});
+
+exports.fetchSwapRequest = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    let data = await SwapModel.findOne({
+      asset: assetId,
+      status: "active",
+    }).populate([
+      {
+        path: "offers.assetOwner",
+        select: userSelectQuery,
+      },
+    ]);
+    if (data) {
+      res.status(200).json({ success: true, data });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "No asset found with requested assetId",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
   }
 });
