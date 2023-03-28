@@ -353,6 +353,10 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
               res.status(401).json({ success: false });
             } else {
               if (!!doc) {
+                let validationData = await NftModel.findOneAndUpdate(
+                  { _id: asset },
+                  { validationId: doc._id }
+                );
                 let activity = await UserActivityModel.create({
                   userAddress: wallet_address,
                   user: id,

@@ -79,6 +79,10 @@ const NftSchema = new mongoose.Schema(
       default: 0,
     },
     erc20ContractAddress: String,
+    validationId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "NftValidation",
+    },
     validationType: String,
     validationAmount: Number,
     validationDuration: Number,
@@ -141,10 +145,10 @@ const NftSchema = new mongoose.Schema(
         ref: "User",
       },
     },
-    borrowState:{
+    borrowState: {
       type: String,
       enum: ["none", "active"],
-      default: "none"
+      default: "none",
     },
     history: [HistorySchema],
   },
