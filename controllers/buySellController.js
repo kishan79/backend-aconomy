@@ -300,7 +300,8 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
 
 exports.placeBid = asyncHandler(async (req, res, next) => {
   try {
-    const { amount, duration, bidId } = req.body;
+    const { amount, bidId } = req.body;
+    // const { amount, duration, bidId } = req.body;
     // const { auctionId } = req.params;
     const { wallet_address, id } = req.user;
     const { assetId } = req.params;
@@ -311,7 +312,10 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress !== wallet_address) {
       if (data.state === "auction") {
-        if (amount >= auctionData.baseAuctionPrice) {
+        if (
+          auctionData.bids.length &&
+          amount >= auctionData.bids[auctionData.bids.length - 1].amount
+        ) {
           AuctionModel.findOneAndUpdate(
             { _id: auctionData._id },
             {
@@ -322,8 +326,47 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                   bidder: id,
                   bidId,
                   amount,
-                  duration,
-                  expireOn: addDays(new Date(), duration),
+                  // duration,
+                  // expireOn: addDays(new Date(), duration),
+                },
+              },
+            },
+            null,
+            async (err, doc) => {
+              if (err) {
+                res.status(401).json({ success: false });
+              } else {
+                if (!!doc) {
+                  let activity = await UserActivityModel.create({
+                    userAddress: wallet_address,
+                    user: id,
+                    asset: data._id,
+                    assetName: data.name,
+                    statusText: "Bid Placed",
+                  });
+                  res.status(201).json({
+                    success: true,
+                    message: "Bid successfully placed",
+                  });
+                } else {
+                  res.status(401).json({ success: false });
+                }
+              }
+            }
+          );
+        } else if (amount >= auctionData.baseAuctionPrice) {
+          AuctionModel.findOneAndUpdate(
+            { _id: auctionData._id },
+            {
+              $push: {
+                bids: {
+                  auctionId: auctionData._id,
+                  bidderAddress: wallet_address,
+                  bidder: id,
+                  bidId,
+                  amount,
+                  // duration,
+                  // expireOn: addDays(new Date(), duration),
                 },
               },
             },
@@ -353,7 +396,8 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
         } else {
           res.status(401).json({
             success: false,
-            message: "Amount must be greater than the base auction amount",
+            message:
+              "Amount must be greater than the base auction amount and the last bid ",
           });
         }
       } else {
@@ -500,7 +544,12 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
     if (auctionData.status === "active") {
       if (auctionData.auctionOwnerAddress === wallet_address) {
         let bid = auctionData.bids.filter((item) => item.bidId === bidId);
-        // if (isBefore(new Date(), bid[0].expireOn)) {
+        if (
+          isBefore(
+            new Date(),
+            addDays(auctionData.createdAt, auctionData.duration)
+          )
+        ) {
           let data = await AuctionModel.findOneAndUpdate(
             // { "bids.bidId": bidId },
             { _id: auctionData._id, "bids.bidId": bidId },
@@ -534,9 +583,9 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
               .status(401)
               .json({ success: false, message: "Failed to accept the bid" });
           }
-        // } else {
-        //   res.status(401).json({ success: false, message: "Bid is expired" });
-        // }
+        } else {
+          res.status(401).json({ success: false, message: "Bid is expired" });
+        }
       } else {
         res.status(401).json({
           success: false,
@@ -559,37 +608,46 @@ exports.withdrawBid = asyncHandler(async (req, res, next) => {
       _id: auctionId,
     });
     let bid = auctionData.bids.filter((item) => item.bidId === bidId);
+    let highestBid = auctionData.bids[auctionData.bids.length - 1];
     if (auctionData.auctionOwnerAddress !== wallet_address) {
       if (
         bid[0].bidderAddress === wallet_address &&
         bid[0].status !== "accepted"
       ) {
-        if (bid[0].status !== "accepted" && bid[0].status !== "withdrawn") {
-          let data = await AuctionModel.findOneAndUpdate(
-            {
-              _id: auctionId,
-              "bids.bidId": bidId,
-            },
-            {
-              $set: {
-                "bids.$.status": "withdrawn",
-              },
-            }
-          );
-          if (data) {
-            res
-              .status(201)
-              .json({ success: true, message: "Bid successfully withdrawn" });
-          } else {
-            res
-              .status(401)
-              .json({ success: false, message: "Bid failed to withdraw" });
-          }
-        } else {
+        if (auctionData.status === "active" && bid[0].bidId === highestBid.bidId) {
           res.status(401).json({
             success: false,
-            message: "Bid already accepted or withdrawn",
+            message:
+              "Highest bid can't be withdrawn when the auction is active",
           });
+        } else {
+          if (bid[0].status !== "accepted" && bid[0].status !== "withdrawn") {
+            let data = await AuctionModel.findOneAndUpdate(
+              {
+                _id: auctionId,
+                "bids.bidId": bidId,
+              },
+              {
+                $set: {
+                  "bids.$.status": "withdrawn",
+                },
+              }
+            );
+            if (data) {
+              res
+                .status(201)
+                .json({ success: true, message: "Bid successfully withdrawn" });
+            } else {
+              res
+                .status(401)
+                .json({ success: false, message: "Bid failed to withdraw" });
+            }
+          } else {
+            res.status(401).json({
+              success: false,
+              message: "Bid already accepted or withdrawn",
+            });
+          }
         }
       } else {
         res.status(401).json({
