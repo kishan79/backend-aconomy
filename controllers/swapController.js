@@ -3,7 +3,7 @@ const NftModel = require("../models/NFT");
 const SwapModel = require("../models/Swap");
 const UserActivityModel = require("../models/UserActivity");
 const { addDays, isBefore } = require("date-fns");
-const { userSelectQuery } = require("../utils/selectQuery");
+const { userSelectQuery, nftSelectQuery } = require("../utils/selectQuery");
 
 exports.listForSwap = asyncHandler(async (req, res, next) => {
   try {
@@ -367,5 +367,64 @@ exports.fetchSwapRequest = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(400).json({ success: false });
+  }
+});
+
+exports.fetchSwapNfts = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      state: "swap",
+    };
+
+    query = NftModel.find(queryStr).select(nftSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });

@@ -23,5 +23,6 @@ router
   .route("/cancelSwapRequest/:assetId")
   .post(protect, authorize("user"), swapController.cancelSwapRequest);
 router.route("/swapRequest/:assetId").get(swapController.fetchSwapRequest);
+router.route("/").get(swapController.fetchSwapNfts);
 
 module.exports = router;
