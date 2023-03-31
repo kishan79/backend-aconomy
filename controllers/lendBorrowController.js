@@ -180,6 +180,8 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                   bidId: bid[0].bidId,
                   bidderAddress: bid[0].bidderAddress,
                   bidder: bid[0].bidder,
+                  nftId: nftData.offer.nftId,
+                  nftContractAddress: nftData.offer.nftContractAddress
                 },
                 borrowState: "active",
               },
@@ -281,7 +283,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.state === "lendborrow") {
-      if (nftData.offer.bidderAddress === wallet_address) {
+      if (nftData.nftOwnerAddress === wallet_address) {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
@@ -309,7 +311,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
       } else {
         res.status(401).json({
           success: false,
-          message: "Only accepted bidder can payback the loan",
+          message: "Only nft owner can payback the loan",
         });
       }
     } else {
