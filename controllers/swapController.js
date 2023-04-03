@@ -298,7 +298,7 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
       });
       if (swapData) {
         let request = swapData.offers.filter((item) => item.swapId === swapId);
-        if (request.status === "none") {
+        if (request[0].status === "none") {
           //   let data = await NftModel.findOneAndUpdate(
           //     { _id: assetId },
           //     { $pull: { swapOffers: { swapId } } }
