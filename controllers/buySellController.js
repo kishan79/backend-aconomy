@@ -146,29 +146,24 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
       if (data.state === "sale") {
-        NftModel.findOneAndUpdate(
-          { _id: assetId },
-          {
-            listingPrice: price,
-            state: "sale",
-            listingDuration: duration,
-          },
-          null,
-          (err, doc) => {
-            if (err) {
-              res.status(401).json({ success: false });
+        let obj = { state: "sale", listingPrice: price };
+        if (duration) {
+          obj = { ...obj, listingDuration: duration };
+        }
+        NftModel.findOneAndUpdate({ _id: assetId }, obj, null, (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              res.status(201).json({
+                success: true,
+                message: "Asset sale edited successfully",
+              });
             } else {
-              if (!!doc) {
-                res.status(201).json({
-                  success: true,
-                  message: "Asset sale edited successfully",
-                });
-              } else {
-                res.status(401).json({ success: false });
-              }
+              res.status(401).json({ success: false });
             }
           }
-        );
+        });
       } else {
         res
           .status(401)
@@ -614,7 +609,10 @@ exports.withdrawBid = asyncHandler(async (req, res, next) => {
         bid[0].bidderAddress === wallet_address &&
         bid[0].status !== "accepted"
       ) {
-        if (auctionData.status === "active" && bid[0].bidId === highestBid.bidId) {
+        if (
+          auctionData.status === "active" &&
+          bid[0].bidId === highestBid.bidId
+        ) {
           res.status(401).json({
             success: false,
             message:

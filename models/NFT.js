@@ -26,6 +26,7 @@ const OfferSchema = new mongoose.Schema(
     expireOn: Date,
     bidder: { type: mongoose.Schema.ObjectId, ref: "User" },
     bidderAddress: String,
+    erc20Address: String,
     status: {
       type: String,
       enum: ["none", "accepted", "rejected"],
@@ -130,8 +131,8 @@ const NftSchema = new mongoose.Schema(
       enum: ["none", "sale", "auction", "lendborrow", "swap", "withdraw"],
       default: "none",
     },
-    offers: [OfferSchema],
-    offer: {
+    lendBorrowOffers: [OfferSchema],
+    lendBorrowOffer: {
       nftId: Number,
       nftContractAddress: String,
       price: Number,

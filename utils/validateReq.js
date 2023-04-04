@@ -57,7 +57,7 @@ const buySellValidationReqSchema = [
 
 const editFixedPriceSellValidationReqSchema = [
   body("price", "The price field is required").notEmpty(),
-  body("duration", "The Duration field is required").notEmpty(),
+  // body("duration", "The Duration field is required").notEmpty(),
 ];
 
 const listAuctionValidationReqSchema = [

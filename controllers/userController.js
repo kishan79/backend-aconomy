@@ -785,7 +785,6 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
         let availableBalance = nftData.fundBalance;
         if (amount <= availableBalance) {
           let balance = availableBalance - amount;
-          console.log(balance, "123");
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
             { fundBalance: balance, state: "withdraw" }
@@ -845,40 +844,52 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.validationState === "validated") {
-        let availableBalance = nftData.validationAmount - nftData.fundBalance;
-        if (amount > 0 && amount <= availableBalance) {
-          let data = await NftModel.findOneAndUpdate(
-            { _id: assetId },
-            { fundBalance: nftData.fundBalance + amount, state: "none" }
-          );
-          if (data) {
-            let validationData = await NFTValidationModel.findOneAndUpdate(
-              {
-                assetOwnerAddress: wallet_address,
-                asset: assetId,
-              },
+        if (nftData.state === "withdraw") {
+          let availableBalance = nftData.validationAmount - nftData.fundBalance;
+          if (amount > 0 && amount <= availableBalance) {
+            let data = await NftModel.findOneAndUpdate(
+              { _id: assetId },
               {
                 fundBalance: nftData.fundBalance + amount,
+                state:
+                  nftData.fundBalance + amount === nftData.validationAmount
+                    ? "none"
+                    : "withdraw",
               }
             );
-            let activity = await UserActivityModel.create({
-              userAddress: wallet_address,
-              user: id,
-              asset: nftData._id,
-              assetName: nftData.name,
-              statusText: "Repaied fund",
-            });
-            res.status(201).json({
-              success: true,
-              message: "Amount repaid successfully",
-            });
+            if (data) {
+              let validationData = await NFTValidationModel.findOneAndUpdate(
+                {
+                  assetOwnerAddress: wallet_address,
+                  asset: assetId,
+                },
+                {
+                  fundBalance: nftData.fundBalance + amount,
+                }
+              );
+              let activity = await UserActivityModel.create({
+                userAddress: wallet_address,
+                user: id,
+                asset: nftData._id,
+                assetName: nftData.name,
+                statusText: "Repaied fund",
+              });
+              res.status(201).json({
+                success: true,
+                message: "Amount repaid successfully",
+              });
+            } else {
+              res
+                .status(401)
+                .json({ success: false, message: "Failed to repay amount" });
+            }
           } else {
             res
               .status(401)
-              .json({ success: false, message: "Failed to repay amount" });
+              .json({ success: false, message: "Balance mismatch" });
           }
         } else {
-          res.status(401).json({ success: false, message: "Balance mismatch" });
+          res.status(401).json({success: false, message: "Forbidden action"})
         }
       } else {
         res

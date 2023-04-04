@@ -17,7 +17,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
           { _id: assetId },
           {
             state: "lendborrow",
-            offer: {
+            lendBorrowOffer: {
               price,
               apy,
               duration,
@@ -69,7 +69,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
           { _id: assetId },
           {
             state: "none",
-            offer: null,
+            lendBorrowOffer: null,
           }
         );
         if (data) {
@@ -107,7 +107,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
-    const { price, apy, duration, expiration, bidId } = req.body;
+    const { price, apy, duration, expiration, bidId, erc20Address } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress !== wallet_address) {
       if (nftData.state === "lendborrow") {
@@ -115,7 +115,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
           { _id: assetId },
           {
             $push: {
-              offers: {
+              lendBorrowOffers: {
                 price,
                 apy,
                 duration,
@@ -124,6 +124,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
                 expireOn: addDays(new Date(), expiration),
                 bidder: id,
                 bidderAddress: wallet_address,
+                erc20Address
               },
             },
           }
@@ -165,14 +166,14 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
-        let bid = nftData.offers.filter((item) => item.bidId === bidId);
+        let bid = nftData.lendBorrowOffers.filter((item) => item.bidId === bidId);
         if (isBefore(new Date(), bid[0].expireOn)) {
           let data = await NftModel.findOneAndUpdate(
-            { _id: assetId, "offers.bidId": bidId },
+            { _id: assetId, "lendBorrowOffers.bidId": bidId },
             {
               $set: {
-                "offers.$.status": "accepted",
-                offer: {
+                "lendBorrowOffers.$.status": "accepted",
+                lendBorrowOffer: {
                   price: bid[0].price,
                   apy: bid[0].apy,
                   duration: bid[0].duration,
@@ -180,8 +181,8 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                   bidId: bid[0].bidId,
                   bidderAddress: bid[0].bidderAddress,
                   bidder: bid[0].bidder,
-                  nftId: nftData.offer.nftId,
-                  nftContractAddress: nftData.offer.nftContractAddress
+                  nftId: nftData.lendBorrowOffer.nftId,
+                  nftContractAddress: nftData.lendBorrowOffer.nftContractAddress
                 },
                 borrowState: "active",
               },
@@ -227,14 +228,14 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
-        let bid = nftData.offers.filter((item) => item.bidId === bidId);
+        let bid = nftData.lendBorrowOffers.filter((item) => item.bidId === bidId);
         if (bid[0].status !== "rejected") {
           if (isBefore(new Date(), bid[0].expireOn)) {
             let data = await NftModel.findOneAndUpdate(
-              { _id: assetId, "offers.bidId": bidId },
+              { _id: assetId, "lendBorrowOffers.bidId": bidId },
               {
                 $set: {
-                  "offers.$.status": "rejected",
+                  "lendBorrowOffers.$.status": "rejected",
                 },
               }
             );
@@ -287,7 +288,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
-            offers: null,
+            lendBorrowOffers: null,
             state: "none",
             borrowState: "none",
           }
