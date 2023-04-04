@@ -732,9 +732,19 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               redeemRequest: "redeemed",
               validator: null,
               validatorAddress: null,
+              validationState: "unvalidated",
             }
           );
           if (nftData) {
+            let validationData = await NFTValidationModel.findOneAndUpdate(
+              {
+                assetOwnerAddress: wallet_address,
+                asset: assetId,
+              },
+              {
+                requestState: "unvalidated",
+              }
+            );
             let activity = await UserActivityModel.create({
               userAddress: wallet_address,
               user: id,
@@ -889,7 +899,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
               .json({ success: false, message: "Balance mismatch" });
           }
         } else {
-          res.status(401).json({success: false, message: "Forbidden action"})
+          res.status(401).json({ success: false, message: "Forbidden action" });
         }
       } else {
         res

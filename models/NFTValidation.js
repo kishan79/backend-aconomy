@@ -16,6 +16,7 @@ const NftValidationSchema = new mongoose.Schema(
       type: String,
       enum: [
         "pending",
+        "unvalidated",
         "validated",
         "cancelled",
         // "revalidation",
