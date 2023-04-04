@@ -328,7 +328,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
 
 exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
   try {
-    const { asset } = req.body;
+    const { asset, validator, validatorAddress } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findOne({
       assetOwnerAddress: wallet_address,
@@ -337,7 +337,11 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
     if (!data) {
       let nftData = await NftModel.findOneAndUpdate(
         { _id: asset },
-        { validationState: "pending" }
+        {
+          validationState: "pending",
+          validator,
+          validatorAddress,
+        }
       );
       if (nftData) {
         NFTValidationModel.create(
@@ -784,7 +788,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
           console.log(balance, "123");
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
-            { fundBalance: balance }
+            { fundBalance: balance, state: "withdraw" }
           );
           if (data) {
             let validationData = await NFTValidationModel.findOneAndUpdate(
@@ -845,7 +849,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
         if (amount > 0 && amount <= availableBalance) {
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
-            { fundBalance: nftData.fundBalance + amount }
+            { fundBalance: nftData.fundBalance + amount, state: "none" }
           );
           if (data) {
             let validationData = await NFTValidationModel.findOneAndUpdate(
