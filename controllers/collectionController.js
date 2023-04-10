@@ -35,11 +35,12 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
 
 exports.createCollection = asyncHandler(async (req, res, next) => {
   try {
+    const { wallet_address, id } = req.user;
     CollectionModel.create(
       {
         ...req.body,
-        collectionOwner: req.user.id,
-        collectionOwnerAddress: req.user.wallet_address,
+        collectionOwner: id,
+        collectionOwnerAddress: wallet_address,
       },
       (err, doc) => {
         if (err) {
@@ -127,7 +128,6 @@ exports.fetchAllCollectionNfts = asyncHandler(async (req, res, next) => {
 
 exports.fetchPublicCollections = asyncHandler(async (req, res, next) => {
   try {
-    
     const { blockchain } = req.body;
     let query;
 

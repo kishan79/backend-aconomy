@@ -35,6 +35,10 @@ const PoolSchema = new mongoose.Schema(
     pool_address: {
       type: String,
     },
+    pool_owner: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
     pool_owner_address: {
       type: String,
     },
@@ -44,11 +48,15 @@ const PoolSchema = new mongoose.Schema(
     profile_image: {
       type: String,
     },
+    banner_image: {
+      type: String,
+    },
     description: {
       type: String,
     },
     visibility: {
-      type: Boolean,
+      type: String,
+      enum: ["private", "public"],
     },
     apr_percent: {
       type: Number,
@@ -68,6 +76,8 @@ const PoolSchema = new mongoose.Schema(
     is_verified: {
       type: Boolean,
     },
+    lender_whitelisted: Boolean,
+    borrower_whitelisted: Boolean,
     lenders: {},
     borrowers: {},
     offers: [PoolOfferSchema],
