@@ -428,3 +428,32 @@ exports.fetchSwapNfts = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+exports.fetchSwapStatus = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { wallet_address } = req.user;
+    let swapData = await SwapModel.findOne({
+      asset: assetId,
+      status: "active",
+    });
+    let data =
+      swapData &&
+      swapData.offers.filter(
+        (item) => item.assetOwnerAddress === wallet_address
+      );
+    if (swapData && swapData.swapOwnerAddress === wallet_address) {
+      res
+        .status(200)
+        .json({ success: true, status: "You made a swap request" });
+    } else if (data.length) {
+      res.status(200).json({ success: true, status: "NFT sent for swap" });
+    } else {
+      res.status(400).json({ success: false, status: "" });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+    });
+  }
+});
