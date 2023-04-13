@@ -1,6 +1,8 @@
 const PoolModel = require("../models/Pool");
 const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
+const LenderOfferModel = require("../models/LenderOffer");
+const LoanRequestModel = require("../models/LoanRequest");
 
 exports.getPools = asyncHandler(async (req, res, next) => {
   try {
@@ -54,7 +56,7 @@ exports.createPool = asyncHandler(async (req, res, next) => {
           } else {
             res
               .status(401)
-              .json({ success: false, message: "Failed to create collection" });
+              .json({ success: false, message: "Failed to create pool" });
           }
         }
       }
@@ -93,12 +95,10 @@ exports.addLender = asyncHandler(async (req, res, next) => {
             .json({ success: false, message: "Failed to add lender" });
         }
       } else {
-        res
-          .status(401)
-          .json({
-            success: false,
-            message: `No user found with address ${address}`,
-          });
+        res.status(401).json({
+          success: false,
+          message: `No user found with address ${address}`,
+        });
       }
     } else {
       res.status(401).json({
@@ -138,12 +138,10 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
             .json({ success: false, message: "Failed to add borrower" });
         }
       } else {
-        res
-          .status(401)
-          .json({
-            success: false,
-            message: `No user found with address ${address}`,
-          });
+        res.status(401).json({
+          success: false,
+          message: `No user found with address ${address}`,
+        });
       }
     } else {
       res.status(401).json({
@@ -159,29 +157,167 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
 exports.makeoffer = asyncHandler(async (req, res, next) => {
   try {
     const { pool_id } = req.params;
-    const data = await PoolModel.findOneAndUpdate(
-      { _id: pool_id },
-      {
-        $push: {
-          offers: {
-            pool_id,
-            amount: 500,
-            status: true,
-            apy_precent: 10,
-            duration: 30,
-            expireOn: "Sat Feb 18 2023 13:22:31 GMT+0530",
-          },
+    const { wallet_address, id } = req.user;
+    let poolData = await PoolModel.findOne({ _id: pool_id });
+    if (poolData && poolData.pool_owner_address !== wallet_address) {
+      LenderOfferModel.create(
+        {
+          ...req.body,
+          pool: pool_id,
+          lender: id,
+          lenderAddress: wallet_address,
         },
-      }
-    );
-    res.status(201).json({
-      success: true,
-      data,
-    });
+        (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              res.status(201).json({
+                success: true,
+                message: "Offer made successfully",
+              });
+            } else {
+              res
+                .status(401)
+                .json({ success: false, message: "Failed to make offer" });
+            }
+          }
+        }
+      );
+    } else {
+      res
+        .status(401)
+        .json({ success: false, message: "Pool owner can't make an offer" });
+    }
   } catch (err) {
     res.status(400).json({
       success: false,
-      data: [],
+      err,
+    });
+  }
+});
+
+exports.acceptOffer = asyncHandler(async (req, res, next) => {
+  try {
+    const { pool_id, bid_id } = req.params;
+    const { wallet_address } = req.user;
+    let poolData = await PoolModel.findOne({ _id: pool_id });
+    if (poolData && poolData.pool_owner_address === wallet_address) {
+      let offerData = await LenderOfferModel.findOne({ pool_id, bid_id });
+      if (offerData.status === "none") {
+        let data = await LenderOfferModel.findOneAndUpdate(
+          { pool_id, bid_id },
+          {
+            status: "accepted",
+          }
+        );
+        if (data) {
+          res
+            .status(201)
+            .json({ success: true, message: "Offer accepted successfully" });
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Failed to accept the offer" });
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Forbidden action" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Pool owner can only accpet an offer",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.rejectOffer = asyncHandler(async (req, res, next) => {
+  try {
+    const { pool_id, bid_id } = req.params;
+    const { wallet_address } = req.user;
+    let poolData = await PoolModel.findOne({ _id: pool_id });
+    if (poolData && poolData.pool_owner_address === wallet_address) {
+      let offerData = await LenderOfferModel.findOne({ pool_id, bid_id });
+      if (offerData.status === "none") {
+        let data = await LenderOfferModel.findOneAndUpdate(
+          { pool_id, bid_id },
+          {
+            status: "rejected",
+          }
+        );
+        if (data) {
+          res
+            .status(201)
+            .json({ success: true, message: "Offer accepted successfully" });
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Failed to accept the offer" });
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Forbidden action" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Pool owner can only accpet an offer",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
+  try {
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.requestLoan = asyncHandler(async (req, res, next) => {
+  try {
+    const { pool_id } = req.params;
+    const { wallet_address, id } = req.user;
+    let poolData = await PoolModel.findOne({ _id: pool_id });
+    if (poolData && poolData.pool_owner_address !== wallet_address) {
+      LoanRequestModel.create(
+        {
+          ...req.body,
+          pool: pool_id,
+          borrower: id,
+          borrowerAddress: wallet_address,
+        },
+        (err, doc) => {
+          if (err) {
+            res.status(401).json({ success: false });
+          } else {
+            if (!!doc) {
+              res.status(201).json({
+                success: true,
+                message: "Loan Requested successfully",
+              });
+            } else {
+              res
+                .status(401)
+                .json({ success: false, message: "Failed to request loan" });
+            }
+          }
+        }
+      );
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Pool owner can't make a loan request",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err,
     });
   }
 });
