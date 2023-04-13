@@ -6,13 +6,26 @@ const LoanRequestSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Pool",
     },
+    pool_id: {
+      type: Number,
+    },
+    loan_id: {
+      type: Number,
+    },
     borrower: {
       type: mongoose.Schema.ObjectId,
-      ref: "User",
+      refPath: "borrowerType",
     },
+    borrowerType: { type: String, enum: ["User", "Validator"], required: true },
     borrowerAddress: {
       type: String,
     },
+    lender: {
+      type: mongoose.Schema.ObjectId,
+      refPath: "lenderType",
+    },
+    lenderType: { type: String, enum: ["User", "Validator"], required: true },
+    lenderAddress: { type: String },
     amount: {
       type: Number,
     },

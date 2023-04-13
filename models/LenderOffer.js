@@ -14,8 +14,9 @@ const LenderOfferSchema = new mongoose.Schema(
     },
     lender: {
       type: mongoose.Schema.ObjectId,
-      ref: "User",
+      refPath: "lenderType",
     },
+    lenderType: { type: String, enum: ["User", "Validator"], required: true },
     lenderAddress: {
       type: String,
     },

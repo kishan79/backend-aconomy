@@ -9,7 +9,11 @@ const poolController = require("../controllers/poolController");
 
 router.route("/").get(
   advancedResults(PoolModel, poolSelectQuery, [
-    { path: "pool_owner", select: userSelectQuery },
+    {
+      path: "pool_owner",
+      select:
+        "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role",
+    },
     { path: "lenders", select: userSelectQuery },
     { path: "borrowers", select: userSelectQuery },
   ]),
@@ -24,14 +28,23 @@ router
   .post(protect, authorize("user"), poolController.addBorrower);
 router
   .route("/create")
-  .post(protect, authorize("user"), poolController.createPool);
+  .post(protect, authorize("validator"), poolController.createPool);
 router
   .route("/:pool_id/makeoffer")
-  .post(protect, authorize("user"), poolController.makeoffer);
+  .post(protect, authorize("user", "validator"), poolController.makeoffer);
 router
   .route("/:pool_id/acceptOffer/:bid_id")
-  .post(protect, authorize("user"), poolController.acceptOffer);
+  .post(protect, authorize("validator"), poolController.acceptOffer);
+router
+  .route("/:pool_id/rejectOffer/:bid_id")
+  .post(protect, authorize("user", "validator"), poolController.rejectOffer);
+router.route("/:pool_id/lenderOffers").get(poolController.fetchLenderOffers);
 router
   .route("/:pool_id/requestLoan")
-  .post(protect, authorize("user"), poolController.requestLoan);
+  .post(protect, authorize("user", "validator"), poolController.requestLoan);
+router
+  .route("/:pool_id/acceptLoan/:loan_id")
+  .post(protect, authorize("user", "validator"), poolController.acceptLoan);
+router.route("/:pool_id/loanRequests").get(poolController.fetchLenderOffers);
+
 module.exports = router;

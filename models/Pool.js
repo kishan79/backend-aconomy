@@ -1,35 +1,5 @@
 const mongoose = require("mongoose");
 
-const PoolOfferSchema = new mongoose.Schema(
-  {
-    pool_id: {
-      type: mongoose.Schema.ObjectId,
-      ref: "Pool",
-    },
-    amount: {
-      type: Number,
-    },
-    status: {
-      type: String,
-      enum: ["none", "accepted", "rejected"],
-      default: "none",
-    },
-    apy_percent: {
-      type: Number,
-      required: true,
-    },
-    duration: {
-      type: Number,
-      required: true,
-    },
-    expireOn: {
-      type: Date,
-      required: true,
-    },
-  },
-  { timestamps: true }
-);
-
 const PoolSchema = new mongoose.Schema(
   {
     pool_address: {
@@ -37,7 +7,7 @@ const PoolSchema = new mongoose.Schema(
     },
     pool_owner: {
       type: mongoose.Schema.ObjectId,
-      ref: "User",
+      ref: "Validator",
     },
     pool_owner_address: {
       type: String,
@@ -80,9 +50,6 @@ const PoolSchema = new mongoose.Schema(
     borrower_whitelisted: Boolean,
     lenders: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
     borrowers: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
-    // offers: [PoolOfferSchema],
-    //   accepted_offer:{},
-    //   loan_request:{},
   },
   { timestamps: true }
 );
