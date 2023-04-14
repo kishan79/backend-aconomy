@@ -1,8 +1,9 @@
 const PoolModel = require("../models/Pool");
 const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
-const LenderOfferModel = require("../models/LenderOffer");
-const LoanRequestModel = require("../models/LoanRequest");
+// const LenderOfferModel = require("../models/LenderOffer");
+// const LoanRequestModel = require("../models/LoanRequest");
+const OfferModel = require("../models/Offer");
 const { Role } = require("../utils/utils");
 
 exports.getPools = asyncHandler(async (req, res, next) => {
@@ -161,13 +162,14 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.lenders.includes(id)) {
-      LenderOfferModel.create(
+      OfferModel.create(
         {
           ...req.body,
           pool: pool_id,
           lender: id,
           lenderAddress: wallet_address,
           lenderType: Role[role],
+          type: "lenderOffer",
         },
         (err, doc) => {
           if (err) {
@@ -187,12 +189,10 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
         }
       );
     } else {
-      res
-        .status(401)
-        .json({
-          success: false,
-          message: "Only authorised lender can make an offer",
-        });
+      res.status(401).json({
+        success: false,
+        message: "Only authorised lender can make an offer",
+      });
     }
   } catch (err) {
     res.status(400).json({
@@ -208,9 +208,9 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.pool_owner_address === wallet_address) {
-      let offerData = await LenderOfferModel.findOne({ pool_id, bid_id });
+      let offerData = await OfferModel.findOne({ pool_id, bid_id });
       if (offerData.status === "none") {
-        let data = await LenderOfferModel.findOneAndUpdate(
+        let data = await OfferModel.findOneAndUpdate(
           { pool_id, bid_id },
           {
             status: "accepted",
@@ -245,9 +245,9 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.pool_owner_address === wallet_address) {
-      let offerData = await LenderOfferModel.findOne({ pool_id, bid_id });
+      let offerData = await OfferModel.findOne({ pool_id, bid_id });
       if (offerData.status === "none") {
-        let data = await LenderOfferModel.findOneAndUpdate(
+        let data = await OfferModel.findOneAndUpdate(
           { pool_id, bid_id },
           {
             status: "rejected",
@@ -284,9 +284,10 @@ exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       pool: req.params.pool_id,
+      type: "lenderOffer",
     };
 
-    query = LenderOfferModel.find(queryStr).populate({
+    query = OfferModel.find(queryStr).populate({
       path: "lender",
       select:
         "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role -termOfService",
@@ -303,7 +304,7 @@ exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
     const limit = parseInt(req.query.limit, 10) || 30;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await LenderOfferModel.countDocuments(queryStr);
+    const total = await OfferModel.countDocuments(queryStr);
     query = query.skip(startIndex).limit(limit);
 
     const results = await query;
@@ -345,13 +346,14 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.borrowers.includes(id)) {
-      LoanRequestModel.create(
+      OfferModel.create(
         {
           ...req.body,
           pool: pool_id,
           borrower: id,
           borrowerAddress: wallet_address,
           borrowerType: Role[role],
+          type: "loanRequest",
         },
         (err, doc) => {
           if (err) {
@@ -390,28 +392,24 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
     const { id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.lenders.includes(id)) {
-      let offerData = await LoanRequestModel.findOne({ pool_id, loan_id });
+      let offerData = await OfferModel.findOne({ pool_id, loan_id });
       if (offerData.status === "none") {
-        let data = await LoanRequestModel.findOneAndUpdate(
+        let data = await OfferModel.findOneAndUpdate(
           { pool_id, loan_id },
           {
             status: "accepted",
           }
         );
         if (data) {
-          res
-            .status(201)
-            .json({
-              success: true,
-              message: "Loan request accepted successfully",
-            });
+          res.status(201).json({
+            success: true,
+            message: "Loan request accepted successfully",
+          });
         } else {
-          res
-            .status(401)
-            .json({
-              success: false,
-              message: "Failed to accept the loan request",
-            });
+          res.status(401).json({
+            success: false,
+            message: "Failed to accept the loan request",
+          });
         }
       } else {
         res.status(401).json({ success: false, message: "Forbidden action" });
@@ -435,9 +433,10 @@ exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       pool: req.params.pool_id,
+      type: "loanRequest"
     };
 
-    query = LoanRequestModel.find(queryStr).populate({
+    query = OfferModel.find(queryStr).populate({
       path: "borrower",
       select:
         "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role -termOfService",
@@ -454,7 +453,7 @@ exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
     const limit = parseInt(req.query.limit, 10) || 30;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await LoanRequestModel.countDocuments(queryStr);
+    const total = await OfferModel.countDocuments(queryStr);
     query = query.skip(startIndex).limit(limit);
 
     const results = await query;

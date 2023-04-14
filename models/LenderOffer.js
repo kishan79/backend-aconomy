@@ -12,6 +12,9 @@ const LenderOfferSchema = new mongoose.Schema(
     bid_id: {
       type: Number,
     },
+    loan_id: {
+      type: Number,
+    },
     lender: {
       type: mongoose.Schema.ObjectId,
       refPath: "lenderType",
@@ -20,9 +23,18 @@ const LenderOfferSchema = new mongoose.Schema(
     lenderAddress: {
       type: String,
     },
+    borrower: {
+      type: mongoose.Schema.ObjectId,
+      refPath: "borrowerType",
+    },
+    borrowerType: { type: String, enum: ["User", "Validator"], required: true },
+    borrowerAddress: {
+      type: String,
+    },
     amount: {
       type: Number,
     },
+    type: { type: String, enum: ["lenderOffer", "loanRequest"] },
     status: {
       type: String,
       enum: ["none", "accepted", "rejected"],

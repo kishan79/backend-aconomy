@@ -31,7 +31,7 @@ const LoanRequestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["none", "accepted", "rejected"],
+      enum: ["none", "accepted", "rejected", "repaid"],
       default: "none",
     },
     apy_percent: {

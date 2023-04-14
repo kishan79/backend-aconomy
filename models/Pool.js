@@ -21,6 +21,9 @@ const PoolSchema = new mongoose.Schema(
     banner_image: {
       type: String,
     },
+    metadata_url: {
+      type: String,
+    },
     description: {
       type: String,
     },
@@ -34,9 +37,9 @@ const PoolSchema = new mongoose.Schema(
     loan_request_expire: {
       type: Date,
     },
-    loan_payment_cycle: {
-      type: Number,
-    },
+    // loan_payment_cycle: {
+    //   type: Number,
+    // },
     type: {
       type: String,
     },
