@@ -160,7 +160,7 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
     const { pool_id } = req.params;
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
-    if (poolData && poolData.pool_owner_address !== wallet_address) {
+    if (poolData && poolData.lenders.includes(id)) {
       LenderOfferModel.create(
         {
           ...req.body,
@@ -189,7 +189,10 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
     } else {
       res
         .status(401)
-        .json({ success: false, message: "Pool owner can't make an offer" });
+        .json({
+          success: false,
+          message: "Only authorised lender can make an offer",
+        });
     }
   } catch (err) {
     res.status(400).json({
@@ -341,7 +344,7 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
     const { pool_id } = req.params;
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
-    if (poolData && poolData.pool_owner_address !== wallet_address) {
+    if (poolData && poolData.borrowers.includes(id)) {
       LoanRequestModel.create(
         {
           ...req.body,
@@ -370,7 +373,7 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message: "Pool owner can't make a loan request",
+        message: "Only authorised borrower can request for loan",
       });
     }
   } catch (err) {
@@ -384,9 +387,9 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
 exports.acceptLoan = asyncHandler(async (req, res, next) => {
   try {
     const { pool_id, loan_id } = req.params;
-    const { wallet_address } = req.user;
+    const { id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
-    if (poolData && poolData.pool_owner_address !== wallet_address) {
+    if (poolData && poolData.lenders.includes(id)) {
       let offerData = await LoanRequestModel.findOne({ pool_id, loan_id });
       if (offerData.status === "none") {
         let data = await LoanRequestModel.findOneAndUpdate(
@@ -398,11 +401,17 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
         if (data) {
           res
             .status(201)
-            .json({ success: true, message: "Loan request accepted successfully" });
+            .json({
+              success: true,
+              message: "Loan request accepted successfully",
+            });
         } else {
           res
             .status(401)
-            .json({ success: false, message: "Failed to accept the loan request" });
+            .json({
+              success: false,
+              message: "Failed to accept the loan request",
+            });
         }
       } else {
         res.status(401).json({ success: false, message: "Forbidden action" });
@@ -410,7 +419,7 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message: "Pool owner can't accept the loan request",
+        message: "Only authorised lender can accept the loan request",
       });
     }
   } catch (err) {

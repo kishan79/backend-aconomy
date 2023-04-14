@@ -22,10 +22,10 @@ router.route("/").get(
 router.route("/:poolId").get(poolController.fetchPool);
 router
   .route("/:poolId/addLender")
-  .post(protect, authorize("user"), poolController.addLender);
+  .post(protect, authorize("validator"), poolController.addLender);
 router
   .route("/:poolId/addBorrower")
-  .post(protect, authorize("user"), poolController.addBorrower);
+  .post(protect, authorize("validator"), poolController.addBorrower);
 router
   .route("/create")
   .post(protect, authorize("validator"), poolController.createPool);
