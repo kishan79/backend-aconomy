@@ -3,7 +3,7 @@ const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
 const OfferModel = require("../models/Offer");
 const { Role, checkWhitelist, validateWhitelist } = require("../utils/utils");
-
+const { userSelectQuery } = require("../utils/selectQuery");
 exports.getPools = asyncHandler(async (req, res, next) => {
   try {
     res.status(200).json(res.advancedResults);
@@ -23,7 +23,9 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
       repaidLoans = 0,
       totalDuration = 0,
       totalAPY = 0;
-    let data = await PoolModel.findOne({ _id: poolId }).lean();
+    let data = await PoolModel.findOne({ _id: poolId })
+      .populate([{ path: "lenders", select: userSelectQuery }])
+      .lean();
     if (data) {
       let activeLoanData = await OfferModel.find({
         pool: poolId,
@@ -142,6 +144,42 @@ exports.addLender = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.removeLender = asyncHandler(async (req, res, next) => {
+  try {
+    const { poolId } = req.params;
+    const { wallet_address } = req.user;
+    const { lenderId } = req.body;
+    let poolData = await PoolModel.findOne({ _id: poolId });
+    if (
+      poolData &&
+      poolData.lender_whitelisted &&
+      poolData.pool_owner_address === wallet_address
+    ) {
+      let data = await PoolModel.findOneAndUpdate(
+        { _id: poolId },
+        { $pull: { lenders: lenderId } }
+      );
+      if (data) {
+        res
+          .status(201)
+          .json({ success: true, message: "Lender successfully removed" });
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Failed to remove lender" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message:
+          "Only pool owner can perform this action or whitelisting is not allowed",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false, err });
+  }
+});
+
 exports.addBorrower = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
@@ -177,6 +215,42 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
           success: false,
           message: `No user found with address ${address}`,
         });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message:
+          "Only pool owner can perform this action or whitelisting is not allowed",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false, err });
+  }
+});
+
+exports.removeBorrower = asyncHandler(async (req, res, next) => {
+  try {
+    const { poolId } = req.params;
+    const { wallet_address } = req.user;
+    const { borrowerId } = req.body;
+    let poolData = await PoolModel.findOne({ _id: poolId });
+    if (
+      poolData &&
+      poolData.borrower_whitelisted &&
+      poolData.pool_owner_address === wallet_address
+    ) {
+      let data = await PoolModel.findOneAndUpdate(
+        { _id: poolId },
+        { $pull: { borrowers: borrowerId } }
+      );
+      if (data) {
+        res
+          .status(201)
+          .json({ success: true, message: "Borrower successfully added" });
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Failed to add borrower" });
       }
     } else {
       res.status(401).json({
