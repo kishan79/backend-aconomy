@@ -1,10 +1,8 @@
 const PoolModel = require("../models/Pool");
 const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
-// const LenderOfferModel = require("../models/LenderOffer");
-// const LoanRequestModel = require("../models/LoanRequest");
 const OfferModel = require("../models/Offer");
-const { Role } = require("../utils/utils");
+const { Role, checkWhitelist, validateWhitelist } = require("../utils/utils");
 
 exports.getPools = asyncHandler(async (req, res, next) => {
   try {
@@ -40,11 +38,13 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
 exports.createPool = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address, id } = req.user;
+    let whitelistData = await checkWhitelist(req.body);
     PoolModel.create(
       {
         ...req.body,
         pool_owner: id,
         pool_owner_address: wallet_address,
+        whitelist: whitelistData,
       },
       (err, doc) => {
         if (err) {
@@ -76,7 +76,7 @@ exports.addLender = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     const { address } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId });
-    if (poolData && poolData.pool_owner_address === wallet_address) {
+    if (poolData && poolData.lender_whitelisted && poolData.pool_owner_address === wallet_address) {
       let user = await UserModel.findOne({ wallet_address: address });
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
@@ -105,7 +105,7 @@ exports.addLender = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message: "Only pool owner can perform this action",
+        message: "Only pool owner can perform this action or whitelisting is not allowed",
       });
     }
   } catch (err) {
@@ -119,7 +119,7 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     const { address } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId });
-    if (poolData && poolData.pool_owner_address === wallet_address) {
+    if (poolData && poolData.borrower_whitelisted && poolData.pool_owner_address === wallet_address) {
       let user = await UserModel.findOne({ wallet_address: address });
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
@@ -148,7 +148,7 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message: "Only pool owner can perform this action",
+        message: "Only pool owner can perform this action or whitelisting is not allowed",
       });
     }
   } catch (err) {
@@ -161,7 +161,8 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
     const { pool_id } = req.params;
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
-    if (poolData && poolData.lenders.includes(id)) {
+    // if (poolData && poolData.lenders.includes(id)) {
+    if (poolData && validateWhitelist(poolData, id, "makeoffer")) {
       OfferModel.create(
         {
           ...req.body,
@@ -345,7 +346,8 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
     const { pool_id } = req.params;
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
-    if (poolData && poolData.borrowers.includes(id)) {
+    // if (poolData && poolData.borrowers.includes(id)) {
+    if (poolData && validateWhitelist(poolData, id, "requestLoan")) {
       OfferModel.create(
         {
           ...req.body,
@@ -391,7 +393,8 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
     const { pool_id, loan_id } = req.params;
     const { id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
-    if (poolData && poolData.lenders.includes(id)) {
+    // if (poolData && poolData.lenders.includes(id)) {
+    if (poolData && validateWhitelist(poolData, id, "acceptLoan")) {
       let offerData = await OfferModel.findOne({ pool_id, loan_id });
       if (offerData.status === "none") {
         let data = await OfferModel.findOneAndUpdate(
@@ -433,7 +436,7 @@ exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       pool: req.params.pool_id,
-      type: "loanRequest"
+      type: "loanRequest",
     };
 
     query = OfferModel.find(queryStr).populate({

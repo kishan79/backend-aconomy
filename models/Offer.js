@@ -19,7 +19,7 @@ const OfferSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       refPath: "lenderType",
     },
-    lenderType: { type: String, enum: ["User", "Validator"], required: true },
+    lenderType: { type: String, enum: ["User", "Validator"] },
     lenderAddress: {
       type: String,
     },
@@ -27,7 +27,7 @@ const OfferSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       refPath: "borrowerType",
     },
-    borrowerType: { type: String, enum: ["User", "Validator"], required: true },
+    borrowerType: { type: String, enum: ["User", "Validator"] },
     borrowerAddress: {
       type: String,
     },

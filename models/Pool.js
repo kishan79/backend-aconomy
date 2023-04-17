@@ -51,6 +51,10 @@ const PoolSchema = new mongoose.Schema(
     },
     lender_whitelisted: Boolean,
     borrower_whitelisted: Boolean,
+    whitelist: {
+      type: String,
+      enum: ["lender", "borrower", "both", "none"],
+    },
     lenders: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
     borrowers: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
   },
