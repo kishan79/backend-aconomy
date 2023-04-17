@@ -37,7 +37,10 @@ router
   .post(protect, authorize("validator"), poolController.acceptOffer);
 router
   .route("/:pool_id/rejectOffer/:bid_id")
-  .post(protect, authorize("user", "validator"), poolController.rejectOffer);
+  .post(protect, authorize("validator"), poolController.rejectOffer);
+router
+  .route("/:pool_id/repayOffer/:bid_id")
+  .post(protect, authorize("validator"), poolController.repayOffer);
 router.route("/:pool_id/lenderOffers").get(poolController.fetchLenderOffers);
 router
   .route("/:pool_id/requestLoan")
@@ -45,6 +48,9 @@ router
 router
   .route("/:pool_id/acceptLoan/:loan_id")
   .post(protect, authorize("user", "validator"), poolController.acceptLoan);
+router
+  .route("/:pool_id/repayLoan/:loan_id")
+  .post(protect, authorize("user", "validator"), poolController.repayLoan);
 router.route("/:pool_id/loanRequests").get(poolController.fetchLenderOffers);
 
 module.exports = router;

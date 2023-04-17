@@ -76,7 +76,11 @@ exports.addLender = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     const { address } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId });
-    if (poolData && poolData.lender_whitelisted && poolData.pool_owner_address === wallet_address) {
+    if (
+      poolData &&
+      poolData.lender_whitelisted &&
+      poolData.pool_owner_address === wallet_address
+    ) {
       let user = await UserModel.findOne({ wallet_address: address });
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
@@ -105,7 +109,8 @@ exports.addLender = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message: "Only pool owner can perform this action or whitelisting is not allowed",
+        message:
+          "Only pool owner can perform this action or whitelisting is not allowed",
       });
     }
   } catch (err) {
@@ -119,7 +124,11 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     const { address } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId });
-    if (poolData && poolData.borrower_whitelisted && poolData.pool_owner_address === wallet_address) {
+    if (
+      poolData &&
+      poolData.borrower_whitelisted &&
+      poolData.pool_owner_address === wallet_address
+    ) {
       let user = await UserModel.findOne({ wallet_address: address });
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
@@ -148,7 +157,8 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message: "Only pool owner can perform this action or whitelisting is not allowed",
+        message:
+          "Only pool owner can perform this action or whitelisting is not allowed",
       });
     }
   } catch (err) {
@@ -209,10 +219,10 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.pool_owner_address === wallet_address) {
-      let offerData = await OfferModel.findOne({ pool_id, bid_id });
+      let offerData = await OfferModel.findOne({ pool: pool_id, bid_id });
       if (offerData.status === "none") {
         let data = await OfferModel.findOneAndUpdate(
-          { pool_id, bid_id },
+          { pool: pool_id, bid_id },
           {
             status: "accepted",
           }
@@ -246,10 +256,10 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.pool_owner_address === wallet_address) {
-      let offerData = await OfferModel.findOne({ pool_id, bid_id });
+      let offerData = await OfferModel.findOne({ pool: pool_id, bid_id });
       if (offerData.status === "none") {
         let data = await OfferModel.findOneAndUpdate(
-          { pool_id, bid_id },
+          { pool: pool_id, bid_id },
           {
             status: "rejected",
           }
@@ -395,10 +405,10 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
     let poolData = await PoolModel.findOne({ _id: pool_id });
     // if (poolData && poolData.lenders.includes(id)) {
     if (poolData && validateWhitelist(poolData, id, "acceptLoan")) {
-      let offerData = await OfferModel.findOne({ pool_id, loan_id });
+      let offerData = await OfferModel.findOne({ pool: pool_id, loan_id });
       if (offerData.status === "none") {
         let data = await OfferModel.findOneAndUpdate(
-          { pool_id, loan_id },
+          { pool: pool_id, loan_id },
           {
             status: "accepted",
           }
@@ -489,5 +499,83 @@ exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
       data: [],
       message: "Failed to execute",
     });
+  }
+});
+
+exports.repayOffer = asyncHandler(async (req, res, next) => {
+  try {
+    const { pool_id, bid_id } = req.params;
+    const { wallet_address } = req.user;
+    let poolData = await PoolModel.findOne({ _id: pool_id });
+    if (poolData && poolData.pool_owner_address === wallet_address) {
+      let offerData = await OfferModel.findOne({ pool: pool_id, bid_id });
+      if (offerData.status === "accepted") {
+        let data = await OfferModel.findOneAndUpdate(
+          { pool: pool_id, bid_id },
+          {
+            status: "repaid",
+          }
+        );
+        if (data) {
+          res.status(201).json({
+            success: true,
+            message: "Offer repaid successfully",
+          });
+        } else {
+          res.status(401).json({
+            success: false,
+            message: "Failed to repay offer",
+          });
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Forbidden action" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only pool owner can repay the lender offer",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});
+
+exports.repayLoan = asyncHandler(async (req, res, next) => {
+  try {
+    const { pool_id, loan_id } = req.params;
+    const { wallet_address } = req.user;
+    let poolData = await PoolModel.findOne({ _id: pool_id });
+    let offerData = await OfferModel.findOne({ pool: pool_id, loan_id });
+    if (poolData && offerData.borrowerAddress === wallet_address) {
+      if (offerData.status === "accepted") {
+        let data = await OfferModel.findOneAndUpdate(
+          { pool: pool_id, loan_id },
+          {
+            status: "repaid",
+          }
+        );
+        if (data) {
+          res.status(201).json({
+            success: true,
+            message: "Loan repaid successfully",
+          });
+        } else {
+          res.status(401).json({
+            success: false,
+            message: "Failed to repay loan",
+          });
+        }
+      } else {
+        res.status(401).json({ success: false, message: "Forbidden action" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only authorised borrower can repay the loan",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
   }
 });
