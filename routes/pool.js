@@ -51,6 +51,6 @@ router
 router
   .route("/:pool_id/repayLoan/:loan_id")
   .post(protect, authorize("user", "validator"), poolController.repayLoan);
-router.route("/:pool_id/loanRequests").get(poolController.fetchLenderOffers);
-
+router.route("/:pool_id/loanRequests").get(poolController.fetchLoanRequests);
+router.route("/:pool_id/filledOffers").get(poolController.fetchFilledOffers);
 module.exports = router;

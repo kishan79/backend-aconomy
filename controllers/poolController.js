@@ -19,16 +19,40 @@ exports.getPools = asyncHandler(async (req, res, next) => {
 exports.fetchPool = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    if (!!nftId) {
-      PoolModel.findOne({ _id: poolId }, (err, doc) => {
-        if (err) {
-          res.status(400).json({ success: false, data: {} });
-        } else {
-          res.status(200).json({ success: true, data: doc });
-        }
+    let activeLoans = 0,
+      repaidLoans = 0,
+      totalDuration = 0,
+      totalAPY = 0;
+    let data = await PoolModel.findOne({ _id: poolId });
+    if (data) {
+      let activeLoanData = await OfferModel.find({
+        pool: poolId,
+        status: "accepted",
+      });
+      for (let i = 0; i < activeLoanData.length; i++) {
+        activeLoans += activeLoanData[i].amount;
+        totalDuration += activeLoanData[i].duration;
+        totalAPY += activeLoanData[i].apy_percent;
+      }
+      let repaidLoanData = await OfferModel.find({
+        pool: poolId,
+        status: "repaid",
+      });
+      for (let i = 0; i < repaidLoanData.length; i++) {
+        repaidLoans += repaidLoanData[i].amount;
+      }
+      res.status(200).json({
+        success: true,
+        data: {
+          ...data._doc,
+          activeLoans,
+          repaidLoans,
+          averageDuration: totalDuration / activeLoanData.length,
+          averageAPY: totalAPY / activeLoanData.length,
+        },
       });
     } else {
-      res.status(400).json({ success: false });
+      res.status(400).json({ success: false, data: {} });
     }
   } catch (err) {
     res.status(400).json({ success: false });
@@ -438,7 +462,7 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
   }
 });
 
-exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
+exports.fetchLoanRequests = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
@@ -577,5 +601,73 @@ exports.repayLoan = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(401).json({ success: false });
+  }
+});
+
+exports.fetchFilledOffers = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      // pool: req.params.pool_id,
+      // status: "accepted",
+      $and: [
+        { pool: req.params.pool_id },
+        { $or: [{ status: "accepted" }, { status: "repaid" }] },
+      ],
+    };
+
+    query = OfferModel.find(queryStr).populate({
+      path: "borrower",
+      select:
+        "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role -termOfService",
+    });
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await OfferModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });
