@@ -23,7 +23,7 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
       repaidLoans = 0,
       totalDuration = 0,
       totalAPY = 0;
-    let data = await PoolModel.findOne({ _id: poolId });
+    let data = await PoolModel.findOne({ _id: poolId }).lean();
     if (data) {
       let activeLoanData = await OfferModel.find({
         pool: poolId,
@@ -44,7 +44,7 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
       res.status(200).json({
         success: true,
         data: {
-          ...data._doc,
+          ...data,
           activeLoans,
           repaidLoans,
           averageDuration: totalDuration / activeLoanData.length,
