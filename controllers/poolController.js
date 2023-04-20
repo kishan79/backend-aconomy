@@ -79,10 +79,11 @@ exports.myPools = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, verification } = req.query;
 
     let queryStr = {
       pool_owner_address: req.user.wallet_address,
+      is_verified: verification === "verified" ? true : false,
     };
 
     query = PoolModel.find(queryStr)
