@@ -1,24 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const advancedResults = require("../middlewares/advancedResults");
-const PoolModel = require("../models/Pool");
 const { protect, authorize } = require("../middlewares/auth");
-const { poolSelectQuery, userSelectQuery } = require("../utils/selectQuery");
 
 const poolController = require("../controllers/poolController");
 
-router.route("/").get(
-  advancedResults(PoolModel, poolSelectQuery, [
-    {
-      path: "pool_owner",
-      select:
-        "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role",
-    },
-    { path: "lenders", select: userSelectQuery },
-    { path: "borrowers", select: userSelectQuery },
-  ]),
-  poolController.getPools
-);
+router.route("/").get(poolController.getPools);
+router
+  .route("/my-pool")
+  .get(protect, authorize("validator"), poolController.myPools);
 router.route("/:poolId").get(poolController.fetchPool);
 router
   .route("/:poolId/addLender")

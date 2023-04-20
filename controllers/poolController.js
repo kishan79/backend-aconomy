@@ -3,10 +3,138 @@ const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
 const OfferModel = require("../models/Offer");
 const { Role, checkWhitelist, validateWhitelist } = require("../utils/utils");
-const { userSelectQuery } = require("../utils/selectQuery");
+const { userSelectQuery, poolSelectQuery } = require("../utils/selectQuery");
+
 exports.getPools = asyncHandler(async (req, res, next) => {
   try {
-    res.status(200).json(res.advancedResults);
+    let query;
+
+    const { sortby, verification } = req.query;
+
+    let queryStr = {
+      is_verified: verification === "verified" ? true : false,
+      visibility: "public",
+    };
+
+    query = PoolModel.find(queryStr)
+      .select(poolSelectQuery)
+      .populate([
+        {
+          path: "pool_owner",
+          select:
+            "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role",
+        },
+        { path: "lenders", select: userSelectQuery },
+        { path: "borrowers", select: userSelectQuery },
+      ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await PoolModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
+
+exports.myPools = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      pool_owner_address: req.user.wallet_address,
+    };
+
+    query = PoolModel.find(queryStr)
+      .select(poolSelectQuery)
+      .populate([
+        {
+          path: "pool_owner",
+          select:
+            "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role",
+        },
+        { path: "lenders", select: userSelectQuery },
+        { path: "borrowers", select: userSelectQuery },
+      ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await PoolModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
   } catch (err) {
     res.status(400).json({
       success: false,
