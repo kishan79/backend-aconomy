@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 
 const PoolSchema = new mongoose.Schema(
   {
+    poolId: {
+      type: Number,
+    },
     pool_address: {
       type: String,
     },
@@ -32,6 +35,9 @@ const PoolSchema = new mongoose.Schema(
       enum: ["private", "public"],
     },
     apr_percent: {
+      type: Number,
+    },
+    duration: {
       type: Number,
     },
     loan_request_expire: {
