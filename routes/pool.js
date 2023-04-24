@@ -16,6 +16,9 @@ router
   .route("/:poolId/removeLender")
   .delete(protect, authorize("validator"), poolController.removeLender);
 router
+  .route("/:poolId/lenders-borrowers")
+  .get(protect, authorize("validator"), poolController.fetchLenderAndBorrower);
+router
   .route("/:poolId/addBorrower")
   .post(protect, authorize("validator"), poolController.addBorrower);
 router

@@ -309,6 +309,45 @@ exports.removeLender = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.fetchLenderAndBorrower = asyncHandler(async (req, res, next) => {
+  try {
+    const { poolId } = req.params;
+    const { wallet_address } = req.user;
+    let poolData = await PoolModel.findOne({ _id: poolId }).populate([
+      {
+        path: "lenders",
+        select: userSelectQuery,
+      },
+      {
+        path: "borrowers",
+        select: userSelectQuery,
+      }
+    ]);
+    if (poolData && poolData.pool_owner_address === wallet_address) {
+      let data = {};
+      data["lenders"] = poolData.lenders;
+      data["borrowers"] = poolData.borrowers;
+      if (data) {
+        res
+          .status(201)
+          .json({ success: true, data});
+      } else {
+        res
+          .status(401)
+          .json({ success: false, message: "Failed to load data" });
+      }
+    } else {
+      res.status(401).json({
+        success: false,
+        message:
+          "Only pool owner can perform this action",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false, err });
+  }
+});
+
 exports.addBorrower = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
