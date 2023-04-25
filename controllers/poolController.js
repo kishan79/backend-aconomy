@@ -323,31 +323,37 @@ exports.removeLender = asyncHandler(async (req, res, next) => {
   }
 });
 
-exports.fetchLenderAndBorrower = asyncHandler(async (req, res, next) => {
+exports.fetchLender = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
     const { wallet_address } = req.user;
-    let poolData = await PoolModel.findOne({ _id: poolId }).populate([
-      {
-        path: "lenders.lender",
-        select: userSelectQuery,
-      },
-      {
-        path: "borrowers.borrower",
-        select: userSelectQuery,
-      },
-    ]);
+    let poolData = await PoolModel.findOne({ _id: poolId }).populate({
+      path: "lenders.lender",
+      select: userSelectQuery,
+    });
     if (poolData && poolData.pool_owner_address === wallet_address) {
-      let data = {};
-      data["lenders"] = poolData.lenders;
-      data["borrowers"] = poolData.borrowers;
-      if (data) {
-        res.status(201).json({ success: true, data });
-      } else {
-        res
-          .status(401)
-          .json({ success: false, message: "Failed to load data" });
-      }
+      res.status(201).json({ success: true, data: poolData.lenders });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only pool owner can perform this action",
+      });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false, err });
+  }
+});
+
+exports.fetchBorrower = asyncHandler(async (req, res, next) => {
+  try {
+    const { poolId } = req.params;
+    const { wallet_address } = req.user;
+    let poolData = await PoolModel.findOne({ _id: poolId }).populate({
+      path: "borrowers.borrower",
+      select: userSelectQuery,
+    });
+    if (poolData && poolData.pool_owner_address === wallet_address) {
+      res.status(201).json({ success: true, data: poolData.borrowers });
     } else {
       res.status(401).json({
         success: false,
@@ -433,7 +439,7 @@ exports.removeBorrower = asyncHandler(async (req, res, next) => {
       );
       let data = await PoolModel.findOneAndUpdate(
         { _id: poolId },
-        { $pull: { borrowers: {_id: borrowerData[0]._id} } }
+        { $pull: { borrowers: { _id: borrowerData[0]._id } } }
       );
       if (data) {
         res
