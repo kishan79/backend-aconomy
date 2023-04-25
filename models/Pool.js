@@ -61,8 +61,24 @@ const PoolSchema = new mongoose.Schema(
       type: String,
       enum: ["lender", "borrower", "both", "none"],
     },
-    lenders: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
-    borrowers: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
+    lenders: [
+      {
+        lender: {
+          type: mongoose.Schema.ObjectId,
+          refPath: "lenders.lenderType",
+        },
+        lenderType: { type: String, enum: ["User", "Validator"] },
+      },
+    ],
+    borrowers: [
+      {
+        borrower: {
+          type: mongoose.Schema.ObjectId,
+          refPath: "borrowers.borrowerType",
+        },
+        borrowerType: { type: String, enum: ["User", "Validator"] },
+      },
+    ],
   },
   { timestamps: true }
 );

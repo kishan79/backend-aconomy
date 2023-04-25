@@ -1,6 +1,7 @@
 const PoolModel = require("../models/Pool");
 const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
+const ValidatorModel = require("../models/Validator");
 const OfferModel = require("../models/Offer");
 const { Role, checkWhitelist, validateWhitelist } = require("../utils/utils");
 const { userSelectQuery, poolSelectQuery } = require("../utils/selectQuery");
@@ -237,12 +238,19 @@ exports.addLender = asyncHandler(async (req, res, next) => {
       poolData.pool_owner_address === wallet_address
     ) {
       let user = await UserModel.findOne({ wallet_address: address });
+      if (!user) {
+        user = await ValidatorModel.findOne({ wallet_address: address });
+      }
+
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
           { _id: poolId },
           {
             $push: {
-              lenders: user._id,
+              lenders: {
+                lender: user._id,
+                lenderType: Role[user.role],
+              },
             },
           }
         );
@@ -278,15 +286,21 @@ exports.removeLender = asyncHandler(async (req, res, next) => {
     const { poolId } = req.params;
     const { wallet_address } = req.user;
     const { lenderId } = req.body;
-    let poolData = await PoolModel.findOne({ _id: poolId });
+    let poolData = await PoolModel.findOne({ _id: poolId }).populate({
+      path: "lenders.lender",
+      select: userSelectQuery,
+    });
     if (
       poolData &&
       poolData.lender_whitelisted &&
       poolData.pool_owner_address === wallet_address
     ) {
+      let lenderData = poolData.lenders.filter(
+        (item) => item.lender._id == lenderId
+      );
       let data = await PoolModel.findOneAndUpdate(
         { _id: poolId },
-        { $pull: { lenders: lenderId } }
+        { $pull: { lenders: { _id: lenderData[0]._id } } }
       );
       if (data) {
         res
@@ -315,22 +329,20 @@ exports.fetchLenderAndBorrower = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate([
       {
-        path: "lenders",
+        path: "lenders.lender",
         select: userSelectQuery,
       },
       {
-        path: "borrowers",
+        path: "borrowers.borrower",
         select: userSelectQuery,
-      }
+      },
     ]);
     if (poolData && poolData.pool_owner_address === wallet_address) {
       let data = {};
       data["lenders"] = poolData.lenders;
       data["borrowers"] = poolData.borrowers;
       if (data) {
-        res
-          .status(201)
-          .json({ success: true, data});
+        res.status(201).json({ success: true, data });
       } else {
         res
           .status(401)
@@ -339,8 +351,7 @@ exports.fetchLenderAndBorrower = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({
         success: false,
-        message:
-          "Only pool owner can perform this action",
+        message: "Only pool owner can perform this action",
       });
     }
   } catch (err) {
@@ -360,12 +371,19 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
       poolData.pool_owner_address === wallet_address
     ) {
       let user = await UserModel.findOne({ wallet_address: address });
+      if (!user) {
+        user = await ValidatorModel.findOne({ wallet_address: address });
+      }
+
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
           { _id: poolId },
           {
             $push: {
-              borrowers: user._id,
+              borrowers: {
+                borrower: user._id,
+                borrowerType: Role[user.role],
+              },
             },
           }
         );
@@ -401,15 +419,21 @@ exports.removeBorrower = asyncHandler(async (req, res, next) => {
     const { poolId } = req.params;
     const { wallet_address } = req.user;
     const { borrowerId } = req.body;
-    let poolData = await PoolModel.findOne({ _id: poolId });
+    let poolData = await PoolModel.findOne({ _id: poolId }).populate({
+      path: "borrowers.borrower",
+      select: userSelectQuery,
+    });
     if (
       poolData &&
       poolData.borrower_whitelisted &&
       poolData.pool_owner_address === wallet_address
     ) {
+      let borrowerData = poolData.borrowers.filter(
+        (item) => item.borrower._id == borrowerId
+      );
       let data = await PoolModel.findOneAndUpdate(
         { _id: poolId },
-        { $pull: { borrowers: borrowerId } }
+        { $pull: { borrowers: {_id: borrowerData[0]._id} } }
       );
       if (data) {
         res
