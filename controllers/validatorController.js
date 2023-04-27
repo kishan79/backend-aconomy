@@ -645,6 +645,7 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       validatorAddress: req.user.wallet_address,
+      validationState: "validated",
     };
 
     query = NftModel.find(queryStr);
