@@ -19,34 +19,34 @@ const validateWhitelist = (obj, id, func) => {
   if (func === "makeoffer") {
     //lender
     if (obj.whitelist === "lender") {
-      return obj.lenders.includes(id);
+      return !!(obj.lenders.find(item => item.lender == id));
     } else if (obj.whitelist === "borrower") {
-      return !obj.borrowers.includes(id);
+      return !(!!(obj.borrowers.find( item => item.borrower == id )))
     } else if (obj.whitelist === "both") {
-      return obj.lenders.includes(id);
+      return  !!(obj.lenders.find( item => item.lender == id ))
     } else {
       return true;
     }
   } else if (func === "requestLoan") {
     //borrower
     if (obj.whitelist === "lender") {
-      return !obj.lenders.includes(id);
+      return  !(!!(obj.lenders.find( item => item.lender == id )))
     } else if (obj.whitelist === "borrower") {
-      return obj.borrowers.includes(id);
+      return !!(obj.borrowers.find( item => item.borrower == id ))
     } else if (obj.whitelist === "both") {
-      return obj.borrowers.includes(id);
+      return !!(obj.borrowers.find( item => item.borrower == id ))
     } else {
       return true;
     }
   } else if (func === "acceptLoan") {
     //lender
     if (obj.whitelist === "lender") {
-      return obj.lenders.includes(id);
+      return !!(obj.lenders.find(item => item.lender == id));
     } else if (obj.whitelist === "borrower") {
-      return !obj.borrowers.includes(id);
+      return !(!!(obj.borrowers.find( item => item.borrower == id )))
     } else if (obj.whitelist === "both") {
       // return obj.lenders.includes(id) || obj.borrowers.includes(id);
-      return obj.lenders.includes(id);
+      return !!(obj.lenders.find(item => item.lender == id));
     } else {
       return true;
     }
