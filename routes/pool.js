@@ -13,7 +13,7 @@ router
   .route("/:poolId/addLender")
   .post(protect, authorize("validator"), poolController.addLender);
 router
-  .route("/:poolId/removeLender")
+  .route("/:poolId/removeLender/:lenderId")
   .delete(protect, authorize("validator"), poolController.removeLender);
 router
   .route("/:poolId/lenders")
@@ -25,7 +25,7 @@ router
   .route("/:poolId/addBorrower")
   .post(protect, authorize("validator"), poolController.addBorrower);
 router
-  .route("/:poolId/removeBorrower")
+  .route("/:poolId/removeBorrower/:borrowerId")
   .delete(protect, authorize("validator"), poolController.removeBorrower);
 router
   .route("/create")

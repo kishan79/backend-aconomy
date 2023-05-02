@@ -283,9 +283,8 @@ exports.addLender = asyncHandler(async (req, res, next) => {
 
 exports.removeLender = asyncHandler(async (req, res, next) => {
   try {
-    const { poolId } = req.params;
+    const { poolId, lenderId } = req.params;
     const { wallet_address } = req.user;
-    const { lenderId } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
       path: "lenders.lender",
       select: userSelectQuery,
@@ -422,9 +421,8 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
 
 exports.removeBorrower = asyncHandler(async (req, res, next) => {
   try {
-    const { poolId } = req.params;
+    const { poolId, borrowerId } = req.params;
     const { wallet_address } = req.user;
-    const { borrowerId } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
       path: "borrowers.borrower",
       select: userSelectQuery,
