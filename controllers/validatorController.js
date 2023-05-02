@@ -229,6 +229,7 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       validatorAddress: req.user.wallet_address,
+      requestState: "unvalidated"
     };
 
     if (search) {
@@ -236,8 +237,8 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
     }
 
     query = NFTValidationModel.find(queryStr).populate([
-      { path: "asset", select: "name mediaLinks assetType" },
-      { path: "assetOwner", select: "name profileImage bannerImage" },
+      { path: "asset", select: "name mediaLinks assetType _id" },
+      { path: "assetOwner", select: "name profileImage bannerImage _id" },
     ]);
 
     if (sortby) {

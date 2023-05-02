@@ -253,7 +253,8 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
     const { sortby, search, assetType, blockchain, validationState } =
       req.query;
     let queryStr = {
-      nftOwnerAddress: req.user.wallet_address,
+      // nftOwnerAddress: req.user.wallet_address,
+      nftOwner: req.params.userId
       // name: { $regex: search, $options: "i" },
       // assetType: { $all: assetType },
       // blockchain,

@@ -71,9 +71,17 @@ const NftSchema = new mongoose.Schema(
       country: String,
       area: String,
     },
-    document: String,
+    document: [
+      {
+        name: String,
+        link: String,
+      },
+    ],
     assetOriginationDate: Date,
-    valueOfAsset: Number,
+    valueOfAsset: {
+      value: Number,
+      unit: String,
+    },
     description: String,
     fundBalance: {
       type: Number,

@@ -53,8 +53,8 @@ router
   .put(protect, authorize("user"), validateOwner, userController.updateUser);
 
 router
-  .route("/assetNFTs")
-  .get(protect, authorize("user"), userController.fetchUserAssetNFTs);
+  .route("/:userId/assetNFTs")
+  .get(userController.fetchUserAssetNFTs);
 
 router
   .route("/sendValidationRequest")
