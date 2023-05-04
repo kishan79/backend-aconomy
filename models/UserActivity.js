@@ -12,7 +12,7 @@ const UserActivity = new mongoose.Schema(
       ref: "Nft",
     },
     assetName: String,
-    assetOwner: String,
+    amount: Number,
     statusText: String,
   },
   { timestamps: true }

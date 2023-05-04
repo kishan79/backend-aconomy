@@ -10,8 +10,8 @@ const ValidatorActivity = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: "Nft",
     },
-    assetOwner: String,
     assetName: String,
+    amount: Number,
     statusText: String,
 }, {timestamps: true});
 

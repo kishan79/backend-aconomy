@@ -142,7 +142,7 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { price, duration } = req.body;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
       if (data.state === "sale") {
@@ -150,20 +150,32 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
         if (duration) {
           obj = { ...obj, listingDuration: duration };
         }
-        NftModel.findOneAndUpdate({ _id: assetId }, obj, null, (err, doc) => {
-          if (err) {
-            res.status(401).json({ success: false });
-          } else {
-            if (!!doc) {
-              res.status(201).json({
-                success: true,
-                message: "Asset sale edited successfully",
-              });
-            } else {
+        NftModel.findOneAndUpdate(
+          { _id: assetId },
+          obj,
+          null,
+          async (err, doc) => {
+            if (err) {
               res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset: doc._id,
+                  assetName: doc.name,
+                  statusText: "Sale edited",
+                });
+                res.status(201).json({
+                  success: true,
+                  message: "Asset sale edited successfully",
+                });
+              } else {
+                res.status(401).json({ success: false });
+              }
             }
           }
-        });
+        );
       } else {
         res
           .status(401)
@@ -183,7 +195,7 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
 exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
       if (data.state === "sale") {
@@ -195,11 +207,18 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
             listingDuration: null,
           },
           null,
-          (err, doc) => {
+          async (err, doc) => {
             if (err) {
               res.status(401).json({ success: false });
             } else {
               if (!!doc) {
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset: doc._id,
+                  assetName: doc.name,
+                  statusText: "Sale cancelled",
+                });
                 res.status(201).json({
                   success: true,
                   message: "Asset sale cancelled successfully",
@@ -414,7 +433,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { price, duration } = req.body;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
       status: "active",
@@ -441,6 +460,13 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
                     listingDuration: duration,
                   }
                 );
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset: doc._id,
+                  assetName: doc.name,
+                  statusText: "Auction edited",
+                });
                 res.status(201).json({
                   success: true,
                   message: "Auction edited successfully",
@@ -470,7 +496,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
 exports.cancelAuction = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
       status: "active",
@@ -494,6 +520,13 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                     listingDuration: null,
                   }
                 );
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset: doc._id,
+                  assetName: doc.name,
+                  statusText: "Auction Cancelled",
+                });
                 if (nftData) {
                   res.status(201).json({
                     success: true,
@@ -531,7 +564,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
     const { bidId } = req.body;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
       status: "active",
@@ -565,6 +598,22 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
               }
             );
             if (nftData) {
+              let activity = await UserActivityModel.insertMany([
+                {
+                  userAddress: wallet_address,
+                  user: id,
+                  asset: nftData._id,
+                  assetName: nftData.name,
+                  statusText: "Accepted Bid",
+                },
+                {
+                  userAddress: bid[0].bidderAddress,
+                  user: bid[0].bidder,
+                  asset: nftData._id,
+                  assetName: nftData.name,
+                  statusText: "Bid got accepted",
+                },
+              ]);
               res
                 .status(201)
                 .json({ success: true, message: "Bid accepted successfully" });
@@ -598,7 +647,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
 exports.withdrawBid = asyncHandler(async (req, res, next) => {
   try {
     const { auctionId, bidId } = req.body;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
       _id: auctionId,
     });
@@ -632,6 +681,13 @@ exports.withdrawBid = asyncHandler(async (req, res, next) => {
               }
             );
             if (data) {
+              let activity = await UserActivityModel.create({
+                userAddress: wallet_address,
+                user: id,
+                asset: data.asset,
+                // assetName: data.name,
+                statusText: "Bid withdrawn",
+              });
               res
                 .status(201)
                 .json({ success: true, message: "Bid successfully withdrawn" });
