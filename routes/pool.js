@@ -5,9 +5,10 @@ const { protect, authorize } = require("../middlewares/auth");
 const poolController = require("../controllers/poolController");
 
 router.route("/").get(poolController.getPools);
-router
-  .route("/my-pool")
-  .get(protect, authorize("validator"), poolController.myPools);
+router.route("/:wallet_address/pools").get(
+  // protect, authorize("validator"),
+  poolController.myPools
+);
 router.route("/:poolId").get(poolController.fetchPool);
 router
   .route("/:poolId/addLender")

@@ -643,9 +643,10 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
     let query;
 
     const { sortby } = req.query;
+    const { wallet_address} = req.params;
 
     let queryStr = {
-      validatorAddress: req.user.wallet_address,
+      validatorAddress: wallet_address,
       validationState: "validated",
     };
 

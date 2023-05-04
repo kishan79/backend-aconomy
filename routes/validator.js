@@ -42,8 +42,8 @@ router
 router
   .route("/account/:id")
   .get(
-    protect,
-    authorize("user", "validator"),
+    // protect,
+    // authorize("user", "validator"),
     validatorController.fetchValidatorById
   );
 
@@ -95,10 +95,10 @@ router
   .get(protect, authorize("validator"), validatorController.fetchActivites);
 
 router
-  .route("/validatedAssets")
+  .route("/:wallet_address/validatedAssets")
   .get(
-    protect,
-    authorize("validator"),
+    // protect,
+    // authorize("validator"),
     validatorController.fetchValidatedAssets
   );
 router
