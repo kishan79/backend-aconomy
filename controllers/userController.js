@@ -13,6 +13,7 @@ const {
   activitySelectQuery,
   nftActivitySelectQuery,
   collectionSelectQuery,
+  validatorSelectQuery
 } = require("../utils/selectQuery");
 const { isBefore } = require("date-fns");
 
@@ -277,7 +278,15 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
     //   queryStr = { ...queryStr, validationState };
     // }
 
-    query = NftModel.find(queryStr);
+    query = NftModel.find(queryStr).populate([
+      {
+        path: "nftCollection",
+        select: collectionSelectQuery,
+      },
+      { path: "nftOwner", select: userSelectQuery },
+      { path: "nftCreator", select: userSelectQuery },
+      { path: "validator", select: validatorSelectQuery },
+    ]);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
