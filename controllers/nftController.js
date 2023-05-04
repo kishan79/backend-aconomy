@@ -8,6 +8,8 @@ const {
   collectionSelectQuery,
   userSelectQuery,
   validatorSelectQuery,
+  userHistorySelectQuery,
+  validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
@@ -37,6 +39,14 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
           { path: "nftOwner", select: userSelectQuery },
           { path: "nftCreator", select: userSelectQuery },
           { path: "validator", select: validatorSelectQuery },
+          {
+            path: "history.user",
+            select: userHistorySelectQuery,
+          },
+          {
+            path: "history.validator",
+            select: validatorHistorySelectQuery,
+          },
         ])
         .select(nftSelectQuery);
     } else {
