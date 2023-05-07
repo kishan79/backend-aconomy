@@ -38,23 +38,22 @@ router
     userController.fetchUsers
   );
 
-router
-  .route("/account/:id")
-  .get(protect, authorize("user", "validator"), userController.fetchUserById);
+router.route("/account/:id").get(
+  // protect, authorize("user", "validator"),
+  userController.fetchUserById
+);
 
 router
   .route("/profile/:wallet_address")
   .get(
-    protect,
-    authorize("user"),
-    validateOwner,
+    // protect,
+    // authorize("user"),
+    // validateOwner,
     userController.fetchUserByAddress
   )
   .put(protect, authorize("user"), validateOwner, userController.updateUser);
 
-router
-  .route("/:userId/assetNFTs")
-  .get(userController.fetchUserAssetNFTs);
+router.route("/:userId/assetNFTs").get(userController.fetchUserAssetNFTs);
 
 router
   .route("/sendValidationRequest")
@@ -102,6 +101,10 @@ router
 router
   .route("/redeemAsset/:assetId")
   .post(protect, authorize("user"), userController.redeemAsset);
-router.route("/withdrawFund/:assetId").post(protect, authorize("user"), userController.withdrawFunds);
-router.route("/repayFund/:assetId").post(protect, authorize("user"), userController.repayFunds);
+router
+  .route("/withdrawFund/:assetId")
+  .post(protect, authorize("user"), userController.withdrawFunds);
+router
+  .route("/repayFund/:assetId")
+  .post(protect, authorize("user"), userController.repayFunds);
 module.exports = router;

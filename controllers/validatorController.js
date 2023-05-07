@@ -92,6 +92,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
           );
           res.status(201).json({
             success: true,
+            id: validator._id,
             token,
             verificationStatus: validator.username ? true : false,
           });
