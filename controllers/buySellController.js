@@ -276,6 +276,13 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                     listingDuration: duration,
                     saleId,
                     nftContractAddress: contractAddress,
+                    $push: {
+                      history: {
+                        action: "Listed for auction",
+                        user: id,
+                        amount: price,
+                      },
+                    },
                   }
                 );
                 let activity = await UserActivityModel.create({
@@ -518,6 +525,12 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                     listingPrice: null,
                     listingDate: null,
                     listingDuration: null,
+                    $push: {
+                      history: {
+                        action: "Auction cancelled",
+                        user: id,
+                      },
+                    },
                   }
                 );
                 let activity = await UserActivityModel.create({
