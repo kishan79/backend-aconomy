@@ -13,7 +13,7 @@ const {
   activitySelectQuery,
   nftActivitySelectQuery,
   collectionSelectQuery,
-  validatorSelectQuery
+  validatorSelectQuery,
 } = require("../utils/selectQuery");
 const { isBefore } = require("date-fns");
 
@@ -147,15 +147,53 @@ exports.fetchUsers = asyncHandler(async (req, res, next) => {
 exports.fetchUserById = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.params;
-    UserModel.findById(id)
-      .select(userSelectQuery)
-      .exec(function (err, user) {
-        if (err) {
-          res.status(400).json({ success: false, data: {} });
+    UserModel.findOne({ _id: id }, (err, doc) => {
+      if (err) {
+        res.status(400).json({ success: false, data: {} });
+      } else {
+        if (!!doc) {
+          NftModel.find(
+            {
+              nftOwnerAddress: doc.wallet_address,
+            },
+            (err, assetData) => {
+              if (err) {
+                res.status(400).json({ success: false, data: {} });
+              } else {
+                NftModel.find(
+                  {
+                    nftOwnerAddress: doc.wallet_address,
+                    validationState: "validated",
+                  },
+                  (err, validatedData) => {
+                    if (err) {
+                      res.status(400).json({ success: false, data: {} });
+                    } else {
+                      res.status(200).json({
+                        success: true,
+                        data: {
+                          ...doc,
+                          totalAssets: assetData.length,
+                          validatedAssets: validatedData.length,
+                        },
+                      });
+                    }
+                  }
+                ).lean();
+              }
+            }
+          ).lean();
         } else {
-          res.status(200).json({ success: true, data: user });
+          res.status(400).json({
+            success: false,
+            data: {},
+            message: "Wrong wallet address",
+          });
         }
-      });
+      }
+    })
+      .select(userSelectQuery)
+      .lean();
   } catch (err) {
     res.status(400).json({ success: false });
   }
@@ -256,7 +294,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
       req.query;
     let queryStr = {
       // nftOwnerAddress: req.user.wallet_address,
-      nftOwner: req.params.userId
+      nftOwner: req.params.userId,
       // name: { $regex: search, $options: "i" },
       // assetType: { $all: assetType },
       // blockchain,

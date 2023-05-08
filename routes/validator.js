@@ -95,7 +95,7 @@ router
   .get(protect, authorize("validator"), validatorController.fetchActivites);
 
 router
-  .route("/:wallet_address/validatedAssets")
+  .route("/:id/validatedAssets")
   .get(
     // protect,
     // authorize("validator"),
