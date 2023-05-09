@@ -2,7 +2,14 @@ const asyncHandler = require("../middlewares/async");
 const NftModel = require("../models/NFT");
 const UserActivityModel = require("../models/UserActivity");
 const { addDays, isBefore } = require("date-fns");
-const { nftSelectQuery } = require("../utils/selectQuery");
+const {
+  nftSelectQuery,
+  collectionSelectQuery,
+  userSelectQuery,
+  validatorSelectQuery,
+  userHistorySelectQuery,
+  validatorHistorySelectQuery,
+} = require("../utils/selectQuery");
 
 exports.proposeOffer = asyncHandler(async (req, res, next) => {
   try {
@@ -124,7 +131,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
                 expireOn: addDays(new Date(), expiration),
                 bidder: id,
                 bidderAddress: wallet_address,
-                erc20Address
+                erc20Address,
               },
             },
           }
@@ -166,7 +173,9 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
-        let bid = nftData.lendBorrowOffers.filter((item) => item.bidId === bidId);
+        let bid = nftData.lendBorrowOffers.filter(
+          (item) => item.bidId === bidId
+        );
         if (isBefore(new Date(), bid[0].expireOn)) {
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId, "lendBorrowOffers.bidId": bidId },
@@ -182,7 +191,8 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                   bidderAddress: bid[0].bidderAddress,
                   bidder: bid[0].bidder,
                   nftId: nftData.lendBorrowOffer.nftId,
-                  nftContractAddress: nftData.lendBorrowOffer.nftContractAddress
+                  nftContractAddress:
+                    nftData.lendBorrowOffer.nftContractAddress,
                 },
                 borrowState: "active",
               },
@@ -228,7 +238,9 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
-        let bid = nftData.lendBorrowOffers.filter((item) => item.bidId === bidId);
+        let bid = nftData.lendBorrowOffers.filter(
+          (item) => item.bidId === bidId
+        );
         if (bid[0].status !== "rejected") {
           if (isBefore(new Date(), bid[0].expireOn)) {
             let data = await NftModel.findOneAndUpdate(
@@ -333,7 +345,25 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
       state: "lendborrow",
     };
 
-    query = NftModel.find(queryStr).select(nftSelectQuery);
+    query = NftModel.find(queryStr)
+      .populate([
+        {
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        },
+        { path: "nftOwner", select: userSelectQuery },
+        { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+        {
+          path: "history.user",
+          select: userHistorySelectQuery,
+        },
+        {
+          path: "history.validator",
+          select: validatorHistorySelectQuery,
+        },
+      ])
+      .select(nftSelectQuery);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");

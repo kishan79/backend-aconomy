@@ -3,7 +3,14 @@ const NftModel = require("../models/NFT");
 const SwapModel = require("../models/Swap");
 const UserActivityModel = require("../models/UserActivity");
 const { addDays, isBefore } = require("date-fns");
-const { userSelectQuery, nftSelectQuery } = require("../utils/selectQuery");
+const {
+  nftSelectQuery,
+  collectionSelectQuery,
+  userSelectQuery,
+  validatorSelectQuery,
+  userHistorySelectQuery,
+  validatorHistorySelectQuery,
+} = require("../utils/selectQuery");
 
 exports.listForSwap = asyncHandler(async (req, res, next) => {
   try {
@@ -388,7 +395,25 @@ exports.fetchSwapNfts = asyncHandler(async (req, res, next) => {
       state: "swap",
     };
 
-    query = NftModel.find(queryStr).select(nftSelectQuery);
+    query = NftModel.find(queryStr)
+      .populate([
+        {
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        },
+        { path: "nftOwner", select: userSelectQuery },
+        { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+        {
+          path: "history.user",
+          select: userHistorySelectQuery,
+        },
+        {
+          path: "history.validator",
+          select: validatorHistorySelectQuery,
+        },
+      ])
+      .select(nftSelectQuery);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
