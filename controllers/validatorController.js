@@ -14,6 +14,10 @@ const {
   validatorSelectQuery,
   validatedAssetSelectQuery,
   nftSelectQuery,
+  collectionSelectQuery,
+  userSelectQuery,
+  userHistorySelectQuery,
+  validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const UserActivityModel = require("../models/UserActivity");
 
@@ -653,7 +657,25 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
 
     query = NftModel.find(queryStr);
 
-    query = query.select(validatedAssetSelectQuery);
+    query = query
+      .populate([
+        {
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        },
+        { path: "nftOwner", select: userSelectQuery },
+        { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+        {
+          path: "history.user",
+          select: userHistorySelectQuery,
+        },
+        {
+          path: "history.validator",
+          select: validatorHistorySelectQuery,
+        },
+      ])
+      .select(validatedAssetSelectQuery);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
