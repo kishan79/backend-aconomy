@@ -23,7 +23,12 @@ const ValidatorSchema = new mongoose.Schema(
       country: String,
       area: String,
     },
-    document: String,
+    document: [
+      {
+        name: String,
+        link: String,
+      },
+    ],
     socialLinks: {
       website: String,
       twitter: String,
