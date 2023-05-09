@@ -96,7 +96,12 @@ const NftSchema = new mongoose.Schema(
     validationAmount: Number,
     validationDuration: Number,
     validationRoyality: Number,
-    validationDocuments: [String],
+    validationDocuments: [
+      {
+        name: String,
+        link: String,
+      },
+    ],
     validationCount: Number,
     validationState: {
       type: String,

@@ -315,12 +315,12 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
             validationAmount,
             validationDuration,
             validationRoyality,
-            validationDocuments,
             requestExpiresOn: addDays(new Date(), validationDuration),
             requestState: "validated",
             validationCount: 1,
             erc20ContractAddress: contractAddress,
             fundBalance: validationAmount,
+            $push: { validationDocuments: { $each: validationDocuments } },
           },
           async (err, doc) => {
             if (err) {
@@ -330,11 +330,12 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                 NftModel.findOneAndUpdate(
                   { _id: data.asset },
                   {
+                    validator: id,
+                    validatorAddress: wallet_address,
                     validationType,
                     validationAmount,
                     validationDuration,
                     validationRoyality,
-                    validationDocuments,
                     requestExpiresOn: addDays(new Date(), validationDuration),
                     validationState: "validated",
                     validationCount: 1,
@@ -345,6 +346,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                         action: "validated",
                         validator: id,
                       },
+                      validationDocuments: { $each: validationDocuments },
                     },
                   },
                   async (err, item) => {
@@ -357,13 +359,6 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                         assetName: data.assetName,
                         statusText: "Asset validated",
                       });
-                      let nftData = await NftModel.findOneAndUpdate(
-                        { _id: data.asset },
-                        {
-                          validator: id,
-                          validatorAddress: wallet_address,
-                        }
-                      );
                       if (activity) {
                         res.status(201).json({
                           success: true,
