@@ -230,7 +230,7 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       validatorAddress: req.user.wallet_address,
-      requestState: "unvalidated",
+      requestState: "pending",
     };
 
     if (search) {
