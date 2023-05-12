@@ -47,7 +47,12 @@ const NftSchema = new mongoose.Schema(
     name: String,
     summary: String,
     blockchain: String,
-    mediaLinks: [String],
+    mediaLinks: [
+      {
+        mediaType: { type: String, enum: ["image", "video", "audio"] },
+        mediaLink: String,
+      },
+    ],
     assetType: [String],
     nftCollection: {
       type: mongoose.Schema.ObjectId,
