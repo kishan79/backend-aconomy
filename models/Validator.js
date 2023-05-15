@@ -35,6 +35,7 @@ const ValidatorSchema = new mongoose.Schema(
       discord: String,
       other: String,
     },
+    favouriteNFT: [{ type: mongoose.Schema.ObjectId, ref: "Nft" }],
   },
   { timestamps: true }
 );

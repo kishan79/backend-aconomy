@@ -32,6 +32,7 @@ const UserSchema = new mongoose.Schema(
     },
     profileImage: String,
     bannerImage: String,
+    favouriteNFT: [{ type: mongoose.Schema.ObjectId, ref: "Nft" }],
   },
   { timestamps: true }
 );

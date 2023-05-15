@@ -39,13 +39,11 @@ router
     validatorController.fetchValidators
   );
 
-router
-  .route("/account/:id")
-  .get(
-    // protect,
-    // authorize("user", "validator"),
-    validatorController.fetchValidatorById
-  );
+router.route("/account/:id").get(
+  // protect,
+  // authorize("user", "validator"),
+  validatorController.fetchValidatorById
+);
 
 router
   .route("/profile/:wallet_address")
@@ -94,13 +92,11 @@ router
   .route("/activities")
   .get(protect, authorize("validator"), validatorController.fetchActivites);
 
-router
-  .route("/:id/validatedAssets")
-  .get(
-    // protect,
-    // authorize("validator"),
-    validatorController.fetchValidatedAssets
-  );
+router.route("/:id/validatedAssets").get(
+  // protect,
+  // authorize("validator"),
+  validatorController.fetchValidatedAssets
+);
 router
   .route("/redeemRequests")
   .get(
@@ -122,4 +118,8 @@ router
     authorize("validator"),
     validatorController.cancelRedeemRequest
   );
+router.route("/:id/favouriteNfts").get(validatorController.getFavouriteNFTs);
+router
+  .route("/favouriteNfts")
+  .patch(protect, authorize("user"), validatorController.addNFTtoFavourite);
 module.exports = router;

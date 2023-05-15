@@ -107,4 +107,13 @@ router
 router
   .route("/repayFund/:assetId")
   .post(protect, authorize("user"), userController.repayFunds);
+router.route("/:userId/borrow").get(userController.fetchNftForBorrow);
+router.route("/:userId/poolLendings").get(userController.fetchUserPoolLendings);
+router
+  .route("/:userId/poolBorrowings")
+  .get(userController.fetchUserPoolBorrowings);
+router.route("/:id/favouriteNfts").get(userController.getFavouriteNFTs);
+router
+  .route("/favouriteNfts")
+  .patch(protect, authorize("user"), userController.addNFTtoFavourite);
 module.exports = router;

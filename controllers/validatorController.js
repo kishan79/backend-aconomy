@@ -965,3 +965,57 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
     res.status(401).json({ success: false });
   }
 });
+
+exports.addNFTtoFavourite = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.user;
+    const { id } = req.body;
+
+    const favouriteNfts = await ValidatorModel.findOne({
+      wallet_address,
+    }).select("favouriteNFT");
+
+    let data = favouriteNfts.favouriteNFT.length
+      ? favouriteNfts.favouriteNFT
+      : [];
+    if (data.length) {
+      if (data.includes(id)) {
+        data = data.filter((d) => d.toString() !== id);
+      } else {
+        data.push(id);
+      }
+    } else {
+      data.push(id);
+    }
+
+    const nft = await ValidatorModel.findOneAndUpdate(
+      { wallet_address },
+      { favouriteNFT: data }
+    );
+
+    if (nft) {
+      res.status(200).json({ success: true });
+    } else {
+      res.status(400).json({ success: false });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false, data: [] });
+  }
+});
+
+exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const nfts = await ValidatorModel.findOne({ _id: id }).populate("favouriteNFT");
+     if (nfts && nfts.favouriteNFT.length) {
+      res.status(200).json({ success: true, data: nfts.favouriteNFT });
+    } else {
+      res.status(400).json({ success: true, data: [] });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: {},
+    });
+  }
+});

@@ -4,6 +4,7 @@ const NFTValidationModel = require("../models/NFTValidation");
 const UserActivityModel = require("../models/UserActivity");
 const CollectionModel = require("../models/Collection");
 const NftModel = require("../models/NFT");
+const OfferModel = require("../models/Offer");
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
@@ -14,6 +15,9 @@ const {
   nftActivitySelectQuery,
   collectionSelectQuery,
   validatorSelectQuery,
+  nftSelectQuery,
+  userHistorySelectQuery,
+  validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const { isBefore } = require("date-fns");
 
@@ -963,5 +967,291 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(401).json({ success: false });
+  }
+});
+
+exports.fetchNftForBorrow = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+    const { userId } = req.params;
+
+    let queryStr = {
+      nftOwner: userId,
+      state: "lendborrow",
+    };
+
+    query = NftModel.find(queryStr)
+      .select(nftSelectQuery)
+      .populate([
+        {
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        },
+        { path: "nftOwner", select: userSelectQuery },
+        { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+        {
+          path: "history.user",
+          select: userHistorySelectQuery,
+        },
+        {
+          path: "history.validator",
+          select: validatorHistorySelectQuery,
+        },
+      ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
+
+exports.fetchUserPoolLendings = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+    const { userId } = req.params;
+
+    let queryStr = {
+      lender: userId,
+    };
+
+    query = OfferModel.find(queryStr).populate([
+      {
+        path: "lender",
+        select:
+          "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role -termOfService",
+      },
+      {
+        path: "pool",
+        select: "-whitelist -lenders -borrowers -__v -updatedAt -description",
+        populate: {
+          path: "pool_owner",
+          model: "Validator",
+          select: validatorSelectQuery,
+        },
+      },
+    ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await OfferModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
+
+exports.fetchUserPoolBorrowings = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+    const { userId } = req.params;
+
+    let queryStr = {
+      borrower: userId,
+    };
+
+    query = OfferModel.find(queryStr).populate([
+      {
+        path: "borrower",
+        select:
+          "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role -termOfService",
+      },
+      {
+        path: "pool",
+        select: "-whitelist -lenders -borrowers -__v -updatedAt -description",
+        populate: {
+          path: "pool_owner",
+          model: "Validator",
+          select: validatorSelectQuery,
+        },
+      },
+    ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await OfferModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
+
+// exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
+// });
+
+exports.addNFTtoFavourite = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.user;
+    const { id } = req.body;
+
+    const favouriteNfts = await UserModel.findOne({
+      wallet_address,
+    }).select("favouriteNFT");
+
+    let data = favouriteNfts.favouriteNFT.length
+      ? favouriteNfts.favouriteNFT
+      : [];
+    if (data.length) {
+      if (data.includes(id)) {
+        data = data.filter((d) => d.toString() !== id);
+      } else {
+        data.push(id);
+      }
+    } else {
+      data.push(id);
+    }
+
+    const nft = await UserModel.findOneAndUpdate(
+      { wallet_address },
+      { favouriteNFT: data }
+    );
+
+    if (nft) {
+      res.status(200).json({ success: true });
+    } else {
+      res.status(400).json({ success: false });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false, data: [] });
+  }
+});
+
+exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const nfts = await UserModel.findOne({ _id: id }).populate("favouriteNFT");
+    if (nfts && nfts.favouriteNFT.length) {
+      res.status(200).json({ success: true, data: nfts.favouriteNFT });
+    } else {
+      res.status(400).json({ success: true, data: [] });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: {},
+    });
   }
 });
