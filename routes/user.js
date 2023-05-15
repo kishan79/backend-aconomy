@@ -112,8 +112,8 @@ router.route("/:userId/poolLendings").get(userController.fetchUserPoolLendings);
 router
   .route("/:userId/poolBorrowings")
   .get(userController.fetchUserPoolBorrowings);
-router.route("/:id/favouriteNfts").get(userController.getFavouriteNFTs);
 router
   .route("/favouriteNfts")
+  .get(protect, authorize("user"), userController.getFavouriteNFTs)
   .patch(protect, authorize("user"), userController.addNFTtoFavourite);
 module.exports = router;

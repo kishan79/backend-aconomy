@@ -118,8 +118,12 @@ router
     authorize("validator"),
     validatorController.cancelRedeemRequest
   );
-router.route("/:id/favouriteNfts").get(validatorController.getFavouriteNFTs);
 router
   .route("/favouriteNfts")
-  .patch(protect, authorize("user"), validatorController.addNFTtoFavourite);
+  .get(protect, authorize("validator"), validatorController.getFavouriteNFTs)
+  .patch(
+    protect,
+    authorize("validator"),
+    validatorController.addNFTtoFavourite
+  );
 module.exports = router;
