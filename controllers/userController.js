@@ -1199,8 +1199,86 @@ exports.fetchUserPoolBorrowings = asyncHandler(async (req, res, next) => {
   }
 });
 
-// exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
-// });
+exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+    const { userId } = req.params;
+
+    let queryStr = {
+      $and: [
+        { nftOwner: userId },
+        { $or: [{ state: "sale" }, { state: "auction" }] },
+      ],
+    };
+
+    query = NftModel.find(queryStr)
+      .select(nftSelectQuery)
+      .populate([
+        {
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        },
+        { path: "nftOwner", select: userSelectQuery },
+        { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+        {
+          path: "history.user",
+          select: userHistorySelectQuery,
+        },
+        {
+          path: "history.validator",
+          select: validatorHistorySelectQuery,
+        },
+      ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
 
 exports.addNFTtoFavourite = asyncHandler(async (req, res, next) => {
   try {
@@ -1252,6 +1330,85 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
     res.status(400).json({
       success: false,
       data: {},
+    });
+  }
+});
+
+exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+    const { id } = req.user;
+
+    let queryStr = {
+      previousOwner: id,
+      state: "burned",
+    };
+
+    query = NftModel.find(queryStr)
+      .select(nftSelectQuery)
+      .populate([
+        {
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        },
+        { path: "nftOwner", select: userSelectQuery },
+        { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+        {
+          path: "history.user",
+          select: userHistorySelectQuery,
+        },
+        {
+          path: "history.validator",
+          select: validatorHistorySelectQuery,
+        },
+      ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
     });
   }
 });

@@ -134,6 +134,11 @@ const NftSchema = new mongoose.Schema(
       ref: "User",
     },
     nftCreatorAddress: String,
+    previousOwner: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+    previousOwnerAddress: String,
     listingPrice: Number,
     listingDate: Date,
     listingDuration: Number,
@@ -146,7 +151,7 @@ const NftSchema = new mongoose.Schema(
     nftContractAddress: String,
     state: {
       type: String,
-      enum: ["none", "sale", "auction", "lendborrow", "swap", "withdraw"],
+      enum: ["none", "sale", "auction", "lendborrow", "swap", "withdraw", "burned"],
       default: "none",
     },
     lendBorrowOffers: [OfferSchema],

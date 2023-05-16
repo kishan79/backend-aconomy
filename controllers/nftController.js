@@ -225,6 +225,8 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
               let data = await NftModel.findOneAndUpdate(
                 { _id: assetId },
                 {
+                  previousOwner: nftData.nftOwner,
+                  previousOwnerAddress: nftData.nftOwnerAddress,
                   nftOwnerAddress: validationData.validatorAddress,
                   nftOwner: validationData.validator,
                   validationType: null,
@@ -234,6 +236,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   validationDocuments: null,
                   requestExpiresOn: null,
                   validationState: "unvalidated",
+                  state: "burned",
                   $push: {
                     history: {
                       action: "burned",
