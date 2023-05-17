@@ -85,7 +85,7 @@ exports.myPools = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       pool_owner: id,
-      is_verified: verification === "verified" ? true : false,
+      // is_verified: verification === "verified" ? true : false,
     };
 
     query = PoolModel.find(queryStr)
@@ -94,7 +94,7 @@ exports.myPools = asyncHandler(async (req, res, next) => {
         {
           path: "pool_owner",
           select:
-            "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role",
+            "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -favouriteNFT -__v -username -role",
         },
         { path: "lenders", select: userSelectQuery },
         { path: "borrowers", select: userSelectQuery },
