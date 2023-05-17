@@ -13,7 +13,7 @@ exports.getPools = asyncHandler(async (req, res, next) => {
     const { sortby, verification } = req.query;
 
     let queryStr = {
-      is_verified: verification === "verified" ? true : false,
+      // is_verified: verification === "verified" ? true : false,
       visibility: "public",
     };
 
@@ -326,19 +326,19 @@ exports.removeLender = asyncHandler(async (req, res, next) => {
 exports.fetchLender = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    const { wallet_address } = req.user;
+    // const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
       path: "lenders.lender",
       select: userSelectQuery,
     });
-    if (poolData && poolData.pool_owner_address === wallet_address) {
+    // if (poolData && poolData.pool_owner_address === wallet_address) {
       res.status(201).json({ success: true, data: poolData.lenders });
-    } else {
-      res.status(401).json({
-        success: false,
-        message: "Only pool owner can perform this action",
-      });
-    }
+    // } else {
+    //   res.status(401).json({
+    //     success: false,
+    //     message: "Only pool owner can perform this action",
+    //   });
+    // }
   } catch (err) {
     res.status(401).json({ success: false, err });
   }
@@ -347,19 +347,19 @@ exports.fetchLender = asyncHandler(async (req, res, next) => {
 exports.fetchBorrower = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    const { wallet_address } = req.user;
+    // const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
       path: "borrowers.borrower",
       select: userSelectQuery,
     });
-    if (poolData && poolData.pool_owner_address === wallet_address) {
+    // if (poolData && poolData.pool_owner_address === wallet_address) {
       res.status(201).json({ success: true, data: poolData.borrowers });
-    } else {
-      res.status(401).json({
-        success: false,
-        message: "Only pool owner can perform this action",
-      });
-    }
+    // } else {
+    //   res.status(401).json({
+    //     success: false,
+    //     message: "Only pool owner can perform this action",
+    //   });
+    // }
   } catch (err) {
     res.status(401).json({ success: false, err });
   }
@@ -890,11 +890,18 @@ exports.fetchFilledOffers = asyncHandler(async (req, res, next) => {
       ],
     };
 
-    query = OfferModel.find(queryStr).populate({
-      path: "borrower",
-      select:
-        "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -__v -username -role -termOfService",
-    });
+    query = OfferModel.find(queryStr).populate([
+      {
+        path: "borrower",
+        select:
+          "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -favouriteNFT -__v -role -termOfService",
+      },
+      {
+        path: "lender",
+        select:
+          "-assetType -bio -email -signatureMessage -document -createdAt -updatedAt -favouriteNFT -__v -role -termOfService",
+      },
+    ]);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");

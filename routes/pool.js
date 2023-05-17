@@ -18,10 +18,10 @@ router
   .delete(protect, authorize("validator"), poolController.removeLender);
 router
   .route("/:poolId/lenders")
-  .get(protect, authorize("validator"), poolController.fetchLender);
+  .get(poolController.fetchLender);
 router
   .route("/:poolId/borrowers")
-  .get(protect, authorize("validator"), poolController.fetchBorrower);
+  .get(poolController.fetchBorrower);
 router
   .route("/:poolId/addBorrower")
   .post(protect, authorize("validator"), poolController.addBorrower);
