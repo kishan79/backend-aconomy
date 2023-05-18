@@ -1,5 +1,5 @@
 const userSelectQuery =
-  "-signatureMessage -createdAt -updatedAt -__v -termOfService -email";
+  "-signatureMessage -createdAt -updatedAt -__v -termOfService";
 const validatorSelectQuery = "-signatureMessage -createdAt -updatedAt -__v";
 const collectionSelectQuery = "-createdAt -updatedAt -__v";
 const nftSelectQuery = "-updatedAt -__v -assetJurisdiction";

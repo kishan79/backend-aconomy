@@ -45,7 +45,6 @@ exports.generateNonce = asyncHandler(async (req, res, next) => {
           bio: "",
           email: "",
           role: "validator",
-          document: "",
         });
       } else {
         await ValidatorModel.findOneAndUpdate(
