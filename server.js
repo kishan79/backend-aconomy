@@ -20,6 +20,7 @@ const nft = require("./routes/nft");
 const buysell = require("./routes/buysell");
 const lendborrow = require("./routes/lendborrow");
 const swap = require("./routes/swap");
+const notification = require("./routes/notification");
 
 const app = express();
 app.use(cors());
@@ -46,6 +47,7 @@ app.use("/api/v1/nft", nft);
 app.use("/api/v1/buysell", buysell);
 app.use("/api/v1/lendborrow", lendborrow);
 app.use("/api/v1/swap", swap);
+app.use("/api/v1/notifications", notification);
 
 // app.use(errorHandler);
 

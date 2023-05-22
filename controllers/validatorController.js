@@ -3,6 +3,7 @@ const UserModel = require("../models/User");
 const NFTValidationModel = require("../models/NFTValidation");
 const ValidatorActivityModel = require("../models/ValidatorActivity");
 const NftModel = require("../models/NFT");
+const NotificationModel = require("../models/Notification");
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
@@ -360,10 +361,21 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                           statusText: "Asset validated",
                         });
                         if (activity) {
-                          res.status(201).json({
-                            success: true,
-                            message: "Asset validated successfully",
+                          let notification = await NotificationModel.create({
+                            nft: data.asset,
+                            category: "asset-validation",
+                            user: data.assetOwner,
+                            userAddress: data.assetOwnerAddress,
+                            validator: id,
+                            validatorAddress: wallet_address,
+                            message: ["is validated by", "View details"],
                           });
+                          if (notification) {
+                            res.status(201).json({
+                              success: true,
+                              message: "Asset validated successfully",
+                            });
+                          }
                         }
                       } else {
                         res.status(401).json({ success: false });
@@ -1005,8 +1017,10 @@ exports.addNFTtoFavourite = asyncHandler(async (req, res, next) => {
 exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.user;
-    const nfts = await ValidatorModel.findOne({ _id: id }).populate("favouriteNFT");
-     if (nfts && nfts.favouriteNFT.length) {
+    const nfts = await ValidatorModel.findOne({ _id: id }).populate(
+      "favouriteNFT"
+    );
+    if (nfts && nfts.favouriteNFT.length) {
       res.status(200).json({ success: true, data: nfts.favouriteNFT });
     } else {
       res.status(400).json({ success: true, data: [] });
