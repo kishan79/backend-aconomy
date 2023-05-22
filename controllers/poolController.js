@@ -3,6 +3,7 @@ const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
 const OfferModel = require("../models/Offer");
+const NotificationModel = require("../models/Notification");
 const { Role, checkWhitelist, validateWhitelist } = require("../utils/utils");
 const { userSelectQuery, poolSelectQuery } = require("../utils/selectQuery");
 
@@ -332,7 +333,7 @@ exports.fetchLender = asyncHandler(async (req, res, next) => {
       select: userSelectQuery,
     });
     // if (poolData && poolData.pool_owner_address === wallet_address) {
-      res.status(201).json({ success: true, data: poolData.lenders });
+    res.status(201).json({ success: true, data: poolData.lenders });
     // } else {
     //   res.status(401).json({
     //     success: false,
@@ -353,7 +354,7 @@ exports.fetchBorrower = asyncHandler(async (req, res, next) => {
       select: userSelectQuery,
     });
     // if (poolData && poolData.pool_owner_address === wallet_address) {
-      res.status(201).json({ success: true, data: poolData.borrowers });
+    res.status(201).json({ success: true, data: poolData.borrowers });
     // } else {
     //   res.status(401).json({
     //     success: false,
@@ -523,9 +524,16 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
-          res
-            .status(201)
-            .json({ success: true, message: "Offer accepted successfully" });
+          let notification = await NotificationModel.create({
+            pool: data.pool,
+            category: "pool-offer-accept",
+            [data.lenderType === "User" ? user : validator]: data.lender,
+          });
+          if (notification) {
+            res
+              .status(201)
+              .json({ success: true, message: "Offer accepted successfully" });
+          }
         } else {
           res
             .status(401)
@@ -560,9 +568,16 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
-          res
-            .status(201)
-            .json({ success: true, message: "Offer accepted successfully" });
+          let notification = await NotificationModel.create({
+            pool: data.pool,
+            category: "pool-offer-reject",
+            [data.lenderType === "User" ? user : validator]: data.lender,
+          });
+          if (notification) {
+            res
+              .status(201)
+              .json({ success: true, message: "Offer accepted successfully" });
+          }
         } else {
           res
             .status(401)
@@ -709,10 +724,18 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
-          res.status(201).json({
-            success: true,
-            message: "Loan request accepted successfully",
+          let notification = await NotificationModel.create({
+            pool: data.pool,
+            category: "pool-loan-accept",
+            [data.borrowerType === "User" ? user : validator]: data.borrower,
+            amount: data.amount
           });
+          if (notification) {
+            res.status(201).json({
+              success: true,
+              message: "Loan request accepted successfully",
+            });
+          }
         } else {
           res.status(401).json({
             success: false,

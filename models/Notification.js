@@ -6,18 +6,28 @@ const NotificationSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Nft",
     },
+    swapnft: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Nft"
+    },
+    pool: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Pool"
+    },
     category: String,
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },
-    userAddress: String,
+    user2: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
     validator: {
       type: mongoose.Schema.ObjectId,
       ref: "Validator",
     },
-    validatorAddress: String,
-    message: [String],
+    amount: Number,
     read: {
       type: Boolean,
       default: false,

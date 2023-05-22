@@ -2,6 +2,7 @@ const NftModel = require("../models/NFT");
 const UserModel = require("../models/User");
 const NFTValidationModel = require("../models/NFTValidation");
 const UserActivityModel = require("../models/UserActivity");
+const NotificationModel = require("../models/Notification");
 const asyncHandler = require("../middlewares/async");
 const {
   nftSelectQuery,
@@ -136,9 +137,17 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
             statusText: "NFT Recieved",
           },
         ]);
-        res
-          .status(201)
-          .json({ success: true, message: "Asset transferred successfully" });
+        let notification = await NotificationModel.create({
+          nft: data._id,
+          category: "asset-transfer",
+          user: userData._id,
+          user2: id,
+        });
+        if (notification) {
+          res
+            .status(201)
+            .json({ success: true, message: "Asset transferred successfully" });
+        }
       } else {
         res
           .status(401)
@@ -253,10 +262,18 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   assetName: nftData.name,
                   statusText: "Burned",
                 });
-                res.status(201).json({
-                  success: true,
-                  message: "Asset burned successfully",
+                let notification = await NotificationModel.create({
+                  nft: nftData._id,
+                  category: "asset-burned",
+                  user: nftData.nftOwner,
+                  validator: validationData.validator
                 });
+                if (notification) {
+                  res.status(201).json({
+                    success: true,
+                    message: "Asset burned successfully",
+                  });
+                }
               } else {
                 res
                   .status(401)

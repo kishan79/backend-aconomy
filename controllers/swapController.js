@@ -2,6 +2,7 @@ const asyncHandler = require("../middlewares/async");
 const NftModel = require("../models/NFT");
 const SwapModel = require("../models/Swap");
 const UserActivityModel = require("../models/UserActivity");
+const NotificationModel = require("../models/Notification");
 const { addDays, isBefore } = require("date-fns");
 const {
   nftSelectQuery,
@@ -123,9 +124,19 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
           }
         );
         if (swapData) {
-          res
-            .status(201)
-            .json({ success: true, message: "Swap request sent successfully" });
+          let notification = await NotificationModel.create({
+            nft: assetId,
+            category: "swap-request",
+            user: id,
+          });
+          if (notification) {
+            res
+              .status(201)
+              .json({
+                success: true,
+                message: "Swap request sent successfully",
+              });
+          }
         } else {
           res
             .status(401)
@@ -201,10 +212,18 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                     }
                   );
                   if (swapNft) {
-                    res.status(201).json({
-                      success: true,
-                      message: "Request accepted successfully",
+                    let notification = await NotificationModel.create({
+                      nft: assetId,
+                      swapnft: request[0].asset,
+                      category: "swap-request-accept",
+                      user: id,
                     });
+                    if (notification) {
+                      res.status(201).json({
+                        success: true,
+                        message: "Request accepted successfully",
+                      });
+                    }
                   } else {
                     res.status(401).json({
                       success: false,
@@ -275,10 +294,18 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
       }
     );
     if (data) {
+      // let notification = await NotificationModel.create({
+      //   nft: assetId,
+      //   swapnft: data.offers,
+      //   category: "swap-request-reject",
+      //   user: id,
+      // });
+      // if (notification) {
       res.status(201).json({
         success: true,
         message: "Request rejected successfully",
       });
+      // }
     } else {
       res.status(401).json({
         success: false,

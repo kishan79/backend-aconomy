@@ -365,10 +365,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                             nft: data.asset,
                             category: "asset-validation",
                             user: data.assetOwner,
-                            userAddress: data.assetOwnerAddress,
                             validator: id,
-                            validatorAddress: wallet_address,
-                            message: ["is validated by", "View details"],
                           });
                           if (notification) {
                             res.status(201).json({
@@ -443,10 +440,18 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                           statusText: "Asset validated",
                         });
                         if (activity) {
-                          res.status(201).json({
-                            success: true,
-                            message: "Asset validated successfully",
+                          let notification = await NotificationModel.create({
+                            nft: data.asset,
+                            category: "asset-validation",
+                            user: data.assetOwner,
+                            validator: id,
                           });
+                          if (notification) {
+                            res.status(201).json({
+                              success: true,
+                              message: "Asset validated successfully",
+                            });
+                          }
                         }
                       } else {
                         res.status(401).json({ success: false });
@@ -681,7 +686,7 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
   try {
     const { requestId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     NFTValidationModel.findOneAndDelete(
       { _id: requestId },
       async (err, doc) => {
@@ -703,10 +708,18 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
               statusText: `Validation request rejected by validator ${wallet_address}`,
             });
             if (activity) {
-              res.status(200).json({
-                success: true,
-                message: "Validation request rejected",
+              let notification = await NotificationModel.create({
+                nft: doc.asset,
+                category: "asset-validation-reject",
+                user: doc.assetOwner,
+                validator: id,
               });
+              if (notification) {
+                res.status(200).json({
+                  success: true,
+                  message: "Validation request rejected",
+                });
+              }
             }
           } else {
             res.status(400).json({

@@ -1,6 +1,7 @@
 const asyncHandler = require("../middlewares/async");
 const NftModel = require("../models/NFT");
 const UserActivityModel = require("../models/UserActivity");
+const NotificationModel = require("../models/Notification");
 const { addDays, isBefore } = require("date-fns");
 const {
   nftSelectQuery,
@@ -144,9 +145,17 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
             assetName: nftData.name,
             statusText: "Made an offer",
           });
-          res
-            .status(201)
-            .json({ success: true, message: "Offer made successfully" });
+          let notification = await NotificationModel.create({
+            nft: nftData._id,
+            category: "lend-make-offer",
+            user: nftData.nftOwner,
+            amount: price,
+          });
+          if (notification) {
+            res
+              .status(201)
+              .json({ success: true, message: "Offer made successfully" });
+          }
         } else {
           res
             .status(401)
@@ -206,9 +215,19 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
               assetName: nftData.name,
               statusText: "Accepted an offer",
             });
-            res
-              .status(201)
-              .json({ success: true, message: "Offer accepted successfully" });
+            let notification = await NotificationModel.create({
+              nft: nftData._id,
+              category: "lend-offer-accept",
+              user: bid[0].bidder,
+            });
+            if (notification) {
+              res
+                .status(201)
+                .json({
+                  success: true,
+                  message: "Offer accepted successfully",
+                });
+            }
           } else {
             res
               .status(401)
@@ -259,10 +278,17 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
                 assetName: nftData.name,
                 statusText: "Rejected an offer",
               });
-              res.status(201).json({
-                success: true,
-                message: "Offer rejected successfully",
+              let notification = await NotificationModel.create({
+                nft: nftData._id,
+                category: "lend-offer-reject",
+                user: bid[0].bidder,
               });
+              if (notification) {
+                res.status(201).json({
+                  success: true,
+                  message: "Offer rejected successfully",
+                });
+              }
             } else {
               res.status(401).json({
                 success: false,

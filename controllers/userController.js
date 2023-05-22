@@ -5,6 +5,7 @@ const UserActivityModel = require("../models/UserActivity");
 const CollectionModel = require("../models/Collection");
 const NftModel = require("../models/NFT");
 const OfferModel = require("../models/Offer");
+const NotificationModel = require("../models/Notification");
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const { ethers } = require("ethers");
@@ -422,10 +423,18 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                   statusText: "Sent validation request",
                 });
                 if (activity) {
-                  res.status(201).json({
-                    success: true,
-                    message: "Validation request sent",
+                  let notification = await NotificationModel.create({
+                    nft: asset,
+                    category: "asset-validation-request",
+                    user: id,
+                    validator,
                   });
+                  if (notification) {
+                    res.status(201).json({
+                      success: true,
+                      message: "Validation request sent",
+                    });
+                  }
                 }
               } else {
                 res.status(401).json({ success: false, message: "not done" });
@@ -478,10 +487,18 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                   statusText: "Sent revalidation request",
                 });
                 if (activity) {
-                  res.status(201).json({
-                    success: true,
-                    message: "Extend validation request sent",
+                  let notification = await NotificationModel.create({
+                    nft: asset,
+                    category: "asset-validation-extend-request",
+                    user: id,
+                    validator: data.validator,
                   });
+                  if (notification) {
+                    res.status(201).json({
+                      success: true,
+                      message: "Extend validation request sent",
+                    });
+                  }
                 }
               }
             } else {
@@ -687,10 +704,17 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
               assetName: nftData.name,
               statusText: "Sent redeem request",
             });
-            res.status(201).json({
-              success: true,
-              message: "Redeem request sent successfully",
+            let notification = await NotificationModel.create({
+              nft: assetId,
+              category: "sent-redeem-request",
+              validator: nftData.validator,
             });
+            if (notification) {
+              res.status(201).json({
+                success: true,
+                message: "Redeem request sent successfully",
+              });
+            }
           } else {
             res.status(401).json({
               success: false,

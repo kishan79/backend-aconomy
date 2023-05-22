@@ -2,6 +2,7 @@ const asyncHandler = require("../middlewares/async");
 const NftModel = require("../models/NFT");
 const UserActivityModel = require("../models/UserActivity");
 const AuctionModel = require("../models/Auction");
+const NotificationModel = require("../models/Notification");
 const { addDays, isBefore } = require("date-fns");
 const {
   nftSelectQuery,
@@ -372,10 +373,18 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     assetName: data.name,
                     statusText: "Bid Placed",
                   });
-                  res.status(201).json({
-                    success: true,
-                    message: "Bid successfully placed",
+                  let notification = await NotificationModel.create({
+                    nft: data._id,
+                    category: "bid-placed",
+                    user: data.nftOwner,
+                    amount,
                   });
+                  if (notification) {
+                    res.status(201).json({
+                      success: true,
+                      message: "Bid successfully placed",
+                    });
+                  }
                 } else {
                   res.status(401).json({ success: false });
                 }
@@ -411,10 +420,18 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     assetName: data.name,
                     statusText: "Bid Placed",
                   });
-                  res.status(201).json({
-                    success: true,
-                    message: "Bid successfully placed",
+                  let notification = await NotificationModel.create({
+                    nft: data._id,
+                    category: "bid-placed",
+                    user: data.nftOwner,
+                    amount,
                   });
+                  if (notification) {
+                    res.status(201).json({
+                      success: true,
+                      message: "Bid successfully placed",
+                    });
+                  }
                 } else {
                   res.status(401).json({ success: false });
                 }
@@ -634,9 +651,20 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                   statusText: "Bid got accepted",
                 },
               ]);
-              res
-                .status(201)
-                .json({ success: true, message: "Bid accepted successfully" });
+              let notification = await NotificationModel.create({
+                nft: nftData._id,
+                category: "accepted-bid",
+                user: bid[0].bidder,
+                amount: bid[0].amount
+              });
+              if (notification) {
+                res
+                  .status(201)
+                  .json({
+                    success: true,
+                    message: "Bid accepted successfully",
+                  });
+              }
             } else {
               res
                 .status(401)
