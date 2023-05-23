@@ -3,7 +3,8 @@ const dotenv = require("dotenv");
 const connectDB = require("../config/db");
 const NftModel = require("../models/NFT");
 const NFTValidationModel = require("../models/NFTValidation");
-const { isBefore } = require("date-fns");
+const NotificationModel = require("../models/Notification");
+const { isBefore, subDays, format } = require("date-fns");
 
 dotenv.config({ path: "./.env" });
 connectDB();
@@ -24,7 +25,7 @@ cron.schedule(
             if (data) {
               // console.log(new Date(data.requestExpiresOn));
               // console.log(isBefore(new Date(data.requestExpiresOn), new Date()));
-              if (data.requestExpiresOn) {
+              if (data.requestExpiresOn && data.requestState === "validated") {
                 if (isBefore(new Date(data.requestExpiresOn), new Date())) {
                   let validationData =
                     await NFTValidationModel.findOneAndUpdate(
@@ -40,10 +41,37 @@ cron.schedule(
                       }
                     );
                     if (dataNft) {
-                      console.log(
-                        `Data Updated for tokenid ${nftData[i].tokenId}`
-                      );
+                      let notification = await NotificationModel.create({
+                        nft: nftData[i]._id,
+                        category: "asset-validation-expiry",
+                        user: nftData[i].nftOwner,
+                      });
+                      if (notification) {
+                        console.log(
+                          `Data Updated for tokenid ${nftData[i].tokenId}`
+                        );
+                      }
                     }
+                  }
+                }
+
+                if (
+                  // isEqual(
+                  //   subDays(new Date(), 7),
+                  //   new Date(data.requestExpiresOn)
+                  // )
+                  format(subDays(new Date(), 7), "ddMMyyyy") ===
+                  format(new Date(data.requestExpiresOn), "ddMMyyyy")
+                ) {
+                  let notification = await NotificationModel.create({
+                    nft: nftData[i]._id,
+                    category: "asset-validation-expiry-soon",
+                    user: nftData[i].nftOwner,
+                  });
+                  if (notification) {
+                    console.log(
+                      `Notification sent for token id ${nftData[i].tokenId}`
+                    );
                   }
                 }
               }
