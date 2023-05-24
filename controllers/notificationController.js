@@ -4,6 +4,7 @@ const {
   userSelectQuery,
   validatorSelectQuery,
   nftSelectQuery,
+  poolSelectQuery
 } = require("../utils/selectQuery");
 
 exports.fetchNotifications = asyncHandler(async (req, res, next) => {
@@ -28,6 +29,9 @@ exports.fetchNotifications = asyncHandler(async (req, res, next) => {
         { path: "nft", select: nftSelectQuery },
         { path: "user", select: userSelectQuery },
         { path: "validator", select: validatorSelectQuery },
+        { path: "swapnft", select: nftSelectQuery},
+        { path: "pool", select: poolSelectQuery },
+        { path: "user2", select: userSelectQuery},
       ]);
 
     if (sortby) {

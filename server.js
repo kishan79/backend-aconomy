@@ -51,7 +51,7 @@ app.use("/api/v1/notifications", notification);
 
 // app.use(errorHandler);
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 
 const server = app.listen(
   PORT,
