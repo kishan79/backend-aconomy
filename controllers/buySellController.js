@@ -655,15 +655,23 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                 nft: nftData._id,
                 category: "accepted-bid",
                 user: bid[0].bidder,
-                amount: bid[0].amount
+                amount: bid[0].amount,
               });
               if (notification) {
-                res
-                  .status(201)
-                  .json({
-                    success: true,
-                    message: "Bid accepted successfully",
-                  });
+                for (let i = 0; i < auctionData.bids.length; i++) {
+                  if (auctionData.bids[i].status === "none") {
+                    let notification2 = await NotificationModel.create({
+                      nft: auctionData.asset,
+                      category: "bid-rejected",
+                      user: auctionData.bids[i].bidder,
+                      amount: auctionData.bids[i].amount,
+                    });
+                  }
+                }
+                res.status(201).json({
+                  success: true,
+                  message: "Bid accepted successfully",
+                });
               }
             } else {
               res
