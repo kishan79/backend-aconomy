@@ -204,15 +204,39 @@ exports.createPool = asyncHandler(async (req, res, next) => {
         pool_owner_address: wallet_address,
         whitelist: whitelistData,
       },
-      (err, doc) => {
+      async (err, doc) => {
         if (err) {
           res.status(401).json({ success: false });
         } else {
           if (!!doc) {
-            res.status(201).json({
-              success: true,
-              message: "Pool successfully created",
-            });
+            let poolData = await PoolModel.findOneAndUpdate(
+              { _id: doc._id },
+              {
+                $push: {
+                  lenders: {
+                    lender: id,
+                    lenderType: "Validator",
+                  },
+                  borrowers: {
+                    borrower: id,
+                    borrowerType: "Validator",
+                  },
+                },
+              }
+            );
+            if (poolData) {
+              res.status(201).json({
+                success: true,
+                message: "Pool successfully created",
+              });
+            } else {
+              res
+                .status(401)
+                .json({
+                  success: false,
+                  message: "Failed to create pool with lender & borrower",
+                });
+            }
           } else {
             res
               .status(401)
@@ -728,7 +752,7 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
             pool: data.pool,
             category: "pool-loan-accept",
             [data.borrowerType === "User" ? user : validator]: data.borrower,
-            amount: data.amount
+            amount: data.amount,
           });
           if (notification) {
             res.status(201).json({
