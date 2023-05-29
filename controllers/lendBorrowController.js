@@ -221,12 +221,10 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
               user: bid[0].bidder,
             });
             if (notification) {
-              res
-                .status(201)
-                .json({
-                  success: true,
-                  message: "Offer accepted successfully",
-                });
+              res.status(201).json({
+                success: true,
+                message: "Offer accepted successfully",
+              });
             }
           } else {
             res
@@ -339,9 +337,17 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
             assetName: nftData.name,
             statusText: "Loan paid back",
           });
-          res
-            .status(201)
-            .json({ success: true, message: "Loan paid successfully" });
+          let notification = await NotificationModel.create({
+            nft: nftData._id,
+            category: "lend-borrow-loan-repaid",
+            user: nftData.lendBorrowOffer.bidder,
+            amount: nftData.lendBorrowOffer.price,
+          });
+          if (notification) {
+            res
+              .status(201)
+              .json({ success: true, message: "Loan paid successfully" });
+          }
         } else {
           res
             .status(401)

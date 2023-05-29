@@ -893,10 +893,19 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
               assetName: nftData.name,
               statusText: "Withdrawn fund",
             });
-            res.status(201).json({
-              success: true,
-              message: "Amount withdrawn successfully",
+            let notification = await NotificationModel.create({
+              nft: nftData._id,
+              category: "validation-fund-withdraw",
+              validator: nftData.validator,
+              user: id,
+              amount,
             });
+            if (notification) {
+              res.status(201).json({
+                success: true,
+                message: "Amount withdrawn successfully",
+              });
+            }
           } else {
             res
               .status(401)
@@ -961,10 +970,19 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                 assetName: nftData.name,
                 statusText: "Repaied fund",
               });
-              res.status(201).json({
-                success: true,
-                message: "Amount repaid successfully",
+              let notification = await NotificationModel.create({
+                nft: nftData._id,
+                category: "validation-fund-repay",
+                validator: nftData.validator,
+                user: id,
+                amount,
               });
+              if (notification) {
+                res.status(201).json({
+                  success: true,
+                  message: "Amount repaid successfully",
+                });
+              }
             } else {
               res
                 .status(401)
