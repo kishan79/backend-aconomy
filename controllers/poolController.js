@@ -230,12 +230,10 @@ exports.createPool = asyncHandler(async (req, res, next) => {
                 message: "Pool successfully created",
               });
             } else {
-              res
-                .status(401)
-                .json({
-                  success: false,
-                  message: "Failed to create pool with lender & borrower",
-                });
+              res.status(401).json({
+                success: false,
+                message: "Failed to create pool with lender & borrower",
+              });
             }
           } else {
             res
@@ -526,7 +524,7 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
       });
     }
   } catch (err) {
-    res.status(400).json({
+    res.status(401).json({
       success: false,
       err,
     });
@@ -551,7 +549,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
           let notification = await NotificationModel.create({
             pool: data.pool,
             category: "pool-offer-accept",
-            [data.lenderType === "User" ? user : validator]: data.lender,
+            [data.lenderType === "User" ? "user" : "validator"]: data.lender,
           });
           if (notification) {
             res
@@ -573,7 +571,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
       });
     }
   } catch (err) {
-    res.status(401).json({ success: false });
+    res.status(401).json({ success: false, err });
   }
 });
 
@@ -595,7 +593,7 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
           let notification = await NotificationModel.create({
             pool: data.pool,
             category: "pool-offer-reject",
-            [data.lenderType === "User" ? user : validator]: data.lender,
+            [data.lenderType === "User" ? "user" : "validator"]: data.lender,
           });
           if (notification) {
             res
@@ -751,7 +749,7 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
           let notification = await NotificationModel.create({
             pool: data.pool,
             category: "pool-loan-accept",
-            [data.borrowerType === "User" ? user : validator]: data.borrower,
+            [data.borrowerType === "User" ? "user" : "validator"]: data.borrower,
             amount: data.amount,
           });
           if (notification) {
