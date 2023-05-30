@@ -121,10 +121,26 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                     statusText: "Sold",
                   },
                 ]);
-                res.status(201).json({
-                  success: true,
-                  message: "Asset bought successfully",
-                });
+                let notification = await NotificationModel.insertMany([
+                  {
+                    nft: data._id,
+                    category: "nft-sold",
+                    user: data.nftOwner,
+                    amount: data.listingPrice,
+                  },
+                  {
+                    nft: data._id,
+                    category: "nft-bought",
+                    user: data.id,
+                    amount: data.listingPrice,
+                  },
+                ]);
+                if (notification) {
+                  res.status(201).json({
+                    success: true,
+                    message: "Asset bought successfully",
+                  });
+                }
               } else {
                 res.status(401).json({ success: false });
               }

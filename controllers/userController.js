@@ -810,6 +810,11 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               validator: null,
               validatorAddress: null,
               validationState: "unvalidated",
+              validationType: null,
+              validationAmount: null,
+              validationDuration: null,
+              validationRoyality: null,
+              validationDocuments: null
             }
           );
           if (nftData) {
@@ -829,10 +834,24 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               assetName: nftData.name,
               statusText: "Asset redeemed",
             });
-            res.status(201).json({
-              success: true,
-              message: "Asset redeemed successfully",
-            });
+            let notification = await NotificationModel.insertMany([
+              {
+                nft: nftData._id,
+                category: "nft-redeem-user",
+                user: id,
+              },
+              {
+                nft: nftData._id,
+                category: "nft-redeem-validator",
+                validator: nftData.validator,
+              },
+            ]);
+            if (notification) {
+              res.status(201).json({
+                success: true,
+                message: "Asset redeemed successfully",
+              });
+            }
           } else {
             res.status(401).json({
               success: false,
