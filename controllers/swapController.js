@@ -127,7 +127,7 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
           let notification = await NotificationModel.create({
             nft: assetId,
             category: "swap-request",
-            user: id,
+            user: nftData.nftOwner,
           });
           if (notification) {
             res
@@ -216,7 +216,7 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                       nft: assetId,
                       swapnft: request[0].asset,
                       category: "swap-request-accept",
-                      user: id,
+                      user: request[0].assetOwner,
                     });
                     if (notification) {
                       res.status(201).json({
