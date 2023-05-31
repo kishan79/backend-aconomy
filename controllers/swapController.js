@@ -186,6 +186,12 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                   state: "none",
                   nftOwner: request[0].assetOwner,
                   nftOwnerAddress: request[0].assetOwnerAddress,
+                  $push: {
+                    history: {
+                      action: "Swapped",
+                      user: id,
+                    },
+                  },
                 }
               );
               if (data) {
@@ -195,6 +201,12 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                     state: "none",
                     nftOwner: nftData.nftOwner,
                     nftOwnerAddress: nftData.nftOwnerAddress,
+                    $push: {
+                      history: {
+                        action: "Swapped",
+                        user: request[0].assetOwner,
+                      },
+                    },
                   }
                 );
                 if (data2) {

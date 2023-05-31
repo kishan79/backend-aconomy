@@ -588,6 +588,12 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                   validationCount: data.validationCount + 1,
                   validationExpired: false,
                   fundBalance: data.fundBalance + validationAmount,
+                  $push: {
+                    history: {
+                      action: "revalidated asset",
+                      validator: id,
+                    },
+                  }
                 },
                 async (err, item) => {
                   if (!!item) {

@@ -814,7 +814,13 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               validationAmount: null,
               validationDuration: null,
               validationRoyality: null,
-              validationDocuments: null
+              validationDocuments: null,
+              $push: {
+                history: {
+                  action: "Redeemed asset",
+                  user: id,
+                },
+              },
             }
           );
           if (nftData) {

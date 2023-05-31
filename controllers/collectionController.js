@@ -1,5 +1,6 @@
 const CollectionModel = require("../models/Collection");
 const NftModel = require("../models/NFT");
+const UserActivityModel = require("../models/UserActivity");
 const asyncHandler = require("../middlewares/async");
 const {
   collectionSelectQuery,
@@ -42,11 +43,17 @@ exports.createCollection = asyncHandler(async (req, res, next) => {
         collectionOwner: id,
         collectionOwnerAddress: wallet_address,
       },
-      (err, doc) => {
+      async (err, doc) => {
         if (err) {
           res.status(401).json({ success: false });
         } else {
           if (!!doc) {
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              assetCollection: doc._id,
+              statusText: "Collection created",
+            });
             res.status(201).json({
               success: true,
               message: "Collection successfully created",

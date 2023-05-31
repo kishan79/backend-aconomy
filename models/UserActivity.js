@@ -11,6 +11,10 @@ const UserActivity = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Nft",
     },
+    assetCollection: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Collection",
+    },
     assetName: String,
     amount: Number,
     statusText: String,

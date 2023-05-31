@@ -118,6 +118,12 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
         {
           nftOwnerAddress: receiver_address,
           nftOwner: userData._id,
+          $push: {
+            history: {
+              action: "Transfered asset",
+              user: id,
+            },
+          },
         }
       );
       if (data) {
@@ -176,6 +182,12 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
             {
               nftOwnerAddress: null,
               nftOwner: null,
+              $push: {
+                history: {
+                  action: "Deleted asset",
+                  user: id,
+                },
+              }
             }
           );
           if (data) {
