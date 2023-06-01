@@ -639,6 +639,9 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                 "bids.$.status": "accepted",
                 status: "inactive",
               },
+            },
+            {
+              new: true,
             }
           );
           if (data) {
@@ -674,13 +677,13 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                 amount: bid[0].amount,
               });
               if (notification) {
-                for (let i = 0; i < auctionData.bids.length; i++) {
-                  if (auctionData.bids[i].status === "none") {
+                for (let i = 0; i < data.bids.length; i++) {
+                  if (data.bids[i].status === "none") {
                     let notification2 = await NotificationModel.create({
-                      nft: auctionData.asset,
+                      nft: data.asset,
                       category: "bid-rejected",
-                      user: auctionData.bids[i].bidder,
-                      amount: auctionData.bids[i].amount,
+                      user: data.bids[i].bidder,
+                      amount: data.bids[i].amount,
                     });
                   }
                 }

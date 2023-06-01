@@ -205,6 +205,9 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                 },
                 borrowState: "active",
               },
+            },
+            {
+              new: true,
             }
           );
           if (data) {
@@ -221,6 +224,15 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
               user: bid[0].bidder,
             });
             if (notification) {
+              for (let i = 0; i < data.lendBorrowOffers.length; i++) {
+                if (data.lendBorrowOffers[i].status === "none") {
+                  let notification2 = await NotificationModel.create({
+                    nft: nftData._id,
+                    category: "lend-offer-reject",
+                    user: data.lendBorrowOffers[i].bidder,
+                  });
+                }
+              }
               res.status(201).json({
                 success: true,
                 message: "Offer accepted successfully",

@@ -29,7 +29,7 @@ const OfferSchema = new mongoose.Schema(
     erc20Address: String,
     status: {
       type: String,
-      enum: ["none", "accepted", "rejected"],
+      enum: ["none", "accepted", "rejected", "expired"],
       default: "none",
     },
   },

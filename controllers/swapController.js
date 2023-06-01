@@ -130,12 +130,10 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
             user: nftData.nftOwner,
           });
           if (notification) {
-            res
-              .status(201)
-              .json({
-                success: true,
-                message: "Swap request sent successfully",
-              });
+            res.status(201).json({
+              success: true,
+              message: "Swap request sent successfully",
+            });
           }
         } else {
           res
@@ -221,6 +219,9 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                         "offers.$.status": "accepted",
                         status: "inactive",
                       },
+                    },
+                    {
+                      new: true,
                     }
                   );
                   if (swapNft) {
@@ -231,6 +232,16 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                       user: request[0].assetOwner,
                     });
                     if (notification) {
+                      for (let i = 0; i < swapNft.offers.length; i++) {
+                        if (swapNft.offers[i].status === "none") {
+                          let notification2 = await NotificationModel.create({
+                            nft: swapNft.offers[i].asset,
+                            swapnft: swapNft.asset,
+                            category: "swap-request-reject",
+                            user: swapNft.offers[i].assetOwner,
+                          });
+                        }
+                      }
                       res.status(201).json({
                         success: true,
                         message: "Request accepted successfully",
@@ -306,18 +317,19 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
       }
     );
     if (data) {
-      // let notification = await NotificationModel.create({
-      //   nft: assetId,
-      //   swapnft: data.offers,
-      //   category: "swap-request-reject",
-      //   user: id,
-      // });
-      // if (notification) {
-      res.status(201).json({
-        success: true,
-        message: "Request rejected successfully",
+      let offer = data.offers.filter((obj) => obj.swapId === swapId);
+      let notification = await NotificationModel.create({
+        nft: offer[0].asset,
+        swapnft: assetId,
+        category: "swap-request-reject",
+        user: offer[0].assetOwner,
       });
-      // }
+      if (notification) {
+        res.status(201).json({
+          success: true,
+          message: "Request rejected successfully",
+        });
+      }
     } else {
       res.status(401).json({
         success: false,
