@@ -56,12 +56,8 @@ cron.schedule(
                 }
 
                 if (
-                  // isEqual(
-                  //   subDays(new Date(), 7),
-                  //   new Date(data.requestExpiresOn)
-                  // )
-                  format(subDays(new Date(), 7), "ddMMyyyy") ===
-                  format(new Date(data.requestExpiresOn), "ddMMyyyy")
+                  format(subDays(new Date(data.requestExpiresOn), 7), "ddMMyyyy") ===
+                  format(new Date(), "ddMMyyyy")
                 ) {
                   let notification = await NotificationModel.create({
                     nft: nftData[i]._id,

@@ -53,9 +53,9 @@ cron.schedule(
               }
               if (nftData[i].lendBorrowOffers[j].status === "accepted") {
                 if (
-                  format(subDays(new Date(), 5), "ddMMyyyy") ===
+                  format(subDays(new Date(nftData[i].lendBorrowOffers[j].expireOn), 5), "ddMMyyyy") ===
                   format(
-                    new Date(nftData[i].lendBorrowOffers[j].expireOn),
+                    new Date(),
                     "ddMMyyyy"
                   )
                 ) {
