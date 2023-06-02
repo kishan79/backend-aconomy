@@ -13,7 +13,7 @@ cron.schedule(
   "0 0 11 * * *",
   async function () {
     try {
-      let nftData = await NftModel.find();
+      let nftData = await NftModel.find({ validationState: "validated" });
       if (nftData.length) {
         console.log(nftData.length);
         for (let i = 0; i < nftData.length; i++) {
@@ -56,8 +56,10 @@ cron.schedule(
                 }
 
                 if (
-                  format(subDays(new Date(data.requestExpiresOn), 7), "ddMMyyyy") ===
-                  format(new Date(), "ddMMyyyy")
+                  format(
+                    subDays(new Date(data.requestExpiresOn), 7),
+                    "ddMMyyyy"
+                  ) === format(new Date(), "ddMMyyyy")
                 ) {
                   let notification = await NotificationModel.create({
                     nft: nftData[i]._id,
