@@ -99,6 +99,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
             id: validator._id,
             token,
             verificationStatus: validator.username ? true : false,
+            whitelisted: validator.whitelisted,
           });
         } else {
           res.status(400).json({
@@ -146,9 +147,118 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
 
 exports.fetchValidators = asyncHandler(async (req, res, next) => {
   try {
-    res.status(200).json(res.advancedResults);
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+      whitelisted: true
+    };
+
+    query = ValidatorModel.find(queryStr).select(validatorSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await ValidatorModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
   } catch (err) {
-    res.status(400).json({ success: false });
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
+
+exports.fetchValidatorlist = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {
+    };
+
+    query = ValidatorModel.find(queryStr).select(validatorSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await ValidatorModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });
 
@@ -593,7 +703,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                       action: "revalidated asset",
                       validator: id,
                     },
-                  }
+                  },
                 },
                 async (err, item) => {
                   if (!!item) {

@@ -34,9 +34,15 @@ router
   .route("/profile")
   .get(
     protect,
-    authorize("user", "validator", "admin"),
-    advancedResults(ValidatorModel, validatorSelectQuery),
+    authorize("user", "validator"),
     validatorController.fetchValidators
+  );
+router
+  .route("/list")
+  .get(
+    protect,
+    authorize("admin"),
+    validatorController.fetchValidatorlist
   );
 
 router.route("/account/:id").get(
