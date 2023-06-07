@@ -1055,3 +1055,41 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+exports.whitelistRequest = asyncHandler(async (req, res, next) => {
+  try {
+    ValidatorModel.findOneAndUpdate(
+      { wallet_address: req.params.wallet_address },
+      { whitelisted: true },
+      null,
+      (err, docs) => {
+        if (err) {
+          res.status(400).json({ success: false });
+        } else {
+          res.status(201).json({ success: true });
+        }
+      }
+    );
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.blacklistRequest = asyncHandler(async (req, res, next) => {
+  try {
+    ValidatorModel.findOneAndUpdate(
+      { wallet_address: req.params.wallet_address },
+      { whitelisted: false },
+      null,
+      (err, docs) => {
+        if (err) {
+          res.status(400).json({ success: false });
+        } else {
+          res.status(201).json({ success: true });
+        }
+      }
+    );
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});

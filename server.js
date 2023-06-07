@@ -23,7 +23,7 @@ const swap = require("./routes/swap");
 const notification = require("./routes/notification");
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

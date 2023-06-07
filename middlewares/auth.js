@@ -20,7 +20,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.role == "user") {
+    if (decoded.role == "user" || decoded.role == "admin") {
       req.user = await User.findById(decoded.id);
     } else if (decoded.role == "validator") {
       req.user = await Validator.findById(decoded.id);

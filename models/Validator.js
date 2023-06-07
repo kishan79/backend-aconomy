@@ -16,6 +16,10 @@ const ValidatorSchema = new mongoose.Schema(
       type: String,
       default: "validator",
     },
+    whitelisted: {
+      type: Boolean,
+      default: false,
+    },
     signatureMessage: {
       type: String,
     },

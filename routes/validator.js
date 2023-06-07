@@ -34,7 +34,7 @@ router
   .route("/profile")
   .get(
     protect,
-    authorize("user", "validator"),
+    authorize("user", "validator", "admin"),
     advancedResults(ValidatorModel, validatorSelectQuery),
     validatorController.fetchValidators
   );
@@ -126,4 +126,11 @@ router
     authorize("validator"),
     validatorController.addNFTtoFavourite
   );
+router
+  .route("/whitelist/:wallet_address")
+  .patch(protect, authorize("admin"), validatorController.whitelistRequest);
+
+router
+  .route("/blacklist/:wallet_address")
+  .patch(protect, authorize("admin"), validatorController.blacklistRequest);
 module.exports = router;
