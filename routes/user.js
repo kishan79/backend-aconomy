@@ -33,7 +33,7 @@ router
   .route("/profile")
   .get(
     protect,
-    authorize("user"),
+    authorize("user", "admin"),
     advancedResults(UserModel, userSelectQuery),
     userController.fetchUsers
   );
