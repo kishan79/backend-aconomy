@@ -34,7 +34,7 @@ router
   .get(
     protect,
     authorize("user", "admin"),
-    advancedResults(UserModel, userSelectQuery),
+    advancedResults(UserModel, "-signatureMessage -__v -termOfService"),
     userController.fetchUsers
   );
 
