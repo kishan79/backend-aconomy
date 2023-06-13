@@ -56,6 +56,10 @@ router
 router.route("/:userId/assetNFTs").get(userController.fetchUserAssetNFTs);
 
 router
+  .route("/validatedAssetNFTs")
+  .get(protect, authorize("user"), userController.fetchUsersValidatedAssetNFTs);
+
+router
   .route("/sendValidationRequest")
   .post(
     protect,
