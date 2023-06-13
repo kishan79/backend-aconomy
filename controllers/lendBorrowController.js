@@ -387,6 +387,7 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       state: "lendborrow",
+      borrowState: "none",
     };
 
     query = NftModel.find(queryStr)
