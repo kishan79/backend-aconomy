@@ -18,7 +18,7 @@ const BidBuySellSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["none", "accepted", "withdrawn"],
+      enum: ["none", "accepted", "withdrawn", "rejected"],
       default: "none",
     },
     duration: {

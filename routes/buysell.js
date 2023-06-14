@@ -67,11 +67,7 @@ router
   );
 router
   .route("/cancelAuction/:assetId")
-  .put(
-    protect,
-    authorize("user"),
-    buysellController.cancelAuction
-  );
+  .put(protect, authorize("user"), buysellController.cancelAuction);
 router
   .route("/acceptBid/:assetId")
   .post(
@@ -79,6 +75,14 @@ router
     authorize("user"),
     validate(acceptBidValidationReqSchema),
     buysellController.acceptBid
+  );
+router
+  .route("/rejectBid/:assetId")
+  .post(
+    protect,
+    authorize("user"),
+    validate(acceptBidValidationReqSchema),
+    buysellController.rejectBid
   );
 router
   .route("/withdrawBid")

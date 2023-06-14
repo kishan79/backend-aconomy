@@ -719,6 +719,71 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.rejectBid = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    const { bidId } = req.body;
+    const { wallet_address, id } = req.user;
+    let auctionData = await AuctionModel.findOne({
+      asset: assetId,
+      status: "active",
+    });
+    if (auctionData.status === "active") {
+      if (auctionData.auctionOwnerAddress === wallet_address) {
+        let bid = auctionData.bids.filter((item) => item.bidId === bidId);
+        // if (
+        //   isBefore(
+        //     new Date(),
+        //     addDays(auctionData.createdAt, auctionData.duration)
+        //   )
+        // ) {
+        let data = await AuctionModel.findOneAndUpdate(
+          // { "bids.bidId": bidId },
+          { _id: auctionData._id, "bids.bidId": bidId },
+          {
+            $set: {
+              "bids.$.status": "rejected",
+            },
+          },
+          {
+            new: true,
+          }
+        );
+        if (data) {
+          let notification = await NotificationModel.create({
+            nft: data.asset,
+            category: "bid-rejected",
+            user: bid[0].bidder,
+            amount: bid[0].amount,
+          });
+          if (notification) {
+            res.status(201).json({
+              success: true,
+              message: "Bid rejected successfully",
+            });
+          }
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Failed to accept the bid" });
+        }
+        // } else {
+        //   res.status(401).json({ success: false, message: "Bid is expired" });
+        // }
+      } else {
+        res.status(401).json({
+          success: false,
+          message: "Only Asset owner can reject the bid",
+        });
+      }
+    } else {
+      res.status(401).json({ success: false, message: "Auction is closed" });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false, message: "Auction is closed" });
+  }
+});
+
 exports.withdrawBid = asyncHandler(async (req, res, next) => {
   try {
     const { auctionId, bidId } = req.body;
