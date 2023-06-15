@@ -387,6 +387,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       nftOwner: req.user.id,
+      state: "none",
       validationState: "validated",
     };
 
