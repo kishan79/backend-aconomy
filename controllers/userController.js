@@ -657,7 +657,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
     const { wallet_address } = req.user;
     const data = await CollectionModel.find({
       $or: [
-        { name: "Public Collection" },
+        { name: "Aconomy" },
         { collectionOwnerAddress: wallet_address },
       ],
     }).select(collectionSelectQuery);
