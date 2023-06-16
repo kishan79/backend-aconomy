@@ -83,8 +83,9 @@ const validationCron = async () => {
     console.log(err);
   }
 };
-
-validationCron();
+setTimeout(() => {
+  validationCron();
+}, 5000);
 //   },
 //   { timezone: "Asia/Kolkata" }
 // );
