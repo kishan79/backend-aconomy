@@ -174,12 +174,17 @@ exports.fetchUserById = asyncHandler(async (req, res, next) => {
                     if (err) {
                       res.status(400).json({ success: false, data: {} });
                     } else {
+                      let tvl = 0;
+                      for (let i = 0; i < validatedData.length; i++) {
+                        tvl += validatedData[i].validationAmount;
+                      }
                       res.status(200).json({
                         success: true,
                         data: {
                           ...doc,
                           totalAssets: assetData.length,
                           validatedAssets: validatedData.length,
+                          tvl,
                         },
                       });
                     }
@@ -229,12 +234,17 @@ exports.fetchUserByAddress = asyncHandler(async (req, res, next) => {
                     if (err) {
                       res.status(400).json({ success: false, data: {} });
                     } else {
+                      let tvl = 0;
+                      for (let i = 0; i < validatedData.length; i++) {
+                        tvl += validatedData[i].validationAmount;
+                      }
                       res.status(200).json({
                         success: true,
                         data: {
                           ...doc,
                           totalAssets: assetData.length,
                           validatedAssets: validatedData.length,
+                          tvl,
                         },
                       });
                     }
@@ -656,10 +666,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.user;
     const data = await CollectionModel.find({
-      $or: [
-        { name: "Aconomy" },
-        { collectionOwnerAddress: wallet_address },
-      ],
+      $or: [{ name: "Aconomy" }, { collectionOwnerAddress: wallet_address }],
     }).select(collectionSelectQuery);
     if (data) {
       res.status(200).json({ success: true, data });
