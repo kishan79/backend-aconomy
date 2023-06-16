@@ -49,6 +49,7 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: doc._id,
                   assetName: doc.name,
+                  assetCollection: doc.nftCollection,
                   statusText: "NFT Listed",
                 });
                 res.status(201).json({
@@ -111,6 +112,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                     user: id,
                     asset: doc._id,
                     assetName: doc.name,
+                    assetCollection: doc.nftCollection,
                     statusText: "Bought",
                   },
                   {
@@ -118,6 +120,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                     user: data.nftOwner,
                     asset: doc._id,
                     assetName: doc.name,
+                    assetCollection: doc.nftCollection,
                     statusText: "Sold",
                   },
                 ]);
@@ -188,6 +191,7 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: doc._id,
                   assetName: doc.name,
+                  assetCollection: doc.nftCollection,
                   statusText: "Sale edited",
                 });
                 res.status(201).json({
@@ -241,6 +245,7 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: doc._id,
                   assetName: doc.name,
+                  assetCollection: doc.nftCollection,
                   statusText: "Sale cancelled",
                 });
                 res.status(201).json({
@@ -314,6 +319,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: nftData._id,
                   assetName: nftData.name,
+                  assetCollection: nftData.nftCollection,
                   statusText: "NFT Listed on Auction",
                 });
                 res.status(201).json({
@@ -387,6 +393,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     user: id,
                     asset: data._id,
                     assetName: data.name,
+                    assetCollection: data.nftCollection,
                     statusText: "Bid Placed",
                   });
                   let notification = await NotificationModel.create({
@@ -434,6 +441,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     user: id,
                     asset: data._id,
                     assetName: data.name,
+                    assetCollection: data.nftCollection,
                     statusText: "Bid Placed",
                   });
                   let notification = await NotificationModel.create({
@@ -512,6 +520,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: doc._id,
                   assetName: doc.name,
+                  assetCollection: doc.nftCollection,
                   statusText: "Auction edited",
                 });
                 res.status(201).json({
@@ -578,6 +587,7 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: doc._id,
                   assetName: doc.name,
+                  assetCollection: doc.nftCollection,
                   statusText: "Auction Cancelled",
                 });
                 if (nftData) {
@@ -660,6 +670,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: nftData._id,
                   assetName: nftData.name,
+                  assetCollection: nftData.nftCollection,
                   statusText: "Accepted Bid",
                 },
                 {
@@ -667,6 +678,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                   user: bid[0].bidder,
                   asset: nftData._id,
                   assetName: nftData.name,
+                  assetCollection: nftData.nftCollection,
                   statusText: "Bid got accepted",
                 },
               ]);

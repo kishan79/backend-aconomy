@@ -42,6 +42,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
             user: id,
             asset: nftData._id,
             assetName: nftData.name,
+            assetCollection: nftData.nftCollection,
             statusText: "Proposed an offer",
           });
           res
@@ -86,6 +87,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
             user: id,
             asset: nftData._id,
             assetName: nftData.name,
+            assetCollection: nftData.nftCollection,
             statusText: "Remove an offer",
           });
           res.status(201).json({
@@ -143,6 +145,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
             user: id,
             asset: nftData._id,
             assetName: nftData.name,
+            assetCollection: nftData.nftCollection,
             statusText: "Made an offer",
           });
           let notification = await NotificationModel.create({
@@ -216,6 +219,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
               user: id,
               asset: nftData._id,
               assetName: nftData.name,
+              assetCollection: nftData.nftCollection,
               statusText: "Accepted an offer",
             });
             let notification = await NotificationModel.create({
@@ -286,6 +290,7 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
                 user: id,
                 asset: nftData._id,
                 assetName: nftData.name,
+                assetCollection: nftData.nftCollection,
                 statusText: "Rejected an offer",
               });
               let notification = await NotificationModel.create({
@@ -347,6 +352,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
             user: id,
             asset: nftData._id,
             assetName: nftData.name,
+            assetCollection: nftData.nftCollection,
             statusText: "Loan paid back",
           });
           let notification = await NotificationModel.create({

@@ -85,6 +85,7 @@ exports.createNft = asyncHandler(async (req, res, next) => {
               user: id,
               asset: doc._id,
               assetName: doc.name,
+              assetCollection: doc.nftCollection,
               statusText: "NFT Created",
             });
             res.status(201).json({
@@ -133,6 +134,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
             user: id,
             asset: data._id,
             assetName: data.name,
+            assetCollection: data.nftCollection,
             statusText: "NFT Transfered",
           },
           {
@@ -140,6 +142,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
             user: userData._id,
             asset: data._id,
             assetName: data.name,
+            assetCollection: data.nftCollection,
             statusText: "NFT Recieved",
           },
         ]);
@@ -196,6 +199,7 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
               user: id,
               asset: data._id,
               assetName: data.name,
+              assetCollection: data.nftCollection,
               statusText: "NFT Deleted",
             });
             res
@@ -273,6 +277,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset: nftData._id,
                   assetName: nftData.name,
+                  assetCollection: nftData.nftCollection,
                   statusText: "Burned",
                 });
                 let notification = await NotificationModel.create({

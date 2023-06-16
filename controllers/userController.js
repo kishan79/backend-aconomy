@@ -489,6 +489,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset,
                   assetName: nftData.name,
+                  assetCollection: nftData.nftCollection,
                   statusText: "Sent validation request",
                 });
                 if (activity) {
@@ -553,6 +554,7 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                   user: id,
                   asset,
                   assetName: nftData.name,
+                  assetCollection: nftData.nftCollection,
                   statusText: "Sent revalidation request",
                 });
                 if (activity) {
@@ -771,6 +773,7 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
               user: id,
               asset: assetId,
               assetName: nftData.name,
+              assetCollection: nftData.nftCollection,
               statusText: "Sent redeem request",
             });
             let notification = await NotificationModel.create({
@@ -833,6 +836,7 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
             user: id,
             asset: assetId,
             assetName: nftData.name,
+            assetCollection: nftData.nftCollection,
             statusText: "Cancelled redeem request",
           });
           res.status(201).json({
@@ -907,6 +911,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               user: id,
               asset: assetId,
               assetName: nftData.name,
+              assetCollection: nftData.nftCollection,
               statusText: "Asset redeemed",
             });
             let notification = await NotificationModel.insertMany([
@@ -985,6 +990,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
               user: id,
               asset: nftData._id,
               assetName: nftData.name,
+              assetCollection: nftData.nftCollection,
               statusText: "Withdrawn fund",
             });
             let notification = await NotificationModel.create({
@@ -1062,6 +1068,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                 user: id,
                 asset: nftData._id,
                 assetName: nftData.name,
+                assetCollection: nftData.nftCollection,
                 statusText: "Repaied fund",
               });
               let notification = await NotificationModel.create({
