@@ -19,11 +19,41 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
   try {
     const { collectionId } = req.params;
     if (!!collectionId) {
-      CollectionModel.findOne({ _id: collectionId }, (err, doc) => {
+      CollectionModel.findOne({ _id: collectionId }, async (err, doc) => {
         if (err) {
           res.status(400).json({ success: false, data: {} });
         } else {
-          res.status(200).json({ success: true, data: doc });
+          // res.status(200).json({ success: true, data: doc });
+          let data = await NftModel.find({
+            nftCollection: collectionId,
+          })
+            .select(
+              "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
+            )
+            .populate({ path: "nftOwner", select: "_id name wallet_address" })
+            .lean();
+          if (data.length) {
+            let floor_price ,
+              tvl = 0,
+              listed = 0,
+              owners = [];
+            for (let i = 0; i < data.length; i++) {
+              if (data.validationState === "validated") {
+                tvl += data[i].validationAmount;
+              }
+              if (data[i].state === "sale" || data[i].state === "auction") {
+                listed += 1;
+              }
+              owners.push({
+                name: data[i].nftOwner.name,
+                wallet_address: data[i].nftOwner.wallet_address,
+              });
+            }
+            let dataObj = { ...doc._doc, tvl, listed, owners };
+            res.status(200).json({ success: true, data: dataObj });
+          } else {
+            res.status(200).json({ success: true, data: {} });
+          }
         }
       }).select(collectionSelectQuery);
     } else {

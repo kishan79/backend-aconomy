@@ -12,6 +12,7 @@ const {
   userHistorySelectQuery,
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
+const { Role } = require("../utils/utils");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
   try {
@@ -60,11 +61,12 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
 
 exports.createNft = asyncHandler(async (req, res, next) => {
   try {
-    const { id, wallet_address } = req.user;
+    const { id, wallet_address, role } = req.user;
     NftModel.create(
       {
         ...req.body,
         nftOwner: id,
+        nftOwnerType: Role[role],
         nftOwnerAddress: wallet_address,
         nftCreator: id,
         nftCreatorAddress: wallet_address,
@@ -190,7 +192,7 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
                   action: "Deleted asset",
                   user: id,
                 },
-              }
+              },
             }
           );
           if (data) {
@@ -254,6 +256,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   previousOwnerAddress: nftData.nftOwnerAddress,
                   nftOwnerAddress: validationData.validatorAddress,
                   nftOwner: validationData.validator,
+                  nftOwnerType: Role["validator"],
                   validationType: null,
                   validationAmount: null,
                   validationDuration: null,
@@ -284,7 +287,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   nft: nftData._id,
                   category: "asset-burned",
                   user: nftData.nftOwner,
-                  validator: validationData.validator
+                  validator: validationData.validator,
                 });
                 if (notification) {
                   res.status(201).json({
