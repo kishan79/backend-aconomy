@@ -33,7 +33,7 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
             .populate({ path: "nftOwner", select: "_id name wallet_address" })
             .lean();
           if (data.length) {
-            let floor_price ,
+            let floor_price,
               tvl = 0,
               listed = 0,
               owners = [];
@@ -49,7 +49,17 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
                 wallet_address: data[i].nftOwner.wallet_address,
               });
             }
-            let dataObj = { ...doc._doc, tvl, listed, owners };
+            let dataObj = {
+              ...doc._doc,
+              tvl,
+              listed: Math.round((listed / data.length) * 100),
+              totalAssets: data.length,
+              owners: [
+                ...new Map(
+                  owners.map((item) => [item["wallet_address"], item])
+                ).values(),
+              ],
+            };
             res.status(200).json({ success: true, data: dataObj });
           } else {
             res.status(200).json({ success: true, data: {} });
