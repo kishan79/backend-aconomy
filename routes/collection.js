@@ -34,4 +34,8 @@ router
   .route("/:collectionId/nft")
   .get(collectionController.fetchAllCollectionNfts);
 
+router
+  .route("/:collectionId/activities")
+  .get(collectionController.fetchCollectionActivities);
+
 module.exports = router;
