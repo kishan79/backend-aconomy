@@ -422,6 +422,10 @@ exports.fetchSwapRequest = asyncHandler(async (req, res, next) => {
         path: "asset",
         select: "name mediaLinks assetType _id",
       },
+      {
+        path: "offers.asset",
+        select: "name mediaLinks assetType _id",
+      },
     ]);
     if (data) {
       res.status(200).json({ success: true, data });

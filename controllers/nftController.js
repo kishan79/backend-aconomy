@@ -49,6 +49,7 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
             path: "history.validator",
             select: validatorHistorySelectQuery,
           },
+          { path: "lendBorrowOffers.bidder", select: userSelectQuery },
         ])
         .select(nftSelectQuery);
     } else {

@@ -33,6 +33,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
               bidid: null,
               nftId,
               nftContractAddress: contractAddress,
+              createdAt: new Date(),
             },
           }
         );
@@ -205,6 +206,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                   nftId: nftData.lendBorrowOffer.nftId,
                   nftContractAddress:
                     nftData.lendBorrowOffer.nftContractAddress,
+                  createdAt: bid[0].createdAt,
                 },
                 borrowState: "active",
               },

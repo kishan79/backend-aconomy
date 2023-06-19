@@ -19,6 +19,7 @@ const {
   userSelectQuery,
   userHistorySelectQuery,
   validatorHistorySelectQuery,
+  redeemNftSelectQuery
 } = require("../utils/selectQuery");
 const UserActivityModel = require("../models/UserActivity");
 
@@ -948,7 +949,7 @@ exports.fetchAllRedeemRequests = asyncHandler(async (req, res, next) => {
       redeemRequest: "true",
     };
 
-    query = NftModel.find(queryStr).select(nftSelectQuery);
+    query = NftModel.find(queryStr).select(redeemNftSelectQuery);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
