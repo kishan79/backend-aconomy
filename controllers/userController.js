@@ -399,6 +399,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
       nftOwner: req.user.id,
       state: "none",
       validationState: "validated",
+      swapState: "none"
     };
 
     query = NftModel.find(queryStr).populate([

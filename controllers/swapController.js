@@ -101,7 +101,10 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
   let nftData = await NftModel.findOne({ _id: assetId });
   if (nftData.nftOwnerAddress !== wallet_address) {
     if (nftData.state === "swap") {
-      let swapNftData = await NftModel.findOne({ _id: swapAsset });
+      let swapNftData = await NftModel.findOneAndUpdate(
+        { _id: swapAsset },
+        { swapState: "requested" }
+      );
       if (swapNftData && swapNftData.nftOwnerAddress === wallet_address) {
         let swapData = await SwapModel.findOneAndUpdate(
           {
@@ -199,6 +202,7 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                     state: "none",
                     nftOwner: nftData.nftOwner,
                     nftOwnerAddress: nftData.nftOwnerAddress,
+                    swapState: "none",
                     $push: {
                       history: {
                         action: "Swapped",
@@ -234,6 +238,11 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                     if (notification) {
                       for (let i = 0; i < swapNft.offers.length; i++) {
                         if (swapNft.offers[i].status === "none") {
+                          let reverseSwapState =
+                            await NftModel.findOneAndUpdate(
+                              { _id: swapNft.offers[i].asset },
+                              { swapState: "none" }
+                            );
                           let notification2 = await NotificationModel.create({
                             nft: swapNft.offers[i].asset,
                             swapnft: swapNft.asset,
@@ -318,6 +327,10 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
     );
     if (data) {
       let offer = data.offers.filter((obj) => obj.swapId === swapId);
+      let swapNft = await NftModel.findByIdAndUpdate(
+        { _id: offer[0].asset },
+        { swapState: "none" }
+      );
       let notification = await NotificationModel.create({
         nft: offer[0].asset,
         swapnft: assetId,
@@ -373,10 +386,16 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
-            res.status(201).json({
-              success: true,
-              message: "Request cancelled successfully",
-            });
+            let swapNft = await NftModel.findByIdAndUpdate(
+              { _id: request[0].asset },
+              { swapState: "none" }
+            );
+            if (swapNft) {
+              res.status(201).json({
+                success: true,
+                message: "Request cancelled successfully",
+              });
+            }
           } else {
             res.status(401).json({
               success: false,

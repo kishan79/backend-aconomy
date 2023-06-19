@@ -187,6 +187,11 @@ const NftSchema = new mongoose.Schema(
       enum: ["none", "active"],
       default: "none",
     },
+    swapState: {
+      type: String,
+      enum: ["none", "requested"],
+      default: "none",
+    },
     history: [HistorySchema],
   },
   { timestamps: true }
