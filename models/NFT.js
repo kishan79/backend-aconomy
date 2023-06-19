@@ -180,6 +180,7 @@ const NftSchema = new mongoose.Schema(
         type: mongoose.Schema.ObjectId,
         ref: "User",
       },
+      createdAt: Date,
     },
     borrowState: {
       type: String,

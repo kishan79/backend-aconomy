@@ -19,7 +19,7 @@ const {
   userSelectQuery,
   userHistorySelectQuery,
   validatorHistorySelectQuery,
-  redeemNftSelectQuery
+  redeemNftSelectQuery,
 } = require("../utils/selectQuery");
 const UserActivityModel = require("../models/UserActivity");
 
@@ -153,7 +153,7 @@ exports.fetchValidators = asyncHandler(async (req, res, next) => {
     const { sortby } = req.query;
 
     let queryStr = {
-      whitelisted: true
+      whitelisted: true,
     };
 
     query = ValidatorModel.find(queryStr).select(validatorSelectQuery);
@@ -211,8 +211,7 @@ exports.fetchValidatorlist = asyncHandler(async (req, res, next) => {
 
     const { sortby } = req.query;
 
-    let queryStr = {
-    };
+    let queryStr = {};
 
     query = ValidatorModel.find(queryStr).select(validatorSelectQuery);
 
@@ -666,75 +665,144 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
   const { wallet_address, id } = req.user;
   const data = await NFTValidationModel.findById(requestId);
   if (data.validatorAddress === wallet_address) {
-    if (data.validationState === "pending") {
-      NFTValidationModel.findOneAndUpdate(
-        { _id: requestId },
-        {
-          validationType,
-          validationAmount: data.validationAmount + validationAmount,
-          validationDuration,
-          validationRoyality,
-          validationDocuments,
-          requestExpiresOn: addDays(new Date(), validationDuration),
-          requestState: "validated",
-          validationCount: data.validationCount + 1,
-          validationExpired: false,
-          fundBalance: data.fundBalance + validationAmount,
-        },
-        async (err, doc) => {
-          if (err) {
-            res.status(401).json({ success: false });
-          } else {
-            if (!!doc) {
-              NftModel.findOneAndUpdate(
-                { _id: data.asset },
-                {
-                  validationType,
-                  validationAmount: data.validationAmount + validationAmount,
-                  validationDuration,
-                  validationRoyality,
-                  validationDocuments,
-                  requestExpiresOn: addDays(new Date(), validationDuration),
-                  validationState: "validated",
-                  validationCount: data.validationCount + 1,
-                  validationExpired: false,
-                  fundBalance: data.fundBalance + validationAmount,
-                  $push: {
-                    history: {
-                      action: "revalidated asset",
-                      validator: id,
+    if (data.requestState === "pending") {
+      if (validationDocuments) {
+        NFTValidationModel.findOneAndUpdate(
+          { _id: requestId },
+          {
+            validationType,
+            validationAmount: data.validationAmount + validationAmount,
+            validationDuration,
+            validationRoyality,
+            requestExpiresOn: addDays(new Date(), validationDuration),
+            requestState: "validated",
+            validationCount: data.validationCount + 1,
+            validationExpired: false,
+            fundBalance: data.fundBalance + validationAmount,
+            $push: { validationDocuments: { $each: validationDocuments } },
+          },
+          async (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                NftModel.findOneAndUpdate(
+                  { _id: data.asset },
+                  {
+                    validationType,
+                    validationAmount: data.validationAmount + validationAmount,
+                    validationDuration,
+                    validationRoyality,
+                    requestExpiresOn: addDays(new Date(), validationDuration),
+                    validationState: "validated",
+                    validationCount: data.validationCount + 1,
+                    validationExpired: false,
+                    fundBalance: data.fundBalance + validationAmount,
+                    $push: {
+                      history: {
+                        action: "revalidated asset",
+                        validator: id,
+                      },
+                      validationDocuments: { $each: validationDocuments },
                     },
                   },
-                },
-                async (err, item) => {
-                  if (!!item) {
-                    let activity = await ValidatorActivityModel.create({
-                      validatorAddress: wallet_address,
-                      validator: id,
-                      asset: data.asset,
-                      assetOwner: data.assetOwnerAddress,
-                      assetName: data.assetName,
-                      statusText: "Asset revalidated",
-                    });
-                    if (activity) {
-                      res.status(201).json({
-                        success: true,
-                        message: "Asset revalidated successfully",
+                  async (err, item) => {
+                    if (!!item) {
+                      let activity = await ValidatorActivityModel.create({
+                        validatorAddress: wallet_address,
+                        validator: id,
+                        asset: data.asset,
+                        assetOwner: data.assetOwnerAddress,
+                        assetName: data.assetName,
+                        statusText: "Asset revalidated",
                       });
+                      if (activity) {
+                        res.status(201).json({
+                          success: true,
+                          message: "Asset revalidated successfully",
+                        });
+                      }
+                    } else {
+                      res.status(401).json({ success: false });
                     }
-                  } else {
-                    res.status(401).json({ success: false });
                   }
-                }
-              );
-            } else {
-              res
-                .status(401)
-                .json({ success: false, message: "Wrong request" });
+                );
+              } else {
+                res
+                  .status(401)
+                  .json({ success: false, message: "Wrong request" });
+              }
             }
           }
-        }
-      );
+        );
+      } else {
+        NFTValidationModel.findOneAndUpdate(
+          { _id: requestId },
+          {
+            validationType,
+            validationAmount: data.validationAmount + validationAmount,
+            validationDuration,
+            validationRoyality,
+            requestExpiresOn: addDays(new Date(), validationDuration),
+            requestState: "validated",
+            validationCount: data.validationCount + 1,
+            validationExpired: false,
+            fundBalance: data.fundBalance + validationAmount,
+          },
+          async (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                NftModel.findOneAndUpdate(
+                  { _id: data.asset },
+                  {
+                    validationType,
+                    validationAmount: data.validationAmount + validationAmount,
+                    validationDuration,
+                    validationRoyality,
+                    requestExpiresOn: addDays(new Date(), validationDuration),
+                    validationState: "validated",
+                    validationCount: data.validationCount + 1,
+                    validationExpired: false,
+                    fundBalance: data.fundBalance + validationAmount,
+                    $push: {
+                      history: {
+                        action: "revalidated asset",
+                        validator: id,
+                      },
+                    },
+                  },
+                  async (err, item) => {
+                    if (!!item) {
+                      let activity = await ValidatorActivityModel.create({
+                        validatorAddress: wallet_address,
+                        validator: id,
+                        asset: data.asset,
+                        assetOwner: data.assetOwnerAddress,
+                        assetName: data.assetName,
+                        statusText: "Asset revalidated",
+                      });
+                      if (activity) {
+                        res.status(201).json({
+                          success: true,
+                          message: "Asset revalidated successfully",
+                        });
+                      }
+                    } else {
+                      res.status(401).json({ success: false });
+                    }
+                  }
+                );
+              } else {
+                res
+                  .status(401)
+                  .json({ success: false, message: "Wrong request" });
+              }
+            }
+          }
+        );
+      }
     } else {
       res.status(403).json({ success: false, message: "Forbidden Action" });
     }
