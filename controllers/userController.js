@@ -399,7 +399,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
       nftOwner: req.user.id,
       state: "none",
       validationState: "validated",
-      swapState: "none"
+      swapState: "none",
     };
 
     query = NftModel.find(queryStr).populate([
@@ -666,11 +666,51 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.user;
-    const data = await CollectionModel.find({
+    const collectionData = await CollectionModel.find({
       $or: [{ name: "Aconomy" }, { collectionOwnerAddress: wallet_address }],
-    }).select(collectionSelectQuery);
-    if (data) {
-      res.status(200).json({ success: true, data });
+    })
+      .select(collectionSelectQuery)
+      .lean();
+    if (collectionData.length) {
+      let dataArr = [];
+      for (let i = 0; i < collectionData.length; i++) {
+        let data = await NftModel.find({
+          nftCollection: collectionData[i]._id,
+        })
+          .select(
+            "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
+          )
+          .populate({ path: "nftOwner", select: "_id name wallet_address" })
+          .lean();
+        let floor_price,
+          tvl = 0,
+          listed = 0,
+          owners = [];
+        for (let j = 0; j < data.length; j++) {
+          if (data.validationState === "validated") {
+            tvl += data[j].validationAmount;
+          }
+          if (data[j].state === "sale" || data[j].state === "auction") {
+            listed += 1;
+          }
+          owners.push({
+            name: data[j].nftOwner.name,
+            wallet_address: data[j].nftOwner.wallet_address,
+          });
+        }
+        dataArr.push({
+          ...collectionData[i],
+          tvl,
+          listed: data.length ? Math.round((listed / data.length) * 100) : 0,
+          totalAssets: data.length,
+          owners: [
+            ...new Map(
+              owners.map((item) => [item["wallet_address"], item])
+            ).values(),
+          ],
+        });
+      }
+      res.status(200).json({ success: true, data: dataArr });
     } else {
       res.status(200).json({ success: true, data: [] });
     }
