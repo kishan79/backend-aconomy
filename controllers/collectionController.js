@@ -32,7 +32,6 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
             )
             .populate({ path: "nftOwner", select: "_id name wallet_address" })
             .lean();
-          if (data.length) {
             let floor_price,
               tvl = 0,
               listed = 0,
@@ -52,7 +51,7 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
             let dataObj = {
               ...doc._doc,
               tvl,
-              listed: Math.round((listed / data.length) * 100),
+              listed: data.length ? Math.round((listed / data.length) * 100): 0,
               totalAssets: data.length,
               owners: [
                 ...new Map(
@@ -61,9 +60,6 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
               ],
             };
             res.status(200).json({ success: true, data: dataObj });
-          } else {
-            res.status(200).json({ success: true, data: {} });
-          }
         }
       }).select(collectionSelectQuery);
     } else {
@@ -237,7 +233,10 @@ exports.fetchCollectionActivities = asyncHandler(async (req, res, next) => {
       assetCollection: req.params.collectionId,
     };
 
-    query = UserActivityModel.find(queryStr);
+    query = UserActivityModel.find(queryStr).populate([
+      { path: "asset", select: "_id name nftOwner" },
+      { path: "user", select: "_id name" },
+    ]);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
