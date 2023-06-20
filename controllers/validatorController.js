@@ -304,12 +304,29 @@ exports.fetchValidatorById = asyncHandler(async (req, res, next) => {
 exports.fetchValidatorByAddress = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.params;
-    ValidatorModel.findOne({ wallet_address }, (err, doc) => {
+    ValidatorModel.findOne({ wallet_address }, async (err, doc) => {
       if (err) {
         res.status(200).json({ success: false, data: {} });
       } else {
         if (!!doc) {
-          res.status(200).json({ success: true, data: doc });
+          let data = await NftModel.find({
+            $or: [
+              { validatorAddress: wallet_address },
+              { nftOwnerType: "Validator" },
+            ],
+          }).select("_id validationState");
+          let validatedAssets = 0;
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].validationState === "validated") {
+              validatedAssets += 1;
+            }
+          }
+          res
+            .status(200)
+            .json({
+              success: true,
+              data: { ...doc, totalAssets: data.length, validatedAssets },
+            });
         } else {
           res.status(400).json({
             success: false,
