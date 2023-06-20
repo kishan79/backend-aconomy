@@ -156,7 +156,7 @@ exports.fetchValidators = asyncHandler(async (req, res, next) => {
       whitelisted: true,
     };
 
-    query = ValidatorModel.find(queryStr).select(validatorSelectQuery);
+    query = ValidatorModel.find(queryStr).select(validatorSelectQuery).lean();
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -173,6 +173,28 @@ exports.fetchValidators = asyncHandler(async (req, res, next) => {
     query = query.skip(startIndex).limit(limit);
 
     const results = await query;
+
+    for (let i = 0; i < results.length; i++) {
+      let data = await NftModel.find({
+        validator: results[i]._id,
+        validationState: "validated",
+      }).select("validationAmount validationDuration");
+
+      if (data) {
+        let tv = 0,
+          totalTime = 0;
+        for (let j = 0; j < data.length; j++) {
+          tv += data[j].validationAmount;
+          totalTime += data[j].validationDuration;
+        }
+        results[i] = {
+          ...results[i],
+          totalAssets: data.length,
+          totalValidation: data.length ? Math.round(tv / data.length) : 0,
+          averageTime: data.length ? Math.round(totalTime / data.length) : 0,
+        };
+      }
+    }
 
     const pagination = {};
 
