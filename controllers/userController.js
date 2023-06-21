@@ -807,7 +807,8 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
       if (data.validationState === "validated") {
         if (
           data.redeemRequest === "false" ||
-          data.redeemRequest === "redeemed"
+          data.redeemRequest === "redeemed" ||
+          data.redeemRequest === "rejected"
         ) {
           let nftData = await NftModel.findOneAndUpdate(
             { _id: assetId },
