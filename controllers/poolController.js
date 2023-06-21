@@ -115,7 +115,24 @@ exports.myPools = asyncHandler(async (req, res, next) => {
     const total = await PoolModel.countDocuments(queryStr);
     query = query.skip(startIndex).limit(limit);
 
-    const results = await query;
+    const results = await query.lean();
+
+    for (let i = 0; i < results.length; i++) {
+      let activeLoanData = await OfferModel.find({
+        pool: results[i]._id,
+        status: "accepted",
+      }).select("amount");
+      if (activeLoanData) {
+        let activeLoans = 0;
+        for (let j = 0; j < activeLoanData.length; j++) {
+          activeLoans += activeLoanData[j].amount;
+        }
+        results[i] = {
+          ...results[i],
+          activeLoans,
+        };
+      }
+    }
 
     const pagination = {};
 
@@ -181,8 +198,12 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
           ...data,
           activeLoans,
           repaidLoans,
-          averageDuration: totalDuration / activeLoanData.length,
-          averageAPY: totalAPY / activeLoanData.length,
+          averageDuration: activeLoanData.length
+            ? Math.round(totalDuration / activeLoanData.length)
+            : 0,
+          averageAPY: activeLoanData.length
+            ? Math.round(totalAPY / activeLoanData.length)
+            : 0,
         },
       });
     } else {
@@ -749,7 +770,8 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
           let notification = await NotificationModel.create({
             pool: data.pool,
             category: "pool-loan-accept",
-            [data.borrowerType === "User" ? "user" : "validator"]: data.borrower,
+            [data.borrowerType === "User" ? "user" : "validator"]:
+              data.borrower,
             amount: data.amount,
           });
           if (notification) {
