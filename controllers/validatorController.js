@@ -321,12 +321,10 @@ exports.fetchValidatorByAddress = asyncHandler(async (req, res, next) => {
               validatedAssets += 1;
             }
           }
-          res
-            .status(200)
-            .json({
-              success: true,
-              data: { ...doc, totalAssets: data.length, validatedAssets },
-            });
+          res.status(200).json({
+            success: true,
+            data: { ...doc, totalAssets: data.length, validatedAssets },
+          });
         } else {
           res.status(400).json({
             success: false,
@@ -1056,7 +1054,13 @@ exports.fetchAllRedeemRequests = asyncHandler(async (req, res, next) => {
       redeemRequest: "true",
     };
 
-    query = NftModel.find(queryStr).select(redeemNftSelectQuery);
+    query = NftModel.find(queryStr);
+
+    query = query
+      .populate([
+        { path: "nftOwner", select: userSelectQuery },
+      ])
+      .select(redeemNftSelectQuery);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");

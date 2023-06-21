@@ -9,7 +9,7 @@ const userHistorySelectQuery = "-__v -signatureMessage -termOfService -email -cr
 const validatorHistorySelectQuery = "-signatureMessage -createdAt -updatedAt -__v -document -email -bio -assetType";
 const validatedAssetSelectQuery = "-updatedAt -__v -assetJurisdiction";
 const poolSelectQuery = "-updatedAt -__v";
-const redeemNftSelectQuery = "tokenId name nftOwner nftOwnerAddress createdAt redeemRequest updatedAt validationDocuments validationExpired validator validatorAddress _id"
+const redeemNftSelectQuery = "tokenId name nftOwner nftOwnerType createdAt redeemRequest updatedAt mediaLinks assetType _id"
 
 module.exports = {
   userSelectQuery,
