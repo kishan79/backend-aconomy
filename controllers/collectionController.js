@@ -236,6 +236,7 @@ exports.fetchCollectionActivities = asyncHandler(async (req, res, next) => {
     query = UserActivityModel.find(queryStr).populate([
       { path: "asset", select: "_id name mediaLinks assetType" },
       { path: "user", select: "_id name profileImage" },
+      { path: "assetCollection", select: "_id name profileImage"}
     ]);
 
     if (sortby) {
