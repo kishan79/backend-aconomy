@@ -179,7 +179,7 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
       let activeLoanData = await OfferModel.find({
         pool: poolId,
         status: "accepted",
-      });
+      }).select("amount duration apy_percent");
       for (let i = 0; i < activeLoanData.length; i++) {
         activeLoans += activeLoanData[i].amount;
         totalDuration += activeLoanData[i].duration;
@@ -188,7 +188,7 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
       let repaidLoanData = await OfferModel.find({
         pool: poolId,
         status: "repaid",
-      });
+      }).select("amount");
       for (let i = 0; i < repaidLoanData.length; i++) {
         repaidLoans += repaidLoanData[i].amount;
       }
