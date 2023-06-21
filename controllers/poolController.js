@@ -175,8 +175,14 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
     let data = await PoolModel.findOne({ _id: poolId })
       .populate([
         { path: "pool_owner", select: "_id name profileImage" },
-        { path: "lenders.lender", select: "_id name profileImage wallet_address" },
-        { path: "borrowers.borrower", select: "_id name profileImage wallet_address" },
+        {
+          path: "lenders.lender",
+          select: "_id name profileImage wallet_address",
+        },
+        {
+          path: "borrowers.borrower",
+          select: "_id name profileImage wallet_address",
+        },
       ])
       .lean();
     if (data) {
@@ -375,10 +381,42 @@ exports.fetchLender = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
     // const { wallet_address } = req.user;
-    let poolData = await PoolModel.findOne({ _id: poolId }).populate({
-      path: "lenders.lender",
-      select: userSelectQuery,
-    });
+    let poolData = await PoolModel.findOne({ _id: poolId })
+      .populate({
+        path: "lenders.lender",
+        select: "_id name profileImage",
+      })
+      .lean();
+    if (poolData) {
+      let offerData = await OfferModel.find({
+        pool: poolId,
+        type: "lenderOffer",
+      }).lean();
+      console.log(poolData.lenders.length);
+      for (let i = 0; i < poolData.lenders.length; i++) {
+        let amountOffered = 0,
+          closedLoan = 0,
+          activeLoan = 0;
+        for (let j = 0; j < offerData.length; j++) {
+          if (poolData.lenders[i].lender._id === offerData[j].lender) {
+            if (offerData[j].status === "accepted") {
+              activeLoan += 1;
+            }
+            if (offerData[j].status === "repaid") {
+              closedLoan += 1;
+            }
+            amountOffered += offerData[j].amount;
+          }
+        }
+        poolData.lenders[i].lender = {
+          ...poolData.lenders[i].lender,
+          amountOffered,
+          closedLoan,
+          activeLoan,
+        };
+        console.log(amountOffered, closedLoan, activeLoan);
+      }
+    }
     // if (poolData && poolData.pool_owner_address === wallet_address) {
     res.status(201).json({ success: true, data: poolData.lenders });
     // } else {
