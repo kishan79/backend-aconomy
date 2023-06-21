@@ -234,8 +234,8 @@ exports.fetchCollectionActivities = asyncHandler(async (req, res, next) => {
     };
 
     query = UserActivityModel.find(queryStr).populate([
-      { path: "asset", select: "_id name nftOwner" },
-      { path: "user", select: "_id name" },
+      { path: "asset", select: "_id name mediaLinks assetType" },
+      { path: "user", select: "_id name profileImage" },
     ]);
 
     if (sortby) {
