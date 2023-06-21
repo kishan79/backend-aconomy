@@ -41,7 +41,7 @@ const PoolSchema = new mongoose.Schema(
       type: Number,
     },
     loan_request_expire: {
-      type: Date,
+      type: Number,
     },
     // loan_payment_cycle: {
     //   type: Number,

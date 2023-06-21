@@ -173,7 +173,11 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
       totalDuration = 0,
       totalAPY = 0;
     let data = await PoolModel.findOne({ _id: poolId })
-      .populate([{ path: "lenders", select: userSelectQuery }])
+      .populate([
+        { path: "pool_owner", select: "_id name profileImage" },
+        { path: "lenders.lender", select: "_id name profileImage wallet_address" },
+        { path: "borrowers.borrower", select: "_id name profileImage wallet_address" },
+      ])
       .lean();
     if (data) {
       let activeLoanData = await OfferModel.find({
