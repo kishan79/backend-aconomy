@@ -6,5 +6,6 @@ const homepageController = require("../controllers/homepageController");
 router.route("/latestnfts").get(homepageController.getLatestNfts);
 router.route("/topvalidators").get(homepageController.getTopValidators);
 router.route("/latestpools").get(homepageController.getLatestPools);
+router.route("/featuredAssetClass").get(homepageController.getFeaturedAssetClass);
 
 module.exports = router;

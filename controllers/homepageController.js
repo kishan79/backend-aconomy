@@ -83,18 +83,17 @@ exports.getTopValidators = asyncHandler(async (req, res, next) => {
     }
 
     results.sort((a, b) => b.totalValidation - a.totalValidation);
-    data = results.splice(0,3);
+    data = results.splice(0, 3);
 
     return res.status(200).json({
       success: true,
-      data
+      data,
     });
   } catch (err) {
     res.status(400).json({
       success: false,
       data: [],
-      message: "Failed to execute",
-      err
+      message: "Failed to execute"
     });
   }
 });
@@ -141,8 +140,44 @@ exports.getLatestPools = asyncHandler(async (req, res, next) => {
     res.status(400).json({
       success: false,
       data: [],
-      message: "Failed to execute",
-      err,
+      message: "Failed to execute"
+    });
+  }
+});
+
+exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
+  try {
+    const ASSET_TYPES = [
+      "Art",
+      "Books",
+      "Collectibles",
+      "Fossils & Minerals",
+      "Handbags",
+      "Jewellery",
+      "Sculptures",
+      "Sneakers",
+      "Watches",
+    ];
+    let dataObj = {};
+    for (let i = 0; i < ASSET_TYPES.length; i++) {
+      let data = await NftModel.find({
+        state: "sale",
+        assetType: ASSET_TYPES[i],
+      })
+        .select("name nftOwner nftOwnerType mediaLinks validator listingPrice")
+        .sort("-createdAt")
+        .limit(3);
+      dataObj[ASSET_TYPES[i]] = data;
+    }
+    return res.status(200).json({
+      success: true,
+      data: dataObj,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute"
     });
   }
 });
