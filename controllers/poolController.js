@@ -44,7 +44,24 @@ exports.getPools = asyncHandler(async (req, res, next) => {
     const total = await PoolModel.countDocuments(queryStr);
     query = query.skip(startIndex).limit(limit);
 
-    const results = await query;
+    const results = await query.lean();
+
+    for (let i = 0; i < results.length; i++) {
+      let activeLoanData = await OfferModel.find({
+        pool: results[i]._id,
+        status: "accepted",
+      }).select("amount");
+      if (activeLoanData) {
+        let activeLoans = 0;
+        for (let j = 0; j < activeLoanData.length; j++) {
+          activeLoans += activeLoanData[j].amount;
+        }
+        results[i] = {
+          ...results[i],
+          activeLoans,
+        };
+      }
+    }
 
     const pagination = {};
 
