@@ -327,10 +327,10 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
     );
     if (data) {
       let offer = data.offers.filter((obj) => obj.swapId === swapId);
-      let swapNft = await NftModel.findByIdAndUpdate(
-        { _id: offer[0].asset },
-        { swapState: "none" }
-      );
+      // let swapNft = await NftModel.findByIdAndUpdate(
+      //   { _id: offer[0].asset },
+      //   { swapState: "none" }
+      // );
       let notification = await NotificationModel.create({
         nft: offer[0].asset,
         swapnft: assetId,

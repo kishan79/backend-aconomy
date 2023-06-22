@@ -37,7 +37,7 @@ const OfferSchema = new mongoose.Schema(
     type: { type: String, enum: ["lenderOffer", "loanRequest"] },
     status: {
       type: String,
-      enum: ["none", "accepted", "rejected", "repaid"],
+      enum: ["none", "accepted", "rejected", "repaid", "defaulted"],
       default: "none",
     },
     apy_percent: {

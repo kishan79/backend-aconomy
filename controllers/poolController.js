@@ -380,7 +380,6 @@ exports.removeLender = asyncHandler(async (req, res, next) => {
 exports.fetchLender = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    // const { wallet_address } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId })
       .populate({
         path: "lenders.lender",
@@ -391,8 +390,10 @@ exports.fetchLender = asyncHandler(async (req, res, next) => {
       let offerData = await OfferModel.find({
         pool: poolId,
         type: "lenderOffer",
-      }).lean();
-      console.log(poolData.lenders.length);
+      })
+        .select("lender status amount")
+        .lean();
+
       for (let i = 0; i < poolData.lenders.length; i++) {
         let amountOffered = 0,
           closedLoan = 0,
@@ -414,17 +415,9 @@ exports.fetchLender = asyncHandler(async (req, res, next) => {
           closedLoan,
           activeLoan,
         };
-        console.log(amountOffered, closedLoan, activeLoan);
       }
     }
-    // if (poolData && poolData.pool_owner_address === wallet_address) {
     res.status(201).json({ success: true, data: poolData.lenders });
-    // } else {
-    //   res.status(401).json({
-    //     success: false,
-    //     message: "Only pool owner can perform this action",
-    //   });
-    // }
   } catch (err) {
     res.status(401).json({ success: false, err });
   }
@@ -433,19 +426,46 @@ exports.fetchLender = asyncHandler(async (req, res, next) => {
 exports.fetchBorrower = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    // const { wallet_address } = req.user;
-    let poolData = await PoolModel.findOne({ _id: poolId }).populate({
-      path: "borrowers.borrower",
-      select: userSelectQuery,
-    });
-    // if (poolData && poolData.pool_owner_address === wallet_address) {
+    let poolData = await PoolModel.findOne({ _id: poolId })
+      .populate({
+        path: "borrowers.borrower",
+        select: "_id name profileImage",
+      })
+      .lean();
+    if (poolData) {
+      let offerData = await OfferModel.find({
+        $and: [
+          { pool: poolId },
+          { $or: [{ status: "accepted" }, { status: "repaid" }] },
+        ],
+      })
+        .select("borrower status amount")
+        .lean();
+
+      for (let i = 0; i < poolData.borrowers.length; i++) {
+        let amountBorrowed = 0,
+          loansPaid = 0,
+          loansDefaulted = 0;
+        for (let j = 0; j < offerData.length; j++) {
+          if (poolData.borrowers[i].borrower._id === offerData[j].borrower) {
+            if (offerData[j].status === "defaulted") {
+              loansDefaulted += 1;
+            }
+            if (offerData[j].status === "repaid") {
+              loansPaid += 1;
+            }
+            amountBorrowed += offerData[j].amount;
+          }
+        }
+        poolData.borrowers[i].borrower = {
+          ...poolData.borrowers[i].borrower,
+          amountBorrowed,
+          loansPaid,
+          loansDefaulted,
+        };
+      }
+    }
     res.status(201).json({ success: true, data: poolData.borrowers });
-    // } else {
-    //   res.status(401).json({
-    //     success: false,
-    //     message: "Only pool owner can perform this action",
-    //   });
-    // }
   } catch (err) {
     res.status(401).json({ success: false, err });
   }
