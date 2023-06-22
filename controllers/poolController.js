@@ -393,13 +393,12 @@ exports.fetchLender = asyncHandler(async (req, res, next) => {
       })
         .select("lender status amount")
         .lean();
-
       for (let i = 0; i < poolData.lenders.length; i++) {
         let amountOffered = 0,
           closedLoan = 0,
           activeLoan = 0;
         for (let j = 0; j < offerData.length; j++) {
-          if (poolData.lenders[i].lender._id === offerData[j].lender) {
+          if (poolData.lenders[i].lender._id.equals(offerData[j].lender)) {
             if (offerData[j].status === "accepted") {
               activeLoan += 1;
             }
@@ -447,7 +446,7 @@ exports.fetchBorrower = asyncHandler(async (req, res, next) => {
           loansPaid = 0,
           loansDefaulted = 0;
         for (let j = 0; j < offerData.length; j++) {
-          if (poolData.borrowers[i].borrower._id === offerData[j].borrower) {
+          if (poolData.borrowers[i].borrower._id.equals(offerData[j].borrower)) {
             if (offerData[j].status === "defaulted") {
               loansDefaulted += 1;
             }
