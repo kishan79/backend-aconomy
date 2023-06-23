@@ -305,8 +305,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby, search, type, blockchain, validation } =
-      req.query;
+    const { sortby, search, type, blockchain, validation } = req.query;
     let queryStr = {
       // nftOwnerAddress: req.user.wallet_address,
       nftOwner: req.params.userId,
@@ -666,17 +665,50 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.user;
-    const collectionData = await CollectionModel.find({
+    let query;
+    const { sortby, search, type, blockchain, fetch } = req.query;
+
+    let queryStr = {
       $or: [{ name: "Aconomy" }, { collectionOwnerAddress: wallet_address }],
-    })
-      .select(collectionSelectQuery)
-      .lean();
-    if (collectionData.length) {
+    };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain };
+    }
+    console.log(queryStr);
+
+    query = CollectionModel.find(queryStr).select(collectionSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    if (!fetch) {
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 30;
+      const startIndex = (page - 1) * limit;
+      const endIndex = page * limit;
+      const total = await CollectionModel.countDocuments(queryStr);
+      query = query.skip(startIndex).limit(limit);
+
+      const results = await query.lean();
+
       let dataArr = [];
-      for (let i = 0; i < collectionData.length; i++) {
+      for (let i = 0; i < results.length; i++) {
         let data = await NftModel.find({
-          nftCollection: collectionData[i]._id,
-          nftOwner: { $ne: null }
+          nftCollection: results[i]._id,
+          nftOwner: { $ne: null },
         })
           .select(
             "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
@@ -700,7 +732,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
           });
         }
         dataArr.push({
-          ...collectionData[i],
+          ...results[i],
           tvl,
           listed: data.length ? Math.round((listed / data.length) * 100) : 0,
           totalAssets: data.length,
@@ -711,12 +743,42 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
           ],
         });
       }
-      res.status(200).json({ success: true, data: dataArr });
-    } else {
-      res.status(200).json({ success: true, data: [] });
+
+      const pagination = {};
+
+      if (endIndex < total) {
+        pagination.next = {
+          page: page + 1,
+          limit,
+        };
+      }
+
+      if (startIndex > 0) {
+        pagination.prev = {
+          page: page - 1,
+          limit,
+        };
+      }
+      return res.status(200).json({
+        success: true,
+        count: results.length,
+        pagination,
+        data: dataArr,
+      });
     }
+    
+    const results = await query.lean();
+
+    return res.status(200).json({
+      success: true,
+      data: results,
+    });
   } catch (err) {
-    res.status(400).json({ success: false });
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });
 
