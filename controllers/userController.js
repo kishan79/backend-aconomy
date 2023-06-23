@@ -676,6 +676,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
       for (let i = 0; i < collectionData.length; i++) {
         let data = await NftModel.find({
           nftCollection: collectionData[i]._id,
+          nftOwner: { $ne: null }
         })
           .select(
             "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
