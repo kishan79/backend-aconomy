@@ -9,9 +9,66 @@ const {
 
 exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
-    res.status(200).json(res.advancedResults);
+    let query;
+
+    const { sortby, search, category } = req.query;
+
+    let queryStr = {};
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (category) {
+      queryStr = { ...queryStr, assetType: { $all: category.split(",") } };
+    }
+
+    query = CollectionModel.find(queryStr).select(collectionSelectQuery);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await CollectionModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
   } catch (err) {
-    res.status(400).json({ success: false });
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });
 
@@ -32,34 +89,34 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
             )
             .populate({ path: "nftOwner", select: "_id name wallet_address" })
             .lean();
-            let floor_price,
-              tvl = 0,
-              listed = 0,
-              owners = [];
-            for (let i = 0; i < data.length; i++) {
-              if (data.validationState === "validated") {
-                tvl += data[i].validationAmount;
-              }
-              if (data[i].state === "sale" || data[i].state === "auction") {
-                listed += 1;
-              }
-              owners.push({
-                name: data[i].nftOwner.name,
-                wallet_address: data[i].nftOwner.wallet_address,
-              });
+          let floor_price,
+            tvl = 0,
+            listed = 0,
+            owners = [];
+          for (let i = 0; i < data.length; i++) {
+            if (data.validationState === "validated") {
+              tvl += data[i].validationAmount;
             }
-            let dataObj = {
-              ...doc._doc,
-              tvl,
-              listed: data.length ? Math.round((listed / data.length) * 100): 0,
-              totalAssets: data.length,
-              owners: [
-                ...new Map(
-                  owners.map((item) => [item["wallet_address"], item])
-                ).values(),
-              ],
-            };
-            res.status(200).json({ success: true, data: dataObj });
+            if (data[i].state === "sale" || data[i].state === "auction") {
+              listed += 1;
+            }
+            owners.push({
+              name: data[i].nftOwner.name,
+              wallet_address: data[i].nftOwner.wallet_address,
+            });
+          }
+          let dataObj = {
+            ...doc._doc,
+            tvl,
+            listed: data.length ? Math.round((listed / data.length) * 100) : 0,
+            totalAssets: data.length,
+            owners: [
+              ...new Map(
+                owners.map((item) => [item["wallet_address"], item])
+              ).values(),
+            ],
+          };
+          res.status(200).json({ success: true, data: dataObj });
         }
       }).select(collectionSelectQuery);
     } else {
@@ -236,7 +293,7 @@ exports.fetchCollectionActivities = asyncHandler(async (req, res, next) => {
     query = UserActivityModel.find(queryStr).populate([
       { path: "asset", select: "_id name mediaLinks assetType" },
       { path: "user", select: "_id name profileImage" },
-      { path: "assetCollection", select: "_id name profileImage"}
+      { path: "assetCollection", select: "_id name profileImage" },
     ]);
 
     if (sortby) {

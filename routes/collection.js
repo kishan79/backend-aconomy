@@ -14,7 +14,7 @@ router
   .get(
     // protect,
     // authorize("user"),
-    advancedResults(CollectionModel, collectionSelectQuery),
+    // advancedResults(CollectionModel, collectionSelectQuery),
     collectionController.fetchCollections
   )
   .post(

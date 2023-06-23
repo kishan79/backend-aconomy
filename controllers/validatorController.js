@@ -150,9 +150,21 @@ exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, category, location } = req.query;
 
     let queryStr = {};
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (category) {
+      queryStr = { ...queryStr, assetType: { $all: category.split(",") } };
+    }
+
+    if (location) {
+      queryStr = { ...queryStr, "address.country" : location };
+    }
 
     query = ValidatorModel.find(queryStr)
       .select("name username address profileImage bannerImage")
