@@ -12,8 +12,8 @@ const collectionController = require("../controllers/collectionController");
 router
   .route("/")
   .get(
-    protect,
-    authorize("user"),
+    // protect,
+    // authorize("user"),
     advancedResults(CollectionModel, collectionSelectQuery),
     collectionController.fetchCollections
   )

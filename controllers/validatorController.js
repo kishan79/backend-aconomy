@@ -146,6 +146,87 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby } = req.query;
+
+    let queryStr = {};
+
+    query = ValidatorModel.find(queryStr)
+      .select("name username address profileImage bannerImage")
+      .lean();
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await ValidatorModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    for (let i = 0; i < results.length; i++) {
+      let data = await NftModel.find({
+        validator: results[i]._id,
+        validationState: "validated",
+      }).select("validationAmount validationDuration");
+
+      if (data) {
+        let tv = 0,
+          totalTime = 0;
+        for (let j = 0; j < data.length; j++) {
+          tv += data[j].validationAmount;
+          totalTime += data[j].validationDuration;
+        }
+        results[i] = {
+          ...results[i],
+          totalAssets: data.length,
+          totalValidation: data.length ? Math.round(tv / data.length) : 0,
+          averageTime: data.length ? Math.round(totalTime / data.length) : 0,
+        };
+      }
+    }
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
+
 exports.fetchValidators = asyncHandler(async (req, res, next) => {
   try {
     let query;

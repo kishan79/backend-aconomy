@@ -13,6 +13,7 @@ const { validatorSelectQuery } = require("../utils/selectQuery");
 //import controllers
 const validatorController = require("../controllers/validatorController");
 
+router.route("/").get(validatorController.fetchAllValidators);
 router
   .route("/auth/:wallet_address/nonce")
   .get(validatorController.generateNonce);
@@ -39,11 +40,7 @@ router
   );
 router
   .route("/list")
-  .get(
-    protect,
-    authorize("admin"),
-    validatorController.fetchValidatorlist
-  );
+  .get(protect, authorize("admin"), validatorController.fetchValidatorlist);
 
 router.route("/account/:id").get(
   // protect,

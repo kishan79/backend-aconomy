@@ -305,7 +305,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby, search, assetType, blockchain, validationState } =
+    const { sortby, search, type, blockchain, validation } =
       req.query;
     let queryStr = {
       // nftOwnerAddress: req.user.wallet_address,
@@ -316,21 +316,21 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
       // validationState
     };
 
-    // if (search) {
-    //   queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
-    // }
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
 
-    // if (blockchain) {
-    //   queryStr = { ...queryStr, blockchain };
-    // }
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain };
+    }
 
-    // if (assetType) {
-    //   queryStr = { ...queryStr, assetType: { $all: assetType.split(",") } };
-    // }
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+    }
 
-    // if (validationState) {
-    //   queryStr = { ...queryStr, validationState };
-    // }
+    if (validation) {
+      queryStr = { ...queryStr, validationState: validation };
+    }
 
     query = NftModel.find(queryStr).populate([
       {
