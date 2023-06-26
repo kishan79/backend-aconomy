@@ -605,11 +605,19 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type } = req.query;
 
     let queryStr = {
       userAddress: req.user.wallet_address,
     };
+
+    if (search) {
+      queryStr = { ...queryStr, assetName: { $regex: search, $options: "i" } };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, statusText: type };
+    }
 
     query = UserActivityModel.find(queryStr)
       .select(activitySelectQuery)
@@ -1229,13 +1237,29 @@ exports.fetchNftForBorrow = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type, blockchain, validation } = req.query;
     const { userId } = req.params;
 
     let queryStr = {
       nftOwner: userId,
       state: "lendborrow",
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+    }
+
+    if (validation) {
+      queryStr = { ...queryStr, validationState: validation };
+    }
 
     query = NftModel.find(queryStr)
       .select(nftSelectQuery)
@@ -1458,7 +1482,7 @@ exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type, blockchain, validation } = req.query;
     const { userId } = req.params;
 
     let queryStr = {
@@ -1467,6 +1491,22 @@ exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
         { $or: [{ state: "sale" }, { state: "auction" }] },
       ],
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+    }
+
+    if (validation) {
+      queryStr = { ...queryStr, validationState: validation };
+    }
 
     query = NftModel.find(queryStr)
       .select(nftSelectQuery)
@@ -1593,13 +1633,25 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type, blockchain } = req.query;
     const { id } = req.user;
 
     let queryStr = {
       previousOwner: id,
       state: "burned",
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+    }
 
     query = NftModel.find(queryStr)
       .select(nftSelectQuery)
