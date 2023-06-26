@@ -11,12 +11,16 @@ exports.getPools = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby, verification } = req.query;
+    const { sortby, verification, search } = req.query;
 
     let queryStr = {
-      // is_verified: verification === "verified" ? true : false,
+      is_verified: verification === "verified" ? true : false,
       visibility: "public",
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
 
     query = PoolModel.find(queryStr)
       .select(poolSelectQuery)
@@ -98,13 +102,17 @@ exports.myPools = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby, verification } = req.query;
+    const { sortby, verification, visibility } = req.query;
     const { id } = req.params;
 
     let queryStr = {
       pool_owner: id,
       // is_verified: verification === "verified" ? true : false,
     };
+
+    if (visibility) {
+      queryStr = { ...queryStr, visibility };
+    }
 
     query = PoolModel.find(queryStr)
       .select(poolSelectQuery)
@@ -463,7 +471,9 @@ exports.fetchBorrower = asyncHandler(async (req, res, next) => {
           loansPaid = 0,
           loansDefaulted = 0;
         for (let j = 0; j < offerData.length; j++) {
-          if (poolData.borrowers[i].borrower._id.equals(offerData[j].borrower)) {
+          if (
+            poolData.borrowers[i].borrower._id.equals(offerData[j].borrower)
+          ) {
             if (offerData[j].status === "defaulted") {
               loansDefaulted += 1;
             }

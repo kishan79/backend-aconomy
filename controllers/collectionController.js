@@ -170,12 +170,16 @@ exports.fetchAllCollectionNfts = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search } = req.query;
 
     let queryStr = {
       // blockchain: req.query.blockchain,
       nftCollection: req.params.collectionId,
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
 
     query = NftModel.find(queryStr).select(nftSelectQuery);
 
@@ -283,12 +287,20 @@ exports.fetchCollectionActivities = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type } = req.query;
 
     let queryStr = {
       // blockchain: req.query.blockchain,
       assetCollection: req.params.collectionId,
     };
+
+    if (search) {
+      queryStr = { ...queryStr, assetName: { $regex: search, $options: "i" } };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, statusText: { $in: type.split(",") } };
+    }
 
     query = UserActivityModel.find(queryStr).populate([
       { path: "asset", select: "_id name mediaLinks assetType" },

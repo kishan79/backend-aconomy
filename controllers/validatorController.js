@@ -163,7 +163,7 @@ exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
     }
 
     if (location) {
-      queryStr = { ...queryStr, "address.country" : location };
+      queryStr = { ...queryStr, "address.country": location };
     }
 
     query = ValidatorModel.find(queryStr)
@@ -243,11 +243,29 @@ exports.fetchValidators = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, category, location } = req.query;
 
     let queryStr = {
       whitelisted: true,
     };
+
+    if (search) {
+      queryStr = {
+        ...queryStr,
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { username: { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    if (category) {
+      queryStr = { ...queryStr, assetType: { $in: category.split(",") } };
+    }
+
+    if (location) {
+      queryStr = { ...queryStr, "address.country": location };
+    }
 
     query = ValidatorModel.find(queryStr).select(validatorSelectQuery).lean();
 
@@ -947,15 +965,26 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type } = req.query;
 
     let queryStr = {
       validatorAddress: req.user.wallet_address,
     };
 
+    if (search) {
+      queryStr = { ...queryStr, assetName: { $regex: search, $options: "i" } };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, statusText: { $in: type.split(",") } };
+    }
+
     query = ValidatorActivityModel.find(queryStr)
       .select(activitySelectQuery)
-      .populate({ path: "asset", select: nftActivitySelectQuery });
+      .populate([
+        { path: "asset", select: nftActivitySelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+      ]);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -1060,13 +1089,32 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type, blockchain, validation } = req.query;
     const { id } = req.params;
 
     let queryStr = {
       validator: id,
-      validationState: "validated",
+      // validationState: "validated",
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
+    }
+
+    if (validation) {
+      queryStr = {
+        ...queryStr,
+        validationState: { $in: validation.split(",") },
+      };
+    }
 
     query = NftModel.find(queryStr);
 
@@ -1148,6 +1196,10 @@ exports.fetchAllRedeemRequests = asyncHandler(async (req, res, next) => {
       validatorAddress: req.user.wallet_address,
       redeemRequest: "true",
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
 
     query = NftModel.find(queryStr);
 

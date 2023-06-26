@@ -624,7 +624,11 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 
     query = UserActivityModel.find(queryStr)
       .select(activitySelectQuery)
-      .populate({ path: "asset", select: nftActivitySelectQuery });
+      .populate([
+        { path: "asset", select: nftActivitySelectQuery },
+        { path: "user", select: userSelectQuery },
+        { path: "assetCollection", select: collectionSelectQuery },
+      ]);
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");

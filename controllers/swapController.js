@@ -463,11 +463,30 @@ exports.fetchSwapNfts = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby } = req.query;
+    const { sortby, search, type, blockchain, validation } = req.query;
 
     let queryStr = {
       state: "swap",
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
+    }
+
+    if (validation) {
+      queryStr = {
+        ...queryStr,
+        validationState: { $in: validation.split(",") },
+      };
+    }
 
     query = NftModel.find(queryStr)
       .populate([
