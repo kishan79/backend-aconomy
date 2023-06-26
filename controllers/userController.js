@@ -320,15 +320,18 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
     }
 
     if (blockchain) {
-      queryStr = { ...queryStr, blockchain };
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
     if (type) {
-      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
     }
 
     if (validation) {
-      queryStr = { ...queryStr, validationState: validation };
+      queryStr = {
+        ...queryStr,
+        validationState: { $in: validation.split(",") },
+      };
     }
 
     query = NftModel.find(queryStr).populate([
@@ -616,7 +619,7 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
     }
 
     if (type) {
-      queryStr = { ...queryStr, statusText: type };
+      queryStr = { ...queryStr, statusText: { $in: type.split(",") } };
     }
 
     query = UserActivityModel.find(queryStr)
@@ -685,13 +688,12 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
     }
 
     if (type) {
-      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
     }
 
     if (blockchain) {
-      queryStr = { ...queryStr, blockchain };
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
-    console.log(queryStr);
 
     query = CollectionModel.find(queryStr).select(collectionSelectQuery);
 
@@ -774,7 +776,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
         data: dataArr,
       });
     }
-    
+
     const results = await query.lean();
 
     return res.status(200).json({
@@ -1250,15 +1252,18 @@ exports.fetchNftForBorrow = asyncHandler(async (req, res, next) => {
     }
 
     if (blockchain) {
-      queryStr = { ...queryStr, blockchain };
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
     if (type) {
-      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
     }
 
     if (validation) {
-      queryStr = { ...queryStr, validationState: validation };
+      queryStr = {
+        ...queryStr,
+        validationState: { $in: validation.split(",") },
+      };
     }
 
     query = NftModel.find(queryStr)
@@ -1497,15 +1502,18 @@ exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
     }
 
     if (blockchain) {
-      queryStr = { ...queryStr, blockchain };
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
     if (type) {
-      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
     }
 
     if (validation) {
-      queryStr = { ...queryStr, validationState: validation };
+      queryStr = {
+        ...queryStr,
+        validationState: { $in: validation.split(",") },
+      };
     }
 
     query = NftModel.find(queryStr)
@@ -1646,11 +1654,11 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
     }
 
     if (blockchain) {
-      queryStr = { ...queryStr, blockchain };
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
     if (type) {
-      queryStr = { ...queryStr, assetType: { $all: type.split(",") } };
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
     }
 
     query = NftModel.find(queryStr)

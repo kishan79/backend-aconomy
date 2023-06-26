@@ -20,7 +20,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
     }
 
     if (category) {
-      queryStr = { ...queryStr, assetType: { $all: category.split(",") } };
+      queryStr = { ...queryStr, assetType: { $in: category.split(",") } };
     }
 
     query = CollectionModel.find(queryStr).select(collectionSelectQuery);

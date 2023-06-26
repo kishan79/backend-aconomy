@@ -159,7 +159,7 @@ exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
     }
 
     if (category) {
-      queryStr = { ...queryStr, assetType: { $all: category.split(",") } };
+      queryStr = { ...queryStr, assetType: { $in: category.split(",") } };
     }
 
     if (location) {
