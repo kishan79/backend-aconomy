@@ -83,6 +83,15 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
+          for (let i = 0; i < nftData.lendBorrowOffers.length; i++) {
+            if (nftData.lendBorrowOffers[i].status === "none") {
+              let notification2 = await NotificationModel.create({
+                nft: nftData._id,
+                category: "lend-offer-reject",
+                user: nftData.lendBorrowOffers[i].bidder,
+              });
+            }
+          }
           let activity = await UserActivityModel.create({
             userAddress: wallet_address,
             user: id,

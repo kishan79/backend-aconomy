@@ -122,6 +122,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
         {
           nftOwnerAddress: receiver_address,
           nftOwner: userData._id,
+          nftOwnerType: Role[userData.role],
           $push: {
             history: {
               action: "Transfered asset",

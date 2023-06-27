@@ -1627,9 +1627,79 @@ exports.addNFTtoFavourite = asyncHandler(async (req, res, next) => {
 exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.user;
+    const { sortby, search, type, blockchain, validation } = req.query;
     const nfts = await UserModel.findOne({ _id: id }).populate("favouriteNFT");
     if (nfts && nfts.favouriteNFT.length) {
-      res.status(200).json({ success: true, data: nfts.favouriteNFT });
+      let dataArr = [];
+      for (let i = 0; i < nfts.favouriteNFT.length; i++) {
+        let isAdded = false;
+        let regex = new RegExp(`${search}`, "i");
+        if (search && regex.test(nfts.favouriteNFT[i].name)) {
+          dataArr.push(nfts.favouriteNFT[i]);
+          isAdded = true;
+        }
+
+        if (
+          type &&
+          !isAdded &&
+          nfts.favouriteNFT[i].assetType.filter((element) =>
+            type.split(",").includes(element)
+          ).length
+        ) {
+          dataArr.push(nfts.favouriteNFT[i]);
+          isAdded = true;
+        }
+
+        if (
+          validation &&
+          !isAdded &&
+          validation.split(",").includes(nfts.favouriteNFT[i].validationState)
+        ) {
+          dataArr.push(nfts.favouriteNFT[i]);
+          isAdded = true;
+        }
+
+        if (
+          blockchain &&
+          blockchain.split(",").includes(nfts.favouriteNFT[i].blockchain)
+        ) {
+          dataArr.push(nfts.favouriteNFT[i]);
+          isAdded = true;
+        }
+      }
+
+      if (sortby === "createdAt") {
+        dataArr.sort((a, b) => a.createdAt - b.createdAt);
+      } else {
+        dataArr.sort((a, b) => b.createdAt - a.createdAt);
+      }
+
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 30;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const data = dataArr.length
+        ? dataArr.slice(startIndex, endIndex)
+        : nfts.favouriteNFT.slice(startIndex, endIndex);
+      const total = dataArr.length ? dataArr.length : nfts.favouriteNFT.length;
+      const pagination = {};
+
+      if (endIndex < total) {
+        pagination.next = {
+          page: page + 1,
+          limit,
+        };
+      }
+
+      if (startIndex > 0) {
+        pagination.prev = {
+          page: page - 1,
+          limit,
+        };
+      }
+      res
+        .status(200)
+        .json({ success: true, count: data.length, pagination, data });
     } else {
       res.status(200).json({ success: true, data: [] });
     }
@@ -1637,6 +1707,7 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
     res.status(400).json({
       success: false,
       data: {},
+      err,
     });
   }
 });
