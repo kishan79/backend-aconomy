@@ -9,19 +9,18 @@ router.route("/:id/pools").get(
   // protect, authorize("validator"),
   poolController.myPools
 );
-router.route("/:poolId").get(poolController.fetchPool);
+router
+  .route("/:poolId")
+  .get(poolController.fetchPool)
+  .put(protect, authorize("validator"), poolController.updatePool);
 router
   .route("/:poolId/addLender")
   .post(protect, authorize("validator"), poolController.addLender);
 router
   .route("/:poolId/removeLender/:lenderId")
   .delete(protect, authorize("validator"), poolController.removeLender);
-router
-  .route("/:poolId/lenders")
-  .get(poolController.fetchLender);
-router
-  .route("/:poolId/borrowers")
-  .get(poolController.fetchBorrower);
+router.route("/:poolId/lenders").get(poolController.fetchLender);
+router.route("/:poolId/borrowers").get(poolController.fetchBorrower);
 router
   .route("/:poolId/addBorrower")
   .post(protect, authorize("validator"), poolController.addBorrower);

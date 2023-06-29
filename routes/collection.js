@@ -28,7 +28,8 @@ router.route("/public").get(collectionController.fetchPublicCollections);
 
 router
   .route("/:collectionId")
-  .get(protect, authorize("user"), collectionController.fetchCollection);
+  .get(protect, authorize("user"), collectionController.fetchCollection)
+  .put(protect, authorize("user"), collectionController.updateCollection);
 
 router
   .route("/:collectionId/nft")

@@ -306,6 +306,43 @@ exports.createPool = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.updatePool = asyncHandler(async (req, res, next) => {
+  try {
+    const { poolId } = req.params;
+    const { wallet_address } = req.user;
+    let pool = await PoolModel.findOne({ _id: poolId });
+    if (pool && pool.pool_owner_address === wallet_address) {
+      PoolModel.findOneAndUpdate(
+        { _id: poolId },
+        { ...req.body },
+        null,
+        (err, doc) => {
+          if (err) {
+            res
+              .status(400)
+              .json({ success: false, message: "Pool failed to update" });
+          } else {
+            if (!!doc) {
+              res.status(201).json({
+                success: true,
+                message: "Pool successfully updated",
+              });
+            } else {
+              res
+                .status(400)
+                .json({ success: false, message: "Wrong pool id" });
+            }
+          }
+        }
+      );
+    } else {
+      res.status(400).json({ success: true, message: "Forbidden Action" });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false, message: "Pool failed to update" });
+  }
+});
+
 exports.addLender = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;

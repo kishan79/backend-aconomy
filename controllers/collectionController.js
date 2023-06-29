@@ -166,6 +166,45 @@ exports.createCollection = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.updateCollection = asyncHandler(async (req, res, next) => {
+  try {
+    const { collectionId } = req.params;
+    const { wallet_address } = req.user;
+    let collection = await CollectionModel.findOne({ _id: collectionId });
+    if (collection && collection.collectionOwnerAddress === wallet_address) {
+      CollectionModel.findOneAndUpdate(
+        { _id: collectionId },
+        { ...req.body },
+        null,
+        (err, doc) => {
+          if (err) {
+            res
+              .status(400)
+              .json({ success: false, message: "Collection failed to update" });
+          } else {
+            if (!!doc) {
+              res.status(201).json({
+                success: true,
+                message: "Collection successfully updated",
+              });
+            } else {
+              res
+                .status(400)
+                .json({ success: false, message: "Wrong collection id" });
+            }
+          }
+        }
+      );
+    } else {
+      res.status(400).json({ success: true, message: "Forbidden Action" });
+    }
+  } catch (err) {
+    res
+      .status(400)
+      .json({ success: false, message: "Collection failed to update" });
+  }
+});
+
 exports.fetchAllCollectionNfts = asyncHandler(async (req, res, next) => {
   try {
     let query;
