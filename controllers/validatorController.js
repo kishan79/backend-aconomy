@@ -1047,6 +1047,9 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
             let nftData = await NftModel.findOneAndUpdate(
               { _id: doc.asset },
               {
+                validator: null,
+                validatorAddress: null,
+                validationId: null,
                 validationState: "unvalidated",
               }
             );
