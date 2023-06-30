@@ -1192,8 +1192,7 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
 exports.fetchAllRedeemRequests = asyncHandler(async (req, res, next) => {
   try {
     let query;
-
-    const { sortby } = req.query;
+    const { sortby, search } = req.query;
 
     let queryStr = {
       validatorAddress: req.user.wallet_address,
