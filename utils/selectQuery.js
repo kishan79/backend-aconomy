@@ -2,7 +2,7 @@ const userSelectQuery =
   "-signatureMessage -createdAt -updatedAt -__v -termOfService";
 const validatorSelectQuery = "-signatureMessage -createdAt -updatedAt -__v";
 const collectionSelectQuery = "-createdAt -updatedAt -__v";
-const nftSelectQuery = "-updatedAt -__v -assetJurisdiction";
+const nftSelectQuery = "-updatedAt -__v";
 const activitySelectQuery = "-_id -updatedAt -__v";
 const nftActivitySelectQuery = "name assetType mediaLinks -_id";
 const userHistorySelectQuery = "-__v -signatureMessage -termOfService -email -createdAt -updatedAt";
