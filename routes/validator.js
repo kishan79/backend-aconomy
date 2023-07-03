@@ -136,4 +136,8 @@ router
 router
   .route("/blacklist/:wallet_address")
   .patch(protect, authorize("admin"), validatorController.blacklistRequest);
+
+router
+  .route("/burnednfts")
+  .get(protect, authorize("validator"), validatorController.fetchBurnedNfts);
 module.exports = router;

@@ -1462,3 +1462,94 @@ exports.blacklistRequest = asyncHandler(async (req, res, next) => {
     res.status(400).json({ success: false });
   }
 });
+
+exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
+  try {
+    let query;
+
+    const { sortby, search, type, blockchain } = req.query;
+    const { id } = req.user;
+
+    let queryStr = {
+      nftOwner: id,
+      nftOwnerType: "Validator"
+    };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
+    }
+
+    if (type) {
+      queryStr = { ...queryStr, assetType: { $in: type.split(",") } };
+    }
+
+    query = NftModel.find(queryStr)
+      .select(nftSelectQuery)
+      .populate([
+        {
+          path: "nftCollection",
+          select: collectionSelectQuery,
+        },
+        { path: "nftOwner", select: userSelectQuery },
+        { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+        {
+          path: "history.user",
+          select: userHistorySelectQuery,
+        },
+        {
+          path: "history.validator",
+          select: validatorHistorySelectQuery,
+        },
+      ]);
+
+    if (sortby) {
+      const sortBy = sortby.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await NftModel.countDocuments(queryStr);
+    query = query.skip(startIndex).limit(limit);
+
+    const results = await query;
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: results.length,
+      pagination,
+      data: results,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});

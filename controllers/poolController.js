@@ -102,13 +102,17 @@ exports.myPools = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby, verification, visibility } = req.query;
+    const { sortby, verification, visibility, search } = req.query;
     const { id } = req.params;
 
     let queryStr = {
       pool_owner: id,
       // is_verified: verification === "verified" ? true : false,
     };
+
+    if (search) {
+      queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
+    }
 
     if (visibility) {
       queryStr = { ...queryStr, visibility };
