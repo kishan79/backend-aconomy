@@ -1,5 +1,6 @@
 const NftModel = require("../models/NFT");
 const UserModel = require("../models/User");
+const ValidatorModel = require("../models/Validator");
 const NFTValidationModel = require("../models/NFTValidation");
 const UserActivityModel = require("../models/UserActivity");
 const NotificationModel = require("../models/Notification");
@@ -25,14 +26,9 @@ exports.fetchNfts = asyncHandler(async (req, res, next) => {
 exports.fetchNft = asyncHandler(async (req, res, next) => {
   try {
     const { nftId } = req.params;
+    const { role, id } = req.query;
     if (!!nftId) {
-      NftModel.findOne({ _id: nftId }, (err, doc) => {
-        if (err) {
-          res.status(400).json({ success: false, data: {} });
-        } else {
-          res.status(200).json({ success: true, data: doc });
-        }
-      })
+      let nftData = await NftModel.findOne({ _id: nftId })
         .populate([
           {
             path: "nftCollection",
@@ -51,7 +47,40 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
           },
           { path: "lendBorrowOffers.bidder", select: userSelectQuery },
         ])
-        .select(nftSelectQuery);
+        .select(nftSelectQuery)
+        .lean();
+
+      if (nftData) {
+        if (id && role === "user") {
+          let user = await UserModel.findOne({ _id: id });
+          if (user && user.favouriteNFT.includes(nftData._id)) {
+            res
+              .status(200)
+              .json({ success: true, data: { ...nftData, favourite: true } });
+          } else {
+            res
+              .status(200)
+              .json({ success: true, data: { ...nftData, favourite: false } });
+          }
+        } else if (id && role === "validator") {
+          let validator = await ValidatorModel.findOne({ _id: id });
+          if (validator && validator.favouriteNFT.includes(nftData._id)) {
+            res
+              .status(200)
+              .json({ success: true, data: { ...nftData, favourite: true } });
+          } else {
+            res
+              .status(200)
+              .json({ success: true, data: { ...nftData, favourite: false } });
+          }
+        } else {
+          res
+            .status(200)
+            .json({ success: true, data: { ...nftData, favourite: false } });
+        }
+      } else {
+        res.status(400).json({ success: false, data: {} });
+      }
     } else {
       res.status(400).json({ success: false });
     }
