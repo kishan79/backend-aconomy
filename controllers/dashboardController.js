@@ -11,29 +11,39 @@ exports.globalSearch = asyncHandler(async (req, res, next) => {
     if (q !== "") {
       const nftData = await NftModel.find({
         name: { $regex: q, $options: "i" },
-      }).select("_id name");
+      }).select("_id name mediaLinks");
 
       const userData = await UserModel.find({
-        $or: [
-          { name: { $regex: q, $options: "i" } },
-          { username: { $regex: q, $options: "i" } },
+        $and: [
+          {
+            $or: [
+              { name: { $regex: q, $options: "i" } },
+              { username: { $regex: q, $options: "i" } },
+            ],
+          },
+          { role: { $ne: "admin" } },
         ],
-      }).select("_id name username");
+      }).select("_id name username profileImage");
 
       const validatorData = await ValidatorModel.find({
-        $or: [
-          { name: { $regex: q, $options: "i" } },
-          { username: { $regex: q, $options: "i" } },
+        $and: [
+          {
+            $or: [
+              { name: { $regex: q, $options: "i" } },
+              { username: { $regex: q, $options: "i" } },
+            ],
+          },
+          { whitelisted: true },
         ],
-      }).select("_id name username");
+      }).select("_id name username profileImage");
 
       const poolData = await PoolModel.find({
         name: { $regex: q, $options: "i" },
-      }).select("_id name");
+      }).select("_id name profile_image");
 
       const collectionData = await CollectionModel.find({
         name: { $regex: q, $options: "i" },
-      }).select("_id name");
+      }).select("_id name profileImage");
 
       res.status(200).json({
         data: {
