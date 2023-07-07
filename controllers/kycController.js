@@ -203,8 +203,7 @@ function getApplicantStatus(applicantId) {
 
 exports.getApplicantStatus = asyncHandler(async (req, res, next) => {
   try {
-    const { applicantId } = req.body;
-    console.log(applicantId);
+    const { applicantId } = req.params;
     let response = await axios(getApplicantStatus(applicantId));
     if (response) {
       console.log("Response:\n", response.data);

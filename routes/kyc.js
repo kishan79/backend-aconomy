@@ -8,5 +8,7 @@ const kycController = require("../controllers/kycController");
 
 router.route("/createApplicant").post(kycController.createApplicant);
 router.route("/createAccessToken").post(kycController.createAccessToken);
-router.route("/getApplicantStatus").post(kycController.getApplicantStatus);
+router
+  .route("/getApplicantStatus/:applicantId")
+  .get(kycController.getApplicantStatus);
 module.exports = router;
