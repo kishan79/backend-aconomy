@@ -183,23 +183,23 @@ exports.createAccessToken = asyncHandler(async (req, res, next) => {
 });
 
 function getApplicantStatus(applicantId) {
-    console.log("Getting the applicant status...");
-  
-    var method = 'get';
-    var url = `/resources/applicants/${applicantId}/status`;
-  
-    var headers = {
-      'Accept': 'application/json',
-      'X-App-Token': SUMSUB_APP_TOKEN
-    };
-  
-    config.method = method;
-    config.url = url;
-    config.headers = headers;
-    config.data = null;
-  
-    return config;
-  }
+  console.log("Getting the applicant status...");
+
+  var method = "get";
+  var url = `/resources/applicants/${applicantId}/status`;
+
+  var headers = {
+    Accept: "application/json",
+    "X-App-Token": SUMSUB_APP_TOKEN,
+  };
+
+  config.method = method;
+  config.url = url;
+  config.headers = headers;
+  config.data = null;
+
+  return config;
+}
 
 exports.getApplicantStatus = asyncHandler(async (req, res, next) => {
   try {
@@ -211,6 +211,23 @@ exports.getApplicantStatus = asyncHandler(async (req, res, next) => {
     } else {
       res.status(401).json({ success: false, data: {} });
     }
+  } catch (err) {
+    res.status(400).json({ success: false, err });
+  }
+});
+
+exports.kycCompleted = asyncHandler(async (req, res, next) => {
+  try {
+    const {} = req.body;
+    const { wallet_address, id, role } = req.user;
+    
+    // let response = await axios(getApplicantStatus(applicantId));
+    // if (response) {
+    //   console.log("Response:\n", response.data);
+    //   res.status(201).json({ success: true, data: response.data });
+    // } else {
+    //   res.status(401).json({ success: false, data: {} });
+    // }
   } catch (err) {
     res.status(400).json({ success: false, err });
   }

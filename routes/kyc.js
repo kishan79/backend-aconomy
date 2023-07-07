@@ -6,9 +6,24 @@ const { protect, authorize } = require("../middlewares/auth");
 const { nftCreateReqSchema } = require("../utils/validateReq");
 const kycController = require("../controllers/kycController");
 
-router.route("/createApplicant").post(kycController.createApplicant);
-router.route("/createAccessToken").post(kycController.createAccessToken);
+router
+  .route("/createApplicant")
+  .post(protect, authorize("user", "validator"), kycController.createApplicant);
+router
+  .route("/createAccessToken")
+  .post(
+    protect,
+    authorize("user", "validator"),
+    kycController.createAccessToken
+  );
 router
   .route("/getApplicantStatus/:applicantId")
-  .get(kycController.getApplicantStatus);
+  .get(
+    protect,
+    authorize("user", "validator"),
+    kycController.getApplicantStatus
+  );
+router
+  .route("/kycComplete")
+  .post(protect, authorize("user"), kycController.kycCompleted);
 module.exports = router;

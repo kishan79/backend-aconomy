@@ -638,8 +638,8 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
         if (
           isBefore(
             new Date(),
-            addDays(auctionData.createdAt, auctionData.duration)
-          )
+            addDays(auctionData.createdAt, auctionData.duration) 
+          ) && bid[0].status === "none"
         ) {
           let data = await AuctionModel.findOneAndUpdate(
             // { "bids.bidId": bidId },
