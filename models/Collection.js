@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const CollectionSchema = new mongoose.Schema(
   {
+    collectionId: Number,
     collectionOwner: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
