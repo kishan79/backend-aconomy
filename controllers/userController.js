@@ -729,21 +729,22 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
           )
           .populate({ path: "nftOwner", select: "_id name wallet_address" })
           .lean();
-        let floor_price,
-          tvl = 0,
+        let tvl = 0,
           listed = 0,
           owners = [];
         for (let j = 0; j < data.length; j++) {
-          if (data.validationState === "validated") {
+          if (data[j].validationState === "validated") {
             tvl += data[j].validationAmount;
           }
           if (data[j].state === "sale" || data[j].state === "auction") {
             listed += 1;
           }
-          owners.push({
-            name: data[j].nftOwner.name,
-            wallet_address: data[j].nftOwner.wallet_address,
-          });
+          if (data[j].nftOwner) {
+            owners.push({
+              name: data[j].nftOwner.name,
+              wallet_address: data[j].nftOwner.wallet_address,
+            });
+          }
         }
         dataArr.push({
           ...results[i],
