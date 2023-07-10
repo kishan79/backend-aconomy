@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       // default: "user",
     },
+    applicantId: String,
     signatureMessage: {
       type: String,
     },

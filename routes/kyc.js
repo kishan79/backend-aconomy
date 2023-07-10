@@ -23,7 +23,4 @@ router
     authorize("user", "validator"),
     kycController.getApplicantStatus
   );
-router
-  .route("/kycComplete")
-  .post(protect, authorize("user"), kycController.kycCompleted);
 module.exports = router;

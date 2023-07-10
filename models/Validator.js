@@ -20,6 +20,7 @@ const ValidatorSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    applicantId: String,
     signatureMessage: {
       type: String,
     },
