@@ -71,7 +71,7 @@ exports.createApplicant = asyncHandler(async (req, res, next) => {
       createApplicant(externalUserId, levelName, fixedInfo)
     );
     if (response) {
-      console.log("Response:\n", response.data);
+      // console.log("Response:\n", response.data);
       if (role === "user") {
         let userData = await UserModel.findByIdAndUpdate(
           { _id: id },
@@ -93,7 +93,7 @@ exports.createApplicant = asyncHandler(async (req, res, next) => {
           res.status(401).json({ success: false });
         }
       }
-      res.status(201).json({ success: true, data: response.data });
+      // res.status(201).json({ success: true, data: response.data });
     } else {
       res.status(401).json({ success: false, data: {} });
     }
@@ -130,13 +130,35 @@ function createAccessToken(
 
 exports.createAccessToken = asyncHandler(async (req, res, next) => {
   try {
+    const { id, role } = req.user;
     const { externalUserId } = req.body;
     let response = await axios(
       createAccessToken(externalUserId, levelName, 1200)
     );
     if (response) {
-      console.log("Response:\n", response.data);
-      res.status(201).json({ success: true, data: response.data });
+      // console.log("Response:\n", response.data);
+      if (role === "user") {
+        let userData = await UserModel.findOne({ _id: id });
+        if (userData) {
+          res.status(201).json({
+            success: true,
+            data: { ...response.data, applicantId: userData.applicantId },
+          });
+        } else {
+          res.status(401).json({ success: false, data: {} });
+        }
+      } else {
+        let validatorData = await ValidatorModel.findOne({ _id: id });
+        if (validatorData) {
+          res.status(201).json({
+            success: true,
+            data: { ...response.data, applicantId: validatorData.applicantId },
+          });
+        } else {
+          res.status(401).json({ success: false, data: {} });
+        }
+      }
+      // res.status(201).json({ success: true, data: response.data });
     } else {
       res.status(401).json({ success: false, data: {} });
     }
