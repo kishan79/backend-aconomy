@@ -3,16 +3,6 @@ const ValidatorModel = require("../models/Validator");
 const PoolModel = require("../models/Pool");
 const OfferModel = require("../models/Offer");
 const asyncHandler = require("../middlewares/async");
-const {
-  nftSelectQuery,
-  collectionSelectQuery,
-  userSelectQuery,
-  validatorSelectQuery,
-  userHistorySelectQuery,
-  validatorHistorySelectQuery,
-  poolSelectQuery,
-} = require("../utils/selectQuery");
-const { Role } = require("../utils/utils");
 
 exports.getLatestNfts = asyncHandler(async (req, res, next) => {
   try {
@@ -29,7 +19,7 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
       ])
       .select("name nftOwner nftOwnerType mediaLinks validator listingPrice");
 
-    query = query.sort("-createdAt").limit(4);
+    query = query.sort("-createdAt").limit(12);
 
     const results = await query;
 
@@ -83,7 +73,7 @@ exports.getTopValidators = asyncHandler(async (req, res, next) => {
     }
 
     results.sort((a, b) => b.totalValidation - a.totalValidation);
-    data = results.splice(0, 3);
+    data = results.splice(0, 11);
 
     return res.status(200).json({
       success: true,
@@ -111,7 +101,7 @@ exports.getLatestPools = asyncHandler(async (req, res, next) => {
 
     query = PoolModel.find(queryStr).select("name type duration apr_percent");
 
-    query = query.sort("-createdAt").limit(4);
+    query = query.sort("-createdAt").limit(12);
 
     const results = await query.lean();
 
@@ -166,7 +156,7 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
       })
         .select("name nftOwner nftOwnerType mediaLinks validator listingPrice")
         .sort("-createdAt")
-        .limit(3);
+        .limit(12);
       dataObj[ASSET_TYPES[i]] = data;
     }
     return res.status(200).json({

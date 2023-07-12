@@ -10,7 +10,7 @@ const validatorValidSignature = [
 
 const validatorOnBoardReqSchema = [
   body("email", "Enter valid email").isEmail().normalizeEmail(),
-  body("email", "The email field is required").notEmpty(),
+  // body("email", "The email field is required").notEmpty(),
   body("username", "The username field is required").notEmpty(),
   body("name", "The name field is required").notEmpty(),
   body("address", "The address field is required").notEmpty(),
