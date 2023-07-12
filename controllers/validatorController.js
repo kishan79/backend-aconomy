@@ -22,6 +22,7 @@ const {
   redeemNftSelectQuery,
 } = require("../utils/selectQuery");
 const UserActivityModel = require("../models/UserActivity");
+const fetch = require("node-fetch");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -127,17 +128,66 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
   }
 });
 
+const generateFWBody = (body, wallet_address) => {
+  const {
+    name,
+    username,
+    assetType,
+    socialLinks,
+    address,
+    bio,
+    profileImage,
+    bannerImage,
+  } = body;
+
+  return JSON.stringify({
+    contact: {
+      first_name: name,
+      twitter: socialLinks.twitter ? socialLinks.twitter : "",
+      linkedin: socialLinks.linkedin ? socialLinks.linkedin : "",
+      address: address.area ? address.area : "",
+      country: address.country ? address.country : "",
+      custom_field: {
+        cf_wallet_address: wallet_address,
+        cf_asset_type: assetType,
+        cf_user_name: username,
+        cf_profile_image: profileImage,
+        cf_banner_image: bannerImage,
+        cf_your_website: socialLinks.website ? socialLinks.website : "",
+        cf_discord: socialLinks.discord ? socialLinks.discord : "",
+        cf_bio: bio,
+      },
+    },
+  });
+};
+
 exports.onboardValidator = asyncHandler(async (req, res, next) => {
   try {
+    const { wallet_address } = req.user;
     ValidatorModel.findOneAndUpdate(
-      { wallet_address: req.user.wallet_address },
+      { wallet_address: wallet_address },
       { ...req.body },
       null,
-      (err, docs) => {
+      async (err, docs) => {
         if (err) {
           res.status(400).json({ success: false });
         } else {
-          res.status(201).json({ success: true });
+          let freshworkData = await fetch(
+            `${process.env.FRESHWORK_URL}/crm/sales/api/contacts`,
+            {
+              method: "POST",
+              body: generateFWBody(req.body, wallet_address),
+              headers: {
+                Authorization: `Token token=${process.env.FRESHWORK_API_TOKEN}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (freshworkData) {
+            res.status(201).json({ success: true });
+          } else {
+            res.status(400).json({ success: false });
+          }
         }
       }
     );
@@ -454,6 +504,38 @@ exports.fetchValidatorByAddress = asyncHandler(async (req, res, next) => {
   }
 });
 
+const generateFWUpsertBody = (body, wallet_address) => {
+  const {
+    name,
+    username,
+    assetType,
+    socialLinks,
+    bio,
+    profileImage,
+    bannerImage,
+  } = body;
+
+  return JSON.stringify({
+    unique_identifier: {
+      cf_wallet_address: wallet_address,
+    },
+    contact: {
+      first_name: name,
+      twitter: socialLinks.twitter ? socialLinks.twitter : "",
+      linkedin: socialLinks.linkedin ? socialLinks.linkedin : "",
+      custom_field: {
+        cf_asset_type: assetType,
+        cf_user_name: username,
+        cf_profile_image: profileImage,
+        cf_banner_image: bannerImage,
+        cf_your_website: socialLinks.website ? socialLinks.website : "",
+        cf_discord: socialLinks.discord ? socialLinks.discord : "",
+        cf_bio: bio,
+      },
+    },
+  });
+};
+
 exports.updateValidator = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.params;
@@ -461,16 +543,32 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
       { wallet_address },
       { ...req.body },
       null,
-      (err, doc) => {
+      async (err, doc) => {
         if (err) {
           res
             .status(400)
             .json({ success: false, message: "Profile failed to update" });
         } else {
           if (!!doc) {
-            res
-              .status(201)
-              .json({ success: true, message: "Profile successfully updated" });
+            let freshworkData = await fetch(
+              `${process.env.FRESHWORK_URL}/crm/sales/api/contacts/upsert`,
+              {
+                method: "POST",
+                body: generateFWUpsertBody(req.body, wallet_address),
+                headers: {
+                  Authorization: `Token token=${process.env.FRESHWORK_API_TOKEN}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            if (freshworkData) {
+              res.status(201).json({
+                success: true,
+                message: "Profile successfully updated",
+              });
+            } else {
+              res.status(400).json({ success: false });
+            }
           } else {
             res
               .status(400)
@@ -1472,7 +1570,7 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       nftOwner: id,
-      nftOwnerType: "Validator"
+      nftOwnerType: "Validator",
     };
 
     if (search) {
