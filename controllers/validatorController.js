@@ -184,8 +184,7 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
             }
           );
           if (freshworkData) {
-            console.log(freshworkData)
-            res.status(201).json({ success: true, freshworkData });
+            res.status(201).json({ success: true });
           } else {
             res.status(400).json({ success: false });
           }
