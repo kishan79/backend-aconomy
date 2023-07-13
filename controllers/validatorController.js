@@ -143,8 +143,6 @@ const generateFWBody = (body, wallet_address) => {
   return JSON.stringify({
     contact: {
       first_name: name,
-      twitter: socialLinks.twitter ? socialLinks.twitter : "",
-      linkedin: socialLinks.linkedin ? socialLinks.linkedin : "",
       address: address.area ? address.area : "",
       country: address.country ? address.country : "",
       custom_field: {
@@ -155,6 +153,8 @@ const generateFWBody = (body, wallet_address) => {
         cf_banner_image: bannerImage,
         cf_your_website: socialLinks.website ? socialLinks.website : "",
         cf_discord: socialLinks.discord ? socialLinks.discord : "",
+        cf_twitter_handle: socialLinks.twitter ? socialLinks.twitter : "",
+        cf_linkedin_handle: socialLinks.linkedin ? socialLinks.linkedin : "",
         cf_bio: bio,
       },
     },
@@ -184,7 +184,8 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
             }
           );
           if (freshworkData) {
-            res.status(201).json({ success: true });
+            console.log(freshworkData)
+            res.status(201).json({ success: true, freshworkData });
           } else {
             res.status(400).json({ success: false });
           }
@@ -521,8 +522,6 @@ const generateFWUpsertBody = (body, wallet_address) => {
     },
     contact: {
       first_name: name,
-      twitter: socialLinks.twitter ? socialLinks.twitter : "",
-      linkedin: socialLinks.linkedin ? socialLinks.linkedin : "",
       custom_field: {
         cf_asset_type: assetType,
         cf_user_name: username,
@@ -530,6 +529,8 @@ const generateFWUpsertBody = (body, wallet_address) => {
         cf_banner_image: bannerImage,
         cf_your_website: socialLinks.website ? socialLinks.website : "",
         cf_discord: socialLinks.discord ? socialLinks.discord : "",
+        cf_twitter_handle: socialLinks.twitter ? socialLinks.twitter : "",
+        cf_linkedin_handle: socialLinks.linkedin ? socialLinks.linkedin : "",
         cf_bio: bio,
       },
     },
