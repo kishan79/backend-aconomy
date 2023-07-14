@@ -28,7 +28,7 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
     const { nftId } = req.params;
     const { role, id } = req.query;
     if (!!nftId) {
-      let nftData = await NftModel.findOne({ _id: nftId })
+      let dataObj = await NftModel.findOne({ _id: nftId })
         .populate([
           {
             path: "nftCollection",
@@ -49,6 +49,10 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
         ])
         .select(nftSelectQuery)
         .lean();
+      let nftData = { ...dataObj };
+      nftData.history = dataObj.history.sort((a, b) => {
+        return b.createdAt - a.createdAt;
+      });
 
       if (nftData) {
         if (id && role === "user") {

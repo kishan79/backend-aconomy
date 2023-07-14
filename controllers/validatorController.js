@@ -699,6 +699,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       requestExpiresOn: addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationExpired: false,
+                      validationDate: new Date(),
                       validationCount: 1,
                       erc20ContractAddress: contractAddress,
                       fundBalance: validationAmount,
@@ -781,6 +782,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       requestExpiresOn: addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationExpired: false,
+                      validationDate: new Date(),
                       validationCount: 1,
                       erc20ContractAddress: contractAddress,
                       fundBalance: validationAmount,
@@ -945,6 +947,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                     validationState: "validated",
                     validationCount: data.validationCount + 1,
                     validationExpired: false,
+                    validationDate: new Date(),
                     fundBalance: data.fundBalance + validationAmount,
                     $push: {
                       history: {
@@ -1013,6 +1016,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                     validationState: "validated",
                     validationCount: data.validationCount + 1,
                     validationExpired: false,
+                    validationDate: new Date(),
                     fundBalance: data.fundBalance + validationAmount,
                     $push: {
                       history: {
@@ -1195,7 +1199,7 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       validator: id,
-      // validationState: "validated",
+      validationState: "validated",
     };
 
     if (search) {
