@@ -85,9 +85,11 @@ router
   .route("/activities")
   .get(protect, authorize("user"), userController.fetchActivites);
 
-router
-  .route("/collections")
-  .get(protect, authorize("user"), userController.fetchCollections);
+router.route("/:wallet_address/collections").get(
+  // protect,
+  // authorize("user"),
+  userController.fetchCollections
+);
 
 router
   .route("/checkUsername")

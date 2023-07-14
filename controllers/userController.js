@@ -679,7 +679,8 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 
 exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
-    const { wallet_address } = req.user;
+    // const { wallet_address } = req.user;
+    const { wallet_address } = req.params;
     let query;
     const { sortby, search, type, blockchain, fetch } = req.query;
 
