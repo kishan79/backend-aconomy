@@ -62,6 +62,10 @@ const NftSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Collection",
     },
+    lazyMint: {
+      type: Boolean,
+      default: false,
+    },
     properties: [
       {
         key: String,
