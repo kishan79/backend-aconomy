@@ -2,7 +2,78 @@ const NftModel = require("../models/NFT");
 const ValidatorModel = require("../models/Validator");
 const PoolModel = require("../models/Pool");
 const OfferModel = require("../models/Offer");
+const CollectionModel = require("../models/Collection");
 const asyncHandler = require("../middlewares/async");
+
+exports.getCarouselData = asyncHandler(async (req, res, next) => {
+  try {
+    let auctionData = await NftModel.find({ state: "auction" })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .populate([
+        { path: "nftOwner", select: "name profileImage" },
+        { path: "validator", select: "name profileImage" },
+      ])
+      .select("name nftOwner nftOwnerType mediaLinks validator listingPrice");
+    let collectionData = await CollectionModel.find()
+      .sort({ createdAt: -1 })
+      .limit(1);
+    let validatorData = await ValidatorModel.find()
+      .select("name username address profileImage bannerImage")
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .lean();
+
+    if (validatorData.length) {
+      let data = await NftModel.find({
+        validator: validatorData[0]._id,
+        validationState: "validated",
+      }).select("validationAmount validationDuration");
+
+      if (data.length) {
+        let tv = 0,
+          totalTime = 0;
+        for (let j = 0; j < data.length; j++) {
+          tv += data[j].validationAmount;
+          totalTime += data[j].validationDuration;
+        }
+        validatorData[0] = {
+          ...validatorData[0],
+          totalAssets: data.length,
+          totalValidation: data.length ? Math.round(tv / data.length) : 0,
+        };
+      } else {
+        validatorData[0] = {
+          ...validatorData[0],
+          totalAssets: data.length,
+          totalValidation: data.length ? Math.round(tv / data.length) : 0,
+          averageTime: data.length ? Math.round(totalTime / data.length) : 0,
+        };
+      }
+      res.status(200).json({
+        data: {
+          auction: auctionData.length ? auctionData[0] : {},
+          collection: collectionData.length ? collectionData[0] : {},
+          validator: validatorData.length ? validatorData[0] : {},
+        },
+      });
+    } else {
+      res.status(200).json({
+        data: {
+          auction: auctionData.length ? auctionData[0] : {},
+          collection: collectionData.length ? collectionData[0] : {},
+          validator: validatorData.length ? validatorData[0] : {},
+        },
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
+  }
+});
 
 exports.getLatestNfts = asyncHandler(async (req, res, next) => {
   try {
@@ -83,7 +154,7 @@ exports.getTopValidators = asyncHandler(async (req, res, next) => {
     res.status(400).json({
       success: false,
       data: [],
-      message: "Failed to execute"
+      message: "Failed to execute",
     });
   }
 });
@@ -130,7 +201,7 @@ exports.getLatestPools = asyncHandler(async (req, res, next) => {
     res.status(400).json({
       success: false,
       data: [],
-      message: "Failed to execute"
+      message: "Failed to execute",
     });
   }
 });
@@ -167,7 +238,7 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
     res.status(400).json({
       success: false,
       data: [],
-      message: "Failed to execute"
+      message: "Failed to execute",
     });
   }
 });

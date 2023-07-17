@@ -1101,7 +1101,16 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
           let balance = availableBalance - amount;
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
-            { fundBalance: balance, state: "withdraw" }
+            {
+              fundBalance: balance,
+              state: "withdraw",
+              $push: {
+                history: {
+                  action: "Withdrawn fund",
+                  user: id,
+                },
+              },
+            }
           );
           if (data) {
             let validationData = await NFTValidationModel.findOneAndUpdate(
@@ -1179,6 +1188,12 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   nftData.fundBalance + amount === nftData.validationAmount
                     ? "none"
                     : "withdraw",
+                $push: {
+                  history: {
+                    action: "Repaid fund",
+                    user: id,
+                  },
+                },
               }
             );
             if (data) {

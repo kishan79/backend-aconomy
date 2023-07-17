@@ -3,6 +3,7 @@ const router = express.Router();
 
 const homepageController = require("../controllers/homepageController");
 
+router.route("/carousel").get(homepageController.getCarouselData);
 router.route("/latestnfts").get(homepageController.getLatestNfts);
 router.route("/topvalidators").get(homepageController.getTopValidators);
 router.route("/latestpools").get(homepageController.getLatestPools);
