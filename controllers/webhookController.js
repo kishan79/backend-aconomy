@@ -20,11 +20,12 @@ const saveDataToDb = async (payload) => {
 
 exports.kycWebhook = asyncHandler(async (req, res, next) => {
   try {
-    const signature = req.get("X-Signature");
+    const signature = req.get("x-payload-digest");
+
     const payload = req.body;
 
     const hmac = crypto
-      .createHmac("sha256", process.env.SUMSUB_WEBHOOK_SECRET_KEY)
+      .createHmac("sha1", process.env.SUMSUB_WEBHOOK_SECRET_KEY)
       .update(JSON.stringify(payload))
       .digest("hex");
 
