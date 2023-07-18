@@ -88,7 +88,9 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
         { path: "nftOwner", select: "name profileImage" },
         { path: "validator", select: "name profileImage" },
       ])
-      .select("name nftOwner nftOwnerType mediaLinks validator listingPrice");
+      .select(
+        "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
+      );
 
     query = query.sort("-createdAt").limit(12);
 
@@ -225,7 +227,13 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
         state: "sale",
         assetType: ASSET_TYPES[i],
       })
-        .select("name nftOwner nftOwnerType mediaLinks validator listingPrice")
+        .populate([
+          { path: "nftOwner", select: "name profileImage" },
+          { path: "validator", select: "name profileImage" },
+        ])
+        .select(
+          "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
+        )
         .sort("-createdAt")
         .limit(12);
       dataObj[ASSET_TYPES[i]] = data;
