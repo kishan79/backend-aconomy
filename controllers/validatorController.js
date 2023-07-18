@@ -202,7 +202,9 @@ exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
 
     const { sortby, search, category, location } = req.query;
 
-    let queryStr = {};
+    let queryStr = {
+      whitelisted: true,
+    };
 
     if (search) {
       queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
