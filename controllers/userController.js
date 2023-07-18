@@ -1645,7 +1645,23 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.user;
     const { sortby, search, type, blockchain, validation } = req.query;
-    const nfts = await UserModel.findOne({ _id: id }).populate("favouriteNFT");
+    const nfts = await UserModel.findOne({ _id: id }).populate([
+      {
+        path: "favouriteNFT",
+        populate: [
+          {
+            path: "nftOwner",
+            model: "User",
+            select: "name profileImage",
+          },
+          {
+            path: "validator",
+            model: "Validator",
+            select: "name profileImage",
+          },
+        ],
+      },
+    ]);
     if (nfts && nfts.favouriteNFT.length) {
       let dataArr = [];
       for (let i = 0; i < nfts.favouriteNFT.length; i++) {
