@@ -42,13 +42,12 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
       //       break;
       //   }
       await saveDataToDb(payload);
-
-      res.status(200);
+      res.sendStatus(200);
     } else {
       console.log("Invalid signature");
-      res.status(400);
+      res.sendStatus(400);
     }
   } catch (err) {
-    res.status(400);
+    res.sendStatus(400);
   }
 });
