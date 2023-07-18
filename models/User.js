@@ -34,6 +34,12 @@ const UserSchema = new mongoose.Schema(
     profileImage: String,
     bannerImage: String,
     favouriteNFT: [{ type: mongoose.Schema.ObjectId, ref: "Nft" }],
+    applicantType: String,
+    reviewResult: {},
+    levelName: String,
+    sandboxMode: Boolean,
+    kycEventType: String,
+    reviewStatus: String,
   },
   { timestamps: true }
 );
