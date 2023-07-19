@@ -1108,6 +1108,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
                 history: {
                   action: "Withdrawn fund",
                   user: id,
+                  amount,
                 },
               },
             }
@@ -1192,6 +1193,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   history: {
                     action: "Repaid fund",
                     user: id,
+                    amount,
                   },
                 },
               }
