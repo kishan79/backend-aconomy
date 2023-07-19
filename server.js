@@ -28,6 +28,7 @@ const webhook = require("./routes/webhook");
 
 const app = express();
 app.use(cors({ origin: "*" }));
+app.use("/webhook", express.raw({ type: 'application/json' }), webhook);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -55,7 +56,6 @@ app.use("/api/v1/notifications", notification);
 app.use("/api/v1/dashboard", dashboard);
 app.use("/api/v1/home", homepage);
 app.use("/api/v1/kyc", kyc);
-app.use("/webhook", webhook);
 
 // app.use(errorHandler);
 

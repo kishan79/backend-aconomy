@@ -9,7 +9,7 @@ const ValidatorModel = require("../models/Validator");
 const SUMSUB_APP_TOKEN = process.env.SUMSUB_APP_TOKEN; // Example: sbx:uY0CgwELmgUAEyl4hNWxLngb.0WSeQeiYny4WEqmAALEAiK2qTC96fBad - Please don't forget to change when switching to production
 const SUMSUB_SECRET_KEY = process.env.SUMSUB_SECRET_KEY; // Example: Hej2ch71kG2kTd1iIUDZFNsO5C1lh5Gq - Please don't forget to change when switching to production
 const SUMSUB_BASE_URL = process.env.SUMSUB_BASE_URL;
-const levelName = process.env.SUMSUB_LEVELNAME;
+const userKYClevelName = process.env.SUMSUB_USER_KYC_LEVELNAME;
 
 var config = {};
 config.baseURL = SUMSUB_BASE_URL;
@@ -68,7 +68,7 @@ exports.createApplicant = asyncHandler(async (req, res, next) => {
     const { id, role } = req.user;
     const { externalUserId, fixedInfo } = req.body;
     let response = await axios(
-      createApplicant(externalUserId, levelName, fixedInfo)
+      createApplicant(externalUserId, userKYClevelName, fixedInfo)
     );
     if (response) {
       // console.log("Response:\n", response.data);
@@ -107,8 +107,8 @@ exports.createApplicant = asyncHandler(async (req, res, next) => {
 
 function createAccessToken(
   externalUserId,
-  levelName = "basic-kyc-level",
-  ttlInSecs = 600
+  levelName,
+  ttlInSecs,
 ) {
   console.log("Creating an access token for initializng SDK...");
 
@@ -133,7 +133,7 @@ exports.createAccessToken = asyncHandler(async (req, res, next) => {
     const { id, role } = req.user;
     const { externalUserId } = req.body;
     let response = await axios(
-      createAccessToken(externalUserId, levelName, 1200)
+      createAccessToken(externalUserId, userKYClevelName, 1200)
     );
     if (response) {
       // console.log("Response:\n", response.data);

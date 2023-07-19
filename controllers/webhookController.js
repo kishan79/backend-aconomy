@@ -7,9 +7,7 @@ const saveDataToDb = async (payload) => {
     { _id: payload.externalUserId },
     {
       applicantType: payload.applicantType,
-      reviewResult: Object.keys(payload.reviewResult).length
-        ? payload.reviewResult
-        : {},
+      reviewResult: !!payload.reviewResult ? payload.reviewResult : {},
       levelName: payload.levelName,
       sandboxMode: payload.sandboxMode,
       kycEventType: payload.type,
@@ -22,13 +20,15 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
   try {
     const signature = req.get("x-payload-digest");
 
-    const payload = req.body;
+    let payload = req.body;
 
     const hmac = crypto
       .createHmac("sha1", process.env.SUMSUB_WEBHOOK_SECRET_KEY)
-      .update(JSON.stringify(payload))
+      .update(payload)
       .digest("hex");
-
+    
+    console.log(JSON.parse(payload.toString()));
+    payload = JSON.parse(payload.toString());
     if (signature === hmac) {
       //   switch (payload.type) {
       //     case "applicantCreated":
@@ -49,6 +49,7 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
       res.sendStatus(400);
     }
   } catch (err) {
+    console.log(err);
     res.sendStatus(400);
   }
 });
