@@ -131,6 +131,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
 const generateFWBody = (body, wallet_address) => {
   const {
     name,
+    email,
     username,
     assetType,
     socialLinks,
@@ -146,6 +147,7 @@ const generateFWBody = (body, wallet_address) => {
       address: address.area ? address.area : "",
       country: address.country ? address.country : "",
       custom_field: {
+        cf_email_address: email,
         cf_wallet_address: wallet_address,
         cf_asset_type: assetType,
         cf_user_name: username,
