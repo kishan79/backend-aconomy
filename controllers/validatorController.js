@@ -146,8 +146,8 @@ const generateFWBody = (body, wallet_address) => {
       first_name: name,
       address: address.area ? address.area : "",
       country: address.country ? address.country : "",
+      emails: email ? email : "",
       custom_field: {
-        cf_email_address: email,
         cf_wallet_address: wallet_address,
         cf_asset_type: assetType,
         cf_user_name: username,
