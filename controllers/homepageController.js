@@ -17,9 +17,27 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       .select("name nftOwner nftOwnerType mediaLinks validator listingPrice");
     let collectionData = await CollectionModel.find()
       .sort({ createdAt: -1 })
-      .limit(1);
+      .limit(1).lean();
+    if (collectionData.length) {
+      let data = await NftModel.find({
+        nftCollection: collectionData[0]._id,
+      })
+        .select(
+          "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
+        )
+        .lean();
+      let tvl = 0;
+      for (let i = 0; i < data.length; i++) {
+        if (data.validationState === "validated") {
+          tvl += data[i].validationAmount;
+        }
+      }
+      collectionData[0] = [
+        { ...collectionData[0], tvl, totalAssets: data.length },
+      ];
+    }
     let validatorData = await ValidatorModel.find()
-      .select("name username address profileImage bannerImage")
+      .select("name username address profileImage bannerImage bio")
       .sort({ createdAt: -1 })
       .limit(1)
       .lean();
