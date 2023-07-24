@@ -32,6 +32,11 @@ const NotificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    bidId: Number,
+    auctionId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Auction",
+    },
   },
   { timestamps: true }
 );

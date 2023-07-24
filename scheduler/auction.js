@@ -35,6 +35,8 @@ const auctionCron = async () => {
                     category: "bid-rejected",
                     user: auctionData[i].bids[j].bidder,
                     amount: auctionData[i].bids[j].amount,
+                    bidId: auctionData[i].bids[j].bidId,
+                    auctionId: auctionData[i]._id,
                   });
                 }
               }

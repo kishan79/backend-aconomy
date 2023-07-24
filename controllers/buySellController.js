@@ -585,12 +585,24 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                 let activity = await UserActivityModel.create({
                   userAddress: wallet_address,
                   user: id,
-                  asset: doc._id,
-                  assetName: doc.name,
-                  assetCollection: doc.nftCollection,
+                  asset: nftData._id,
+                  assetName: nftData.name,
+                  assetCollection: nftData.nftCollection,
                   statusText: "Auction Cancelled",
                 });
                 if (nftData) {
+                  for (let i = 0; i < doc.bids.length; i++) {
+                    if (doc.bids[i].status === "none") {
+                      let notification = await NotificationModel.create({
+                        nft: doc.asset,
+                        category: "bid-rejected",
+                        user: doc.bids[i].bidder,
+                        amount: doc.bids[i].amount,
+                        bidId: doc.bids[i].bidId,
+                        auctionId: doc._id
+                      });
+                    }
+                  }
                   res.status(201).json({
                     success: true,
                     message: "Auction cancelled successfully",
@@ -638,8 +650,9 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
         if (
           isBefore(
             new Date(),
-            addDays(auctionData.createdAt, auctionData.duration) 
-          ) && bid[0].status === "none"
+            addDays(auctionData.createdAt, auctionData.duration)
+          ) &&
+          bid[0].status === "none"
         ) {
           let data = await AuctionModel.findOneAndUpdate(
             // { "bids.bidId": bidId },
@@ -696,6 +709,8 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                       category: "bid-rejected",
                       user: data.bids[i].bidder,
                       amount: data.bids[i].amount,
+                      bidId: data.bids[i].bidId,
+                      auctionId: auctionData._id
                     });
                   }
                 }
@@ -767,6 +782,8 @@ exports.rejectBid = asyncHandler(async (req, res, next) => {
             category: "bid-rejected",
             user: bid[0].bidder,
             amount: bid[0].amount,
+            bidId: bid[0].bidId,
+            auctionId: auctionData._id,
           });
           if (notification) {
             res.status(201).json({
