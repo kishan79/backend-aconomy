@@ -599,7 +599,8 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                         user: doc.bids[i].bidder,
                         amount: doc.bids[i].amount,
                         bidId: doc.bids[i].bidId,
-                        auctionId: doc._id
+                        auctionId: doc._id,
+                        saleId: doc.saleId,
                       });
                     }
                   }
@@ -710,7 +711,8 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                       user: data.bids[i].bidder,
                       amount: data.bids[i].amount,
                       bidId: data.bids[i].bidId,
-                      auctionId: auctionData._id
+                      auctionId: auctionData._id,
+                      saleId: auctionData.saleId,
                     });
                   }
                 }

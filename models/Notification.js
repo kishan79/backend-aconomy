@@ -8,11 +8,11 @@ const NotificationSchema = new mongoose.Schema(
     },
     swapnft: {
       type: mongoose.Schema.ObjectId,
-      ref: "Nft"
+      ref: "Nft",
     },
     pool: {
       type: mongoose.Schema.ObjectId,
-      ref: "Pool"
+      ref: "Pool",
     },
     category: String,
     user: {
@@ -37,6 +37,7 @@ const NotificationSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Auction",
     },
+    saleId: Number,
   },
   { timestamps: true }
 );

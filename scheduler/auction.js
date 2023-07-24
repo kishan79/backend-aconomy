@@ -37,6 +37,7 @@ const auctionCron = async () => {
                     amount: auctionData[i].bids[j].amount,
                     bidId: auctionData[i].bids[j].bidId,
                     auctionId: auctionData[i]._id,
+                    saleId: auctionData[i].saleId,
                   });
                 }
               }
