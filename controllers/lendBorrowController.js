@@ -89,6 +89,8 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
                 nft: nftData._id,
                 category: "lend-offer-reject",
                 user: nftData.lendBorrowOffers[i].bidder,
+                tokenId: nftData.tokenId,
+                bidId: nftData.lendBorrowOffers[i].bidId
               });
             }
           }
@@ -245,6 +247,8 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                     nft: nftData._id,
                     category: "lend-offer-reject",
                     user: data.lendBorrowOffers[i].bidder,
+                    tokenId: nftData.tokenId,
+                    bidId: bid[0].bidId
                   });
                 }
               }
@@ -308,6 +312,8 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
                 nft: nftData._id,
                 category: "lend-offer-reject",
                 user: bid[0].bidder,
+                tokenId: nftData.tokenId,
+                bidId: bid[0].bidId
               });
               if (notification) {
                 res.status(201).json({

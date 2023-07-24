@@ -248,6 +248,8 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                             swapnft: swapNft.asset,
                             category: "swap-request-reject",
                             user: swapNft.offers[i].assetOwner,
+                            swapId: swapNft.offers[i].swapId,
+                            swapRequestId: swapNft._id,
                           });
                         }
                       }
@@ -336,6 +338,8 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
         swapnft: assetId,
         category: "swap-request-reject",
         user: offer[0].assetOwner,
+        swapId: offer[0].swapId,
+        swapRequestId: data._id,
       });
       if (notification) {
         res.status(201).json({

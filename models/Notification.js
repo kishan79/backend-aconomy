@@ -38,6 +38,12 @@ const NotificationSchema = new mongoose.Schema(
       ref: "Auction",
     },
     saleId: Number,
+    tokenId: Number,
+    swapId: Number,
+    swapRequestId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Swap",
+    },
   },
   { timestamps: true }
 );
