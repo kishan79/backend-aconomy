@@ -245,10 +245,10 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                 if (data.lendBorrowOffers[i].status === "none") {
                   let notification2 = await NotificationModel.create({
                     nft: nftData._id,
-                    category: "lend-offer-reject",
+                    category: "lend-offer-declined",
                     user: data.lendBorrowOffers[i].bidder,
                     tokenId: nftData.tokenId,
-                    bidId: bid[0].bidId
+                    bidId: data.lendBorrowOffers[i].bidId
                   });
                 }
               }
@@ -308,14 +308,14 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
                 assetCollection: nftData.nftCollection,
                 statusText: "Rejected an offer",
               });
-              let notification = await NotificationModel.create({
-                nft: nftData._id,
-                category: "lend-offer-reject",
-                user: bid[0].bidder,
-                tokenId: nftData.tokenId,
-                bidId: bid[0].bidId
-              });
-              if (notification) {
+              // let notification = await NotificationModel.create({
+              //   nft: nftData._id,
+              //   category: "lend-offer-reject",
+              //   user: bid[0].bidder,
+              //   tokenId: nftData.tokenId,
+              //   bidId: bid[0].bidId
+              // });
+              if (activity) {
                 res.status(201).json({
                   success: true,
                   message: "Offer rejected successfully",

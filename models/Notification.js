@@ -44,6 +44,10 @@ const NotificationSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Swap",
     },
+    action: {
+      type: Boolean,
+      default: true
+    }
   },
   { timestamps: true }
 );

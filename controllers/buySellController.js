@@ -786,6 +786,7 @@ exports.rejectBid = asyncHandler(async (req, res, next) => {
             amount: bid[0].amount,
             bidId: bid[0].bidId,
             auctionId: auctionData._id,
+            saleId: data.saleId,
           });
           if (notification) {
             res.status(201).json({

@@ -366,12 +366,11 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     const { swapId, swapRequestId } = req.body;
     const { wallet_address, id } = req.user;
-    let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress !== wallet_address) {
-      let swapData = await SwapModel.findOne({
-        _id: swapRequestId,
-      });
-      if (swapData) {
+    let swapData = await SwapModel.findOne({
+      _id: swapRequestId,
+    });
+    if (swapData) {
+      if (swapData.swapOwnerAddress !== wallet_address) {
         let request = swapData.offers.filter((item) => item.swapId === swapId);
         if (request[0].status === "none" || request[0].status === "rejected") {
           //   let data = await NftModel.findOneAndUpdate(
@@ -413,13 +412,13 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
           });
         }
       } else {
-        res.status(401).json({ success: false, message: "Request not found" });
+        res.status(401).json({
+          success: false,
+          message: "Swap owner can't cancel the user swap request",
+        });
       }
     } else {
-      res.status(401).json({
-        success: false,
-        message: "Asset owner can't cancel the user swap request",
-      });
+      res.status(401).json({ success: false, message: "Request not found" });
     }
   } catch (err) {
     res.status(401).json({ success: false });
