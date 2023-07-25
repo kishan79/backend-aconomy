@@ -17,7 +17,8 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       .select("name nftOwner nftOwnerType mediaLinks validator listingPrice");
     let collectionData = await CollectionModel.find()
       .sort({ createdAt: -1 })
-      .limit(1).lean();
+      .limit(1)
+      .lean();
     if (collectionData.length) {
       let data = await NftModel.find({
         nftCollection: collectionData[0]._id,
@@ -36,7 +37,7 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
         { ...collectionData[0], tvl, totalAssets: data.length },
       ];
     }
-    let validatorData = await ValidatorModel.find()
+    let validatorData = await ValidatorModel.find({ whitelisted: true })
       .select("name username address profileImage bannerImage bio")
       .sort({ createdAt: -1 })
       .limit(1)
