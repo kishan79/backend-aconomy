@@ -4,8 +4,8 @@ const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
 
 const saveDataToDb = async (payload) => {
-  let applicantUser = await UserModel.findOne({ _id: payload.externalUserId });
-  if (Object.keys(applicantUser).length) {
+  let applicantUser = await UserModel.find({ _id: payload.externalUserId });
+  if (applicantUser.length) {
     let data = await UserModel.findOneAndUpdate(
       { _id: payload.externalUserId },
       {
@@ -43,8 +43,8 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
       .update(payload)
       .digest("hex");
 
-    console.log(JSON.parse(payload.toString()));
     payload = JSON.parse(payload.toString());
+    console.log(payload);
     if (signature === hmac) {
       //   switch (payload.type) {
       //     case "applicantCreated":
