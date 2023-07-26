@@ -41,6 +41,12 @@ const ValidatorSchema = new mongoose.Schema(
       linkedin: String,
     },
     favouriteNFT: [{ type: mongoose.Schema.ObjectId, ref: "Nft" }],
+    applicantType: String,
+    reviewResult: {},
+    levelName: String,
+    sandboxMode: Boolean,
+    kycEventType: String,
+    reviewStatus: String,
   },
   { timestamps: true }
 );
