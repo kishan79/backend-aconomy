@@ -1,19 +1,35 @@
 const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const UserModel = require("../models/User");
+const ValidatorModel = require("../models/Validator");
 
 const saveDataToDb = async (payload) => {
-  let data = await UserModel.findOneAndUpdate(
-    { _id: payload.externalUserId },
-    {
-      applicantType: payload.applicantType,
-      reviewResult: !!payload.reviewResult ? payload.reviewResult : {},
-      levelName: payload.levelName,
-      sandboxMode: payload.sandboxMode,
-      kycEventType: payload.type,
-      reviewStatus: payload.reviewStatus,
-    }
-  );
+  let applicantUser = await UserModel.findOne({ _id: payload.externalUserId });
+  if (Object.keys(applicantUser).length) {
+    let data = await UserModel.findOneAndUpdate(
+      { _id: payload.externalUserId },
+      {
+        applicantType: payload.applicantType,
+        reviewResult: !!payload.reviewResult ? payload.reviewResult : {},
+        levelName: payload.levelName,
+        sandboxMode: payload.sandboxMode,
+        kycEventType: payload.type,
+        reviewStatus: payload.reviewStatus,
+      }
+    );
+  } else {
+    let data = await ValidatorModel.findOneAndUpdate(
+      { _id: payload.externalUserId },
+      {
+        applicantType: payload.applicantType,
+        reviewResult: !!payload.reviewResult ? payload.reviewResult : {},
+        levelName: payload.levelName,
+        sandboxMode: payload.sandboxMode,
+        kycEventType: payload.type,
+        reviewStatus: payload.reviewStatus,
+      }
+    );
+  }
 };
 
 exports.kycWebhook = asyncHandler(async (req, res, next) => {
@@ -26,7 +42,7 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
       .createHmac("sha1", process.env.SUMSUB_WEBHOOK_SECRET_KEY)
       .update(payload)
       .digest("hex");
-    
+
     console.log(JSON.parse(payload.toString()));
     payload = JSON.parse(payload.toString());
     if (signature === hmac) {
