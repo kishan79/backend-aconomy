@@ -132,3 +132,22 @@ exports.readAllNotifications = asyncHandler(async (req, res, next) => {
     res.status(401).json({ success: false });
   }
 });
+
+exports.changeNotificationStatus = asyncHandler(async (req, res, next) => {
+  try {
+    const { notificationId } = req.params;
+    let data = await NotificationModel.findOneAndUpdate(
+      { _id: notificationId },
+      { action: false }
+    );
+    if (data) {
+      res.status(201).json({ success: true, message: "Notification updated" });
+    } else {
+      res
+        .status(401)
+        .json({ success: false, message: "Notification failed to update" });
+    }
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+});

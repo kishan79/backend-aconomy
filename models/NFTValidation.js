@@ -54,6 +54,7 @@ const NftValidationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    validationCommission: Number,
   },
   { timestamps: true }
 );

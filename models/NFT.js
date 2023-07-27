@@ -132,6 +132,7 @@ const NftSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    validationCommission: Number,
     validationDate: Date,
     validator: {
       type: mongoose.Schema.ObjectId,

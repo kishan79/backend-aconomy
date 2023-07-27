@@ -25,4 +25,11 @@ router
     authorize("user", "validator"),
     notificationController.readAllNotifications
   );
+router
+  .route("/notification-status/:notificationId")
+  .put(
+    protect,
+    authorize("user", "validator"),
+    notificationController.changeNotificationStatus
+  );
 module.exports = router;

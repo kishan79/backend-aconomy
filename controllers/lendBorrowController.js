@@ -73,7 +73,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress === wallet_address) {
+    // if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.state === "lendborrow") {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
@@ -114,12 +114,12 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
       } else {
         res.status(401).json({ success: false, message: "Action forbidden" });
       }
-    } else {
-      res.status(401).json({
-        success: false,
-        message: "Only asset owner can remove from borrow",
-      });
-    }
+    // } else {
+    //   res.status(401).json({
+    //     success: false,
+    //     message: "Only asset owner can remove from borrow",
+    //   });
+    // }
   } catch (err) {
     res.status(401).json({ success: false });
   }

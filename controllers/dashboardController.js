@@ -3,7 +3,6 @@ const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
 const PoolModel = require("../models/Pool");
 const CollectionModel = require("../models/Collection");
-const NotificationModel = require("../models/Notification");
 const asyncHandler = require("../middlewares/async");
 
 exports.globalSearch = asyncHandler(async (req, res, next) => {
@@ -63,24 +62,5 @@ exports.globalSearch = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(400).json({ success: false });
-  }
-});
-
-exports.changeNotificationStatus = asyncHandler(async (req, res, next) => {
-  try {
-    const { notificationId } = req.params;
-    let data = await NotificationModel.findOneAndUpdate(
-      { _id: notificationId },
-      { action: false }
-    );
-    if (data) {
-      res.status(201).json({ success: true, message: "Notification updated" });
-    } else {
-      res
-        .status(401)
-        .json({ success: false, message: "Notification failed to update" });
-    }
-  } catch (err) {
-    res.status(401).json({ success: false });
   }
 });
