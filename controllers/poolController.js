@@ -6,6 +6,7 @@ const OfferModel = require("../models/Offer");
 const NotificationModel = require("../models/Notification");
 const { Role, checkWhitelist, validateWhitelist } = require("../utils/utils");
 const { userSelectQuery, poolSelectQuery } = require("../utils/selectQuery");
+const mixpanel = require("../services/mixpanel");
 
 exports.getPools = asyncHandler(async (req, res, next) => {
   try {
@@ -285,6 +286,11 @@ exports.createPool = asyncHandler(async (req, res, next) => {
               }
             );
             if (poolData) {
+              await mixpanel.track("Pool created", {
+                distinct_id: id,
+                poolId: doc.poolId,
+                pool: doc._id,
+              });
               res.status(201).json({
                 success: true,
                 message: "Pool successfully created",
@@ -313,20 +319,24 @@ exports.createPool = asyncHandler(async (req, res, next) => {
 exports.updatePool = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let pool = await PoolModel.findOne({ _id: poolId });
     if (pool && pool.pool_owner_address === wallet_address) {
       PoolModel.findOneAndUpdate(
         { _id: poolId },
         { ...req.body },
         null,
-        (err, doc) => {
+        async (err, doc) => {
           if (err) {
             res
               .status(400)
               .json({ success: false, message: "Pool failed to update" });
           } else {
             if (!!doc) {
+              await mixpanel.track("Pool updated", {
+                distinct_id: id,
+                pool: doc._id,
+              });
               res.status(201).json({
                 success: true,
                 message: "Pool successfully updated",
@@ -350,7 +360,7 @@ exports.updatePool = asyncHandler(async (req, res, next) => {
 exports.addLender = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     const { address } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId });
     if (
@@ -376,6 +386,10 @@ exports.addLender = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
+          await mixpanel.track("Pool lender added", {
+            distinct_id: id,
+            pool: poolId,
+          });
           res
             .status(201)
             .json({ success: true, message: "Lender successfully added" });
@@ -405,7 +419,7 @@ exports.addLender = asyncHandler(async (req, res, next) => {
 exports.removeLender = asyncHandler(async (req, res, next) => {
   try {
     const { poolId, lenderId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
       path: "lenders.lender",
       select: userSelectQuery,
@@ -423,6 +437,10 @@ exports.removeLender = asyncHandler(async (req, res, next) => {
         { $pull: { lenders: { _id: lenderData[0]._id } } }
       );
       if (data) {
+        await mixpanel.track("Pool lender removed", {
+          distinct_id: id,
+          pool: poolId,
+        });
         res
           .status(201)
           .json({ success: true, message: "Lender successfully removed" });
@@ -541,7 +559,7 @@ exports.fetchBorrower = asyncHandler(async (req, res, next) => {
 exports.addBorrower = asyncHandler(async (req, res, next) => {
   try {
     const { poolId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     const { address } = req.body;
     let poolData = await PoolModel.findOne({ _id: poolId });
     if (
@@ -567,6 +585,10 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
+          await mixpanel.track("Pool borrower added", {
+            distinct_id: id,
+            pool: poolId,
+          });
           res
             .status(201)
             .json({ success: true, message: "Borrower successfully added" });
@@ -596,7 +618,7 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
 exports.removeBorrower = asyncHandler(async (req, res, next) => {
   try {
     const { poolId, borrowerId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
       path: "borrowers.borrower",
       select: userSelectQuery,
@@ -614,6 +636,10 @@ exports.removeBorrower = asyncHandler(async (req, res, next) => {
         { $pull: { borrowers: { _id: borrowerData[0]._id } } }
       );
       if (data) {
+        await mixpanel.track("Pool borrower removed", {
+          distinct_id: id,
+          pool: poolId,
+        });
         res
           .status(201)
           .json({ success: true, message: "Borrower successfully added" });
@@ -650,11 +676,15 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
           lenderType: Role[role],
           type: "lenderOffer",
         },
-        (err, doc) => {
+        async (err, doc) => {
           if (err) {
             res.status(401).json({ success: false, err });
           } else {
             if (!!doc) {
+              await mixpanel.track("Pool make offer", {
+                distinct_id: id,
+                pool: pool_id,
+              });
               res.status(201).json({
                 success: true,
                 message: "Offer made successfully",
@@ -684,7 +714,7 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
 exports.acceptOffer = asyncHandler(async (req, res, next) => {
   try {
     const { pool_id, bid_id } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.pool_owner_address === wallet_address) {
       let offerData = await OfferModel.findOne({ pool: pool_id, bid_id });
@@ -702,6 +732,10 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
             [data.lenderType === "User" ? "user" : "validator"]: data.lender,
           });
           if (notification) {
+            await mixpanel.track("Pool offer accepted", {
+              distinct_id: id,
+              pool: pool_id,
+            });
             res
               .status(201)
               .json({ success: true, message: "Offer accepted successfully" });
@@ -728,7 +762,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
 exports.rejectOffer = asyncHandler(async (req, res, next) => {
   try {
     const { pool_id, bid_id } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.pool_owner_address === wallet_address) {
       let offerData = await OfferModel.findOne({ pool: pool_id, bid_id });
@@ -746,6 +780,10 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
             [data.lenderType === "User" ? "user" : "validator"]: data.lender,
           });
           if (notification) {
+            await mixpanel.track("Pool offer rejected", {
+              distinct_id: id,
+              pool: pool_id,
+            });
             res
               .status(201)
               .json({ success: true, message: "Offer accepted successfully" });
@@ -849,11 +887,15 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
           borrowerType: Role[role],
           type: "loanRequest",
         },
-        (err, doc) => {
+        async (err, doc) => {
           if (err) {
             res.status(401).json({ success: false });
           } else {
             if (!!doc) {
+              await mixpanel.track("Pool loan requested", {
+                distinct_id: id,
+                pool: poolId,
+              });
               res.status(201).json({
                 success: true,
                 message: "Loan Requested successfully",
@@ -904,6 +946,10 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
             amount: data.amount,
           });
           if (notification) {
+            await mixpanel.track("Pool loan accepted", {
+              distinct_id: id,
+              pool: pool_id,
+            });
             res.status(201).json({
               success: true,
               message: "Loan request accepted successfully",
@@ -996,7 +1042,7 @@ exports.fetchLoanRequests = asyncHandler(async (req, res, next) => {
 exports.repayOffer = asyncHandler(async (req, res, next) => {
   try {
     const { pool_id, bid_id } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     if (poolData && poolData.pool_owner_address === wallet_address) {
       let offerData = await OfferModel.findOne({ pool: pool_id, bid_id });
@@ -1008,6 +1054,11 @@ exports.repayOffer = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
+          await mixpanel.track("Pool offer repaid", {
+            distinct_id: id,
+            pool: pool_id,
+            bidId: bid_id
+          });
           res.status(201).json({
             success: true,
             message: "Offer repaid successfully",
@@ -1035,7 +1086,7 @@ exports.repayOffer = asyncHandler(async (req, res, next) => {
 exports.repayLoan = asyncHandler(async (req, res, next) => {
   try {
     const { pool_id, loan_id } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
     let offerData = await OfferModel.findOne({ pool: pool_id, loan_id });
     if (poolData && offerData.borrowerAddress === wallet_address) {
@@ -1047,6 +1098,11 @@ exports.repayLoan = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
+          await mixpanel.track("Pool loan repaid", {
+            distinct_id: id,
+            pool: pool_id,
+            loan: loan_id
+          });
           res.status(201).json({
             success: true,
             message: "Loan repaid successfully",

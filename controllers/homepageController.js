@@ -4,6 +4,7 @@ const PoolModel = require("../models/Pool");
 const OfferModel = require("../models/Offer");
 const CollectionModel = require("../models/Collection");
 const asyncHandler = require("../middlewares/async");
+const mixpanel = require("../services/mixpanel");
 
 exports.getCarouselData = asyncHandler(async (req, res, next) => {
   try {
@@ -114,6 +115,8 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
     query = query.sort("-createdAt").limit(12);
 
     const results = await query;
+
+    await mixpanel.track("Homepage viewed", {});
 
     return res.status(200).json({
       success: true,

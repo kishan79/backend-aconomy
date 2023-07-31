@@ -12,6 +12,7 @@ const {
   userHistorySelectQuery,
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
+const mixpanel = require("../services/mixpanel");
 
 exports.listForSwap = asyncHandler(async (req, res, next) => {
   try {
@@ -33,6 +34,10 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
+            await mixpanel.track("Listed for swap", {
+              distinct_id: id,
+              asset: assetId,
+            });
             res.status(201).json({ success: true, message: "Listed for swap" });
           } else {
             res.status(401).json({
@@ -58,6 +63,10 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
+            await mixpanel.track("Unlisted for swap", {
+              distinct_id: id,
+              asset: assetId,
+            });
             res
               .status(201)
               .json({ success: true, message: "Unlisted for swap" });
@@ -133,6 +142,11 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
             user: nftData.nftOwner,
           });
           if (notification) {
+            await mixpanel.track("Requested for swap", {
+              distinct_id: id,
+              asset: assetId,
+              swapAsset,
+            });
             res.status(201).json({
               success: true,
               message: "Swap request sent successfully",
@@ -253,6 +267,10 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                           });
                         }
                       }
+                      await mixpanel.track("Swap accepted", {
+                        distinct_id: id,
+                        asset: assetId,
+                      });
                       res.status(201).json({
                         success: true,
                         message: "Request accepted successfully",
@@ -342,6 +360,11 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
         swapRequestId: data._id,
       });
       if (notification) {
+        await mixpanel.track("Swap request rejected", {
+          distinct_id: id,
+          asset: assetId,
+          swapId
+        });
         res.status(201).json({
           success: true,
           message: "Request rejected successfully",
@@ -394,6 +417,12 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
               { swapState: "none" }
             );
             if (swapNft) {
+              await mixpanel.track("Swap request cancelled", {
+                distinct_id: id,
+                asset: assetId,
+                swapId,
+                swapRequestId
+              });
               res.status(201).json({
                 success: true,
                 message: "Request cancelled successfully",
