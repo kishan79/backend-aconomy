@@ -21,6 +21,7 @@ const {
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const { isBefore } = require("date-fns");
+const mixpanel = require("../services/mixpanel");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -91,6 +92,9 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
               expiresIn: process.env.JWT_EXPIRE,
             }
           );
+          await mixpanel.track("User logged-in", {
+            distinct_id: user._id,
+          });
           res.status(201).json({
             success: true,
             id: user._id,
@@ -128,10 +132,13 @@ exports.onboardUser = asyncHandler(async (req, res, next) => {
       { wallet_address: req.user.wallet_address },
       { ...req.body },
       null,
-      (err, docs) => {
+      async (err, docs) => {
         if (err) {
           res.status(400).json({ success: false });
         } else {
+          await mixpanel.track("User onboard", {
+            distinct_id: docs._id,
+          });
           res.status(200).json({ success: true });
         }
       }
@@ -276,13 +283,16 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
       { wallet_address },
       { ...req.body },
       null,
-      (err, doc) => {
+      async (err, doc) => {
         if (err) {
           res
             .status(400)
             .json({ success: false, message: "Profile failed to update" });
         } else {
           if (!!doc) {
+            await mixpanel.track("User profile updated", {
+              distinct_id: doc._id,
+            });
             res
               .status(201)
               .json({ success: true, message: "Profile successfully updated" });
@@ -513,6 +523,11 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                     validator,
                   });
                   if (notification) {
+                    await mixpanel.track("User sent validation request", {
+                      distinct_id: id,
+                      validator,
+                      asset,
+                    });
                     res.status(201).json({
                       success: true,
                       message: "Validation request sent",
@@ -578,6 +593,14 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                     validator: data.validator,
                   });
                   if (notification) {
+                    await mixpanel.track(
+                      "User sent extend validation request",
+                      {
+                        distinct_id: id,
+                        validator: data.validator,
+                        asset,
+                      }
+                    );
                     res.status(201).json({
                       success: true,
                       message: "Extend validation request sent",
@@ -839,6 +862,7 @@ exports.checkUsernameAvailability = asyncHandler(async (req, res, next) => {
 
 exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
   try {
+    const { id } = req.user;
     const { assetId } = req.params;
     NFTValidationModel.findOneAndDelete(
       { asset: assetId },
@@ -854,6 +878,10 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
               }
             );
             if (nftData) {
+              await mixpanel.track("User cancel validation request", {
+                distinct_id: id,
+                validator: doc.validator,
+              });
               res.status(200).json({
                 success: true,
                 message: "Validation request cancelled",
@@ -910,6 +938,10 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
               validator: nftData.validator,
             });
             if (notification) {
+              await mixpanel.track("User sent redeem request", {
+                distinct_id: id,
+                asset: assetId,
+              });
               res.status(201).json({
                 success: true,
                 message: "Redeem request sent successfully",
@@ -966,6 +998,10 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
             assetName: nftData.name,
             assetCollection: nftData.nftCollection,
             statusText: "Cancelled redeem request",
+          });
+          await mixpanel.track("User cancel redeem request", {
+            distinct_id: id,
+            asset: assetId,
           });
           res.status(201).json({
             success: true,
@@ -1055,6 +1091,10 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               },
             ]);
             if (notification) {
+              await mixpanel.track("User redeem asset", {
+                distinct_id: id,
+                asset: assetId,
+              });
               res.status(201).json({
                 success: true,
                 message: "Asset redeemed successfully",
@@ -1139,6 +1179,11 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
               amount,
             });
             if (notification) {
+              await mixpanel.track("User withdraw funds", {
+                distinct_id: id,
+                asset: assetId,
+                amount,
+              });
               res.status(201).json({
                 success: true,
                 message: "Amount withdrawn successfully",
@@ -1224,6 +1269,11 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                 amount,
               });
               if (notification) {
+                await mixpanel.track("User repay funds", {
+                  distinct_id: id,
+                  asset: assetId,
+                  amount,
+                });
                 res.status(201).json({
                   success: true,
                   message: "Amount repaid successfully",
