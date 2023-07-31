@@ -8,6 +8,7 @@ const {
   userSelectQuery,
   validatorSelectQuery,
 } = require("../utils/selectQuery");
+const mixpanel = require("../services/mixpanel");
 
 exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
@@ -149,6 +150,12 @@ exports.createCollection = asyncHandler(async (req, res, next) => {
               assetCollection: doc._id,
               statusText: "Collection created",
             });
+            await mixpanel.track("Collection created", {
+              distinct_id: id,
+              assetCollection: doc.id,
+              collectionId: doc.collectionId,
+              collectionName: doc.name,
+            });
             res.status(201).json({
               success: true,
               message: "Collection successfully created",
@@ -171,20 +178,23 @@ exports.createCollection = asyncHandler(async (req, res, next) => {
 exports.updateCollection = asyncHandler(async (req, res, next) => {
   try {
     const { collectionId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     let collection = await CollectionModel.findOne({ _id: collectionId });
     if (collection && collection.collectionOwnerAddress === wallet_address) {
       CollectionModel.findOneAndUpdate(
         { _id: collectionId },
         { ...req.body },
         null,
-        (err, doc) => {
+        async (err, doc) => {
           if (err) {
             res
               .status(400)
               .json({ success: false, message: "Collection failed to update" });
           } else {
             if (!!doc) {
+              await mixpanel.track("Collection updated", {
+                distinct_id: id,
+              });
               res.status(201).json({
                 success: true,
                 message: "Collection successfully updated",

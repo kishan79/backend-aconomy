@@ -11,6 +11,7 @@ const {
   userHistorySelectQuery,
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
+const mixpanel = require("../services/mixpanel");
 
 exports.proposeOffer = asyncHandler(async (req, res, next) => {
   try {
@@ -46,6 +47,10 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
             assetCollection: nftData.nftCollection,
             statusText: "Proposed an offer",
           });
+          await mixpanel.track("Propose asset borrow offer", {
+            distinct_id: id,
+            asset: assetId,
+          });
           res
             .status(201)
             .json({ success: true, message: "Offer proposed successfully" });
@@ -74,46 +79,50 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     // if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.state === "lendborrow") {
-        let data = await NftModel.findOneAndUpdate(
-          { _id: assetId },
-          {
-            state: "none",
-            lendBorrowOffer: null,
-          }
-        );
-        if (data) {
-          for (let i = 0; i < nftData.lendBorrowOffers.length; i++) {
-            if (nftData.lendBorrowOffers[i].status === "none") {
-              let notification2 = await NotificationModel.create({
-                nft: nftData._id,
-                category: "lend-offer-reject",
-                user: nftData.lendBorrowOffers[i].bidder,
-                tokenId: nftData.tokenId,
-                bidId: nftData.lendBorrowOffers[i].bidId
-              });
-            }
-          }
-          let activity = await UserActivityModel.create({
-            userAddress: wallet_address,
-            user: id,
-            asset: nftData._id,
-            assetName: nftData.name,
-            assetCollection: nftData.nftCollection,
-            statusText: "Remove an offer",
-          });
-          res.status(201).json({
-            success: true,
-            message: "Offer removed from borrow successfully",
-          });
-        } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Failed to remove from borrow" });
+    if (nftData.state === "lendborrow") {
+      let data = await NftModel.findOneAndUpdate(
+        { _id: assetId },
+        {
+          state: "none",
+          lendBorrowOffer: null,
         }
+      );
+      if (data) {
+        for (let i = 0; i < nftData.lendBorrowOffers.length; i++) {
+          if (nftData.lendBorrowOffers[i].status === "none") {
+            let notification2 = await NotificationModel.create({
+              nft: nftData._id,
+              category: "lend-offer-reject",
+              user: nftData.lendBorrowOffers[i].bidder,
+              tokenId: nftData.tokenId,
+              bidId: nftData.lendBorrowOffers[i].bidId,
+            });
+          }
+        }
+        let activity = await UserActivityModel.create({
+          userAddress: wallet_address,
+          user: id,
+          asset: nftData._id,
+          assetName: nftData.name,
+          assetCollection: nftData.nftCollection,
+          statusText: "Remove an offer",
+        });
+        await mixpanel.track("Removed from borrow", {
+          distinct_id: id,
+          asset: assetId,
+        });
+        res.status(201).json({
+          success: true,
+          message: "Offer removed from borrow successfully",
+        });
       } else {
-        res.status(401).json({ success: false, message: "Action forbidden" });
+        res
+          .status(401)
+          .json({ success: false, message: "Failed to remove from borrow" });
       }
+    } else {
+      res.status(401).json({ success: false, message: "Action forbidden" });
+    }
     // } else {
     //   res.status(401).json({
     //     success: false,
@@ -167,6 +176,10 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
             amount: price,
           });
           if (notification) {
+            await mixpanel.track("Made offer for lend", {
+              distinct_id: id,
+              asset: assetId,
+            });
             res
               .status(201)
               .json({ success: true, message: "Offer made successfully" });
@@ -248,10 +261,16 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                     category: "lend-offer-declined",
                     user: data.lendBorrowOffers[i].bidder,
                     tokenId: nftData.tokenId,
-                    bidId: data.lendBorrowOffers[i].bidId
+                    bidId: data.lendBorrowOffers[i].bidId,
                   });
                 }
               }
+              await mixpanel.track("Accept lend offer", {
+                distinct_id: id,
+                asset: assetId,
+                bidId,
+                bidder: bid[0].bidder,
+              });
               res.status(201).json({
                 success: true,
                 message: "Offer accepted successfully",
@@ -316,6 +335,11 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
               //   bidId: bid[0].bidId
               // });
               if (activity) {
+                await mixpanel.track("Reject lend offer", {
+                  distinct_id: id,
+                  asset: assetId,
+                  bidId,
+                });
                 res.status(201).json({
                   success: true,
                   message: "Offer rejected successfully",
@@ -379,6 +403,10 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
             amount: nftData.lendBorrowOffer.price,
           });
           if (notification) {
+            await mixpanel.track("Borrowed loan paid back", {
+              distinct_id: id,
+              asset: assetId,
+            });
             res
               .status(201)
               .json({ success: true, message: "Loan paid successfully" });

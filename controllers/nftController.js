@@ -15,6 +15,7 @@ const {
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const { Role } = require("../utils/utils");
+const mixpanel = require("../services/mixpanel");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
   try {
@@ -70,29 +71,34 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
         if (id && role === "user") {
           let user = await UserModel.findOne({ _id: id });
           if (user && user.favouriteNFT.includes(nftData._id)) {
-            res
-              .status(200)
-              .json({ success: true, data: { ...nftData, favourite: true, highestBid } });
+            res.status(200).json({
+              success: true,
+              data: { ...nftData, favourite: true, highestBid },
+            });
           } else {
-            res
-              .status(200)
-              .json({ success: true, data: { ...nftData, favourite: false, highestBid } });
+            res.status(200).json({
+              success: true,
+              data: { ...nftData, favourite: false, highestBid },
+            });
           }
         } else if (id && role === "validator") {
           let validator = await ValidatorModel.findOne({ _id: id });
           if (validator && validator.favouriteNFT.includes(nftData._id)) {
-            res
-              .status(200)
-              .json({ success: true, data: { ...nftData, favourite: true, highestBid } });
+            res.status(200).json({
+              success: true,
+              data: { ...nftData, favourite: true, highestBid },
+            });
           } else {
-            res
-              .status(200)
-              .json({ success: true, data: { ...nftData, favourite: false, highestBid } });
+            res.status(200).json({
+              success: true,
+              data: { ...nftData, favourite: false, highestBid },
+            });
           }
         } else {
-          res
-            .status(200)
-            .json({ success: true, data: { ...nftData, favourite: false, highestBid } });
+          res.status(200).json({
+            success: true,
+            data: { ...nftData, favourite: false, highestBid },
+          });
         }
       } else {
         res.status(400).json({ success: false, data: {} });
@@ -135,6 +141,12 @@ exports.createNft = asyncHandler(async (req, res, next) => {
               assetName: doc.name,
               assetCollection: doc.nftCollection,
               statusText: "NFT Created",
+            });
+            await mixpanel.track("Asset minted", {
+              distinct_id: id,
+              asset: doc._id,
+              assetName: doc.name,
+              assetCollection: doc.nftCollection,
             });
             res.status(201).json({
               success: true,
@@ -202,6 +214,11 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
           user2: id,
         });
         if (notification) {
+          await mixpanel.track("Asset transferred", {
+            distinct_id: id,
+            asset: data._id,
+            to: userData._id,
+          });
           res
             .status(201)
             .json({ success: true, message: "Asset transferred successfully" });
@@ -250,6 +267,10 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
               assetName: data.name,
               assetCollection: data.nftCollection,
               statusText: "NFT Deleted",
+            });
+            await mixpanel.track("Asset deleted", {
+              distinct_id: id,
+              asset: assetId,
             });
             res
               .status(201)
@@ -337,6 +358,10 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   validator: validationData.validator,
                 });
                 if (notification) {
+                  await mixpanel.track("Asset burned", {
+                    distinct_id: id,
+                    asset: assetId,
+                  });
                   res.status(201).json({
                     success: true,
                     message: "Asset burned successfully",

@@ -12,6 +12,7 @@ const {
   userHistorySelectQuery,
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
+const mixpanel = require("../services/mixpanel");
 
 exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
@@ -51,6 +52,10 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
                   assetName: doc.name,
                   assetCollection: doc.nftCollection,
                   statusText: "NFT Listed",
+                });
+                await mixpanel.track("Asset listed", {
+                  distinct_id: id,
+                  asset: doc._id,
                 });
                 res.status(201).json({
                   success: true,
@@ -139,6 +144,14 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                   },
                 ]);
                 if (notification) {
+                  await mixpanel.track("Asset sold", {
+                    distinct_id: data.nftOwner,
+                    asset: data._id,
+                  });
+                  await mixpanel.track("Asset bought", {
+                    distinct_id: data.id,
+                    asset: data._id,
+                  });
                   res.status(201).json({
                     success: true,
                     message: "Asset bought successfully",
@@ -194,6 +207,10 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
                   assetCollection: doc.nftCollection,
                   statusText: "Sale edited",
                 });
+                await mixpanel.track("Asset listing updated", {
+                  distinct_id: id,
+                  asset: assetId,
+                });
                 res.status(201).json({
                   success: true,
                   message: "Asset sale edited successfully",
@@ -247,6 +264,10 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
                   assetName: doc.name,
                   assetCollection: doc.nftCollection,
                   statusText: "Sale cancelled",
+                });
+                await mixpanel.track("Asset delisted", {
+                  distinct_id: id,
+                  asset: doc._id,
                 });
                 res.status(201).json({
                   success: true,
@@ -321,6 +342,10 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                   assetName: nftData.name,
                   assetCollection: nftData.nftCollection,
                   statusText: "NFT Listed on Auction",
+                });
+                await mixpanel.track("Asset listed for auction", {
+                  distinct_id: id,
+                  asset: assetId,
                 });
                 res.status(201).json({
                   success: true,
@@ -403,6 +428,10 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     amount,
                   });
                   if (notification) {
+                    await mixpanel.track("Auction bid placed", {
+                      distinct_id: id,
+                      asset: data._id,
+                    });
                     res.status(201).json({
                       success: true,
                       message: "Bid successfully placed",
@@ -451,6 +480,10 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     amount,
                   });
                   if (notification) {
+                    await mixpanel.track("Auction bid placed", {
+                      distinct_id: id,
+                      asset: data._id,
+                    });
                     res.status(201).json({
                       success: true,
                       message: "Bid successfully placed",
@@ -522,6 +555,10 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
                   assetName: doc.name,
                   assetCollection: doc.nftCollection,
                   statusText: "Auction edited",
+                });
+                await mixpanel.track("Auction edited", {
+                  distinct_id: id,
+                  asset: assetId,
                 });
                 res.status(201).json({
                   success: true,
@@ -604,6 +641,10 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                       });
                     }
                   }
+                  await mixpanel.track("Auction cancelled", {
+                    distinct_id: id,
+                    asset: assetId,
+                  });
                   res.status(201).json({
                     success: true,
                     message: "Auction cancelled successfully",
@@ -716,6 +757,12 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                     });
                   }
                 }
+                await mixpanel.track("Auction bid accepted", {
+                  distinct_id: id,
+                  asset: assetId,
+                  bidder: bid[0].bidder,
+                  amount: bid[0].amount,
+                });
                 res.status(201).json({
                   success: true,
                   message: "Bid accepted successfully",
@@ -789,6 +836,15 @@ exports.rejectBid = asyncHandler(async (req, res, next) => {
             saleId: data.saleId,
           });
           if (notification) {
+            await mixpanel.track("Auction bid rejected", {
+              distinct_id: id,
+              asset: data._id,
+              bidder: bid[0].bidder,
+              amount: bid[0].amount,
+              bidId: bid[0].bidId,
+              auctionId: auctionData._id,
+              saleId: data.saleId,
+            });
             res.status(201).json({
               success: true,
               message: "Bid rejected successfully",
@@ -859,6 +915,12 @@ exports.withdrawBid = asyncHandler(async (req, res, next) => {
                 asset: data.asset,
                 // assetName: data.name,
                 statusText: "Bid withdrawn",
+              });
+              await mixpanel.track("Auction bid withdrawn", {
+                distinct_id: id,
+                asset: data.asset,
+                bidId,
+                auctionId
               });
               res
                 .status(201)

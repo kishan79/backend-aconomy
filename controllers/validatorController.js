@@ -23,6 +23,7 @@ const {
 } = require("../utils/selectQuery");
 const UserActivityModel = require("../models/UserActivity");
 const fetch = require("node-fetch");
+const mixpanel = require("../services/mixpanel");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -96,6 +97,9 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
               expiresIn: process.env.JWT_EXPIRE,
             }
           );
+          await mixpanel.track("Validator logged-in", {
+            distinct_id: validator._id,
+          });
           res.status(201).json({
             success: true,
             id: validator._id,
@@ -186,6 +190,9 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
             }
           );
           if (freshworkData) {
+            await mixpanel.track("Validator onboard", {
+              distinct_id: docs._id,
+            });
             res.status(201).json({ success: true });
           } else {
             res.status(400).json({ success: false });
@@ -599,6 +606,9 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
               }
             );
             if (freshworkData) {
+              await mixpanel.track("Validator profile updated", {
+                distinct_id: doc._id,
+              });
               res.status(201).json({
                 success: true,
                 message: "Profile successfully updated",
@@ -769,6 +779,10 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                             validator: id,
                           });
                           if (notification) {
+                            await mixpanel.track("Asset validated", {
+                              distinct_id: id,
+                              asset: data.asset
+                            });
                             res.status(201).json({
                               success: true,
                               message: "Asset validated successfully",
@@ -853,6 +867,10 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                             validator: id,
                           });
                           if (notification) {
+                            await mixpanel.track("Asset validated", {
+                              distinct_id: id,
+                              asset: data.asset
+                            });
                             res.status(201).json({
                               success: true,
                               message: "Asset validated successfully",
@@ -922,6 +940,10 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
                 statusText: "Added more funds",
               });
               if (activity) {
+                await mixpanel.track("Funding asset", {
+                  distinct_id: id,
+                  asset: data.asset
+                });
                 res.status(201).json({
                   success: true,
                   message: "Successfully added more funds",
@@ -1010,6 +1032,10 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                         statusText: "Asset revalidated",
                       });
                       if (activity) {
+                        await mixpanel.track("Asset revalidated", {
+                          distinct_id: id,
+                          asset: data.asset
+                        });
                         res.status(201).json({
                           success: true,
                           message: "Asset revalidated successfully",
@@ -1078,6 +1104,10 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                         statusText: "Asset revalidated",
                       });
                       if (activity) {
+                        await mixpanel.track("Asset revalidated", {
+                          distinct_id: id,
+                          asset: data.asset
+                        });
                         res.status(201).json({
                           success: true,
                           message: "Asset revalidated successfully",
@@ -1212,6 +1242,10 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
                 validator: id,
               });
               if (notification) {
+                await mixpanel.track("Reject validation request", {
+                  distinct_id: id,
+                  asset: doc.asset
+                });
                 res.status(200).json({
                   success: true,
                   message: "Validation request rejected",
@@ -1425,6 +1459,10 @@ exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
             //   assetName: nftData.name,
             //   statusText: "Sent redeem request",
             // });
+            await mixpanel.track("Accept redeem request", {
+              distinct_id: id,
+              asset: assetId
+            });
             res.status(201).json({
               success: true,
               message: "Redeem request accepted successfully",
@@ -1460,7 +1498,7 @@ exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
 exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
   try {
     const { assetId } = req.params;
-    const { wallet_address } = req.user;
+    const { wallet_address, id } = req.user;
     const data = await NftModel.findOne({
       _id: assetId,
     });
@@ -1481,6 +1519,10 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
             //   assetName: nftData.name,
             //   statusText: "Sent redeem request",
             // });
+            await mixpanel.track("Cancel redeem request", {
+              distinct_id: id,
+              asset: assetId
+            });
             res.status(201).json({
               success: true,
               message: "Redeem request cancelled successfully",
