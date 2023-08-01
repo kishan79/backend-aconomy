@@ -9,6 +9,7 @@ const {
   validatorSelectQuery,
 } = require("../utils/selectQuery");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
@@ -132,6 +133,7 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
 
 exports.createCollection = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { wallet_address, id } = req.user;
     CollectionModel.create(
       {
@@ -155,6 +157,7 @@ exports.createCollection = asyncHandler(async (req, res, next) => {
               assetCollection: doc.id,
               collectionId: doc.collectionId,
               collectionName: doc.name,
+              ip: remoteIp,
             });
             res.status(201).json({
               success: true,
@@ -177,6 +180,7 @@ exports.createCollection = asyncHandler(async (req, res, next) => {
 
 exports.updateCollection = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { collectionId } = req.params;
     const { wallet_address, id } = req.user;
     let collection = await CollectionModel.findOne({ _id: collectionId });
@@ -194,6 +198,7 @@ exports.updateCollection = asyncHandler(async (req, res, next) => {
             if (!!doc) {
               await mixpanel.track("Collection updated", {
                 distinct_id: id,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,

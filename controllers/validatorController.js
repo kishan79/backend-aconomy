@@ -69,6 +69,7 @@ exports.generateNonce = asyncHandler(async (req, res, next) => {
 
 exports.validateSignature = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.params;
     const { signature } = req.body;
     if (wallet_address.length && signature.length) {
@@ -100,6 +101,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
           );
           await mixpanel.track("Validator logged-in", {
             distinct_id: validator._id,
+            ip: remoteIp,
           });
           res.status(201).json({
             success: true,
@@ -175,7 +177,7 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
     ValidatorModel.findOneAndUpdate(
       { wallet_address: wallet_address },
       { ...req.body },
-      {new: true},
+      { new: true },
       async (err, docs) => {
         if (err) {
           res.status(400).json({ success: false });
@@ -597,7 +599,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
     ValidatorModel.findOneAndUpdate(
       { wallet_address },
       { ...req.body },
-      {new: true},
+      { new: true },
       async (err, doc) => {
         if (err) {
           res
@@ -625,7 +627,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
                 username: doc.username,
                 wallet_address: doc.wallet_address,
                 // $created: doc.createdAt,
-                ip: remoteIp
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -718,6 +720,7 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
 
 exports.validateAsset = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { requestId } = req.params;
     const {
       validationType,
@@ -800,6 +803,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                             await mixpanel.track("Asset validated", {
                               distinct_id: id,
                               asset: data.asset,
+                              ip: remoteIp,
                             });
                             res.status(201).json({
                               success: true,
@@ -888,6 +892,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                             await mixpanel.track("Asset validated", {
                               distinct_id: id,
                               asset: data.asset,
+                              ip: remoteIp,
                             });
                             res.status(201).json({
                               success: true,
@@ -922,6 +927,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
 
 exports.addMoreFunds = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { amount } = req.body;
     const { wallet_address, id } = req.user;
@@ -961,6 +967,7 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Funding asset", {
                   distinct_id: id,
                   asset: data.asset,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -986,170 +993,179 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
 });
 
 exports.reValidateAsset = asyncHandler(async (req, res, next) => {
-  const { requestId } = req.params;
-  const {
-    validationType,
-    validationAmount,
-    validationDuration,
-    validationRoyality,
-    validationDocuments,
-  } = req.body;
-  const { wallet_address, id } = req.user;
-  const data = await NFTValidationModel.findById(requestId);
-  if (data.validatorAddress === wallet_address) {
-    if (data.requestState === "pending") {
-      if (validationDocuments) {
-        NFTValidationModel.findOneAndUpdate(
-          { _id: requestId },
-          {
-            validationType,
-            validationAmount: data.validationAmount + validationAmount,
-            validationDuration,
-            validationRoyality,
-            requestExpiresOn: addDays(new Date(), validationDuration),
-            requestState: "validated",
-            validationCount: data.validationCount + 1,
-            validationExpired: false,
-            fundBalance: data.fundBalance + validationAmount,
-            $push: { validationDocuments: { $each: validationDocuments } },
-          },
-          async (err, doc) => {
-            if (err) {
-              res.status(401).json({ success: false });
-            } else {
-              if (!!doc) {
-                NftModel.findOneAndUpdate(
-                  { _id: data.asset },
-                  {
-                    validationType,
-                    validationAmount: data.validationAmount + validationAmount,
-                    validationDuration,
-                    validationRoyality,
-                    requestExpiresOn: addDays(new Date(), validationDuration),
-                    validationState: "validated",
-                    validationCount: data.validationCount + 1,
-                    validationExpired: false,
-                    validationDate: new Date(),
-                    fundBalance: data.fundBalance + validationAmount,
-                    $push: {
-                      history: {
-                        action: "revalidated asset",
-                        validator: id,
-                      },
-                      validationDocuments: { $each: validationDocuments },
-                    },
-                  },
-                  async (err, item) => {
-                    if (!!item) {
-                      let activity = await ValidatorActivityModel.create({
-                        validatorAddress: wallet_address,
-                        validator: id,
-                        asset: data.asset,
-                        assetOwner: data.assetOwnerAddress,
-                        assetName: data.assetName,
-                        statusText: "Asset revalidated",
-                      });
-                      if (activity) {
-                        await mixpanel.track("Asset revalidated", {
-                          distinct_id: id,
-                          asset: data.asset,
-                        });
-                        res.status(201).json({
-                          success: true,
-                          message: "Asset revalidated successfully",
-                        });
-                      }
-                    } else {
-                      res.status(401).json({ success: false });
-                    }
-                  }
-                );
+  try {
+    const remoteIp = getRemoteIp(req);
+    const { requestId } = req.params;
+    const {
+      validationType,
+      validationAmount,
+      validationDuration,
+      validationRoyality,
+      validationDocuments,
+    } = req.body;
+    const { wallet_address, id } = req.user;
+    const data = await NFTValidationModel.findById(requestId);
+    if (data.validatorAddress === wallet_address) {
+      if (data.requestState === "pending") {
+        if (validationDocuments) {
+          NFTValidationModel.findOneAndUpdate(
+            { _id: requestId },
+            {
+              validationType,
+              validationAmount: data.validationAmount + validationAmount,
+              validationDuration,
+              validationRoyality,
+              requestExpiresOn: addDays(new Date(), validationDuration),
+              requestState: "validated",
+              validationCount: data.validationCount + 1,
+              validationExpired: false,
+              fundBalance: data.fundBalance + validationAmount,
+              $push: { validationDocuments: { $each: validationDocuments } },
+            },
+            async (err, doc) => {
+              if (err) {
+                res.status(401).json({ success: false });
               } else {
-                res
-                  .status(401)
-                  .json({ success: false, message: "Wrong request" });
+                if (!!doc) {
+                  NftModel.findOneAndUpdate(
+                    { _id: data.asset },
+                    {
+                      validationType,
+                      validationAmount:
+                        data.validationAmount + validationAmount,
+                      validationDuration,
+                      validationRoyality,
+                      requestExpiresOn: addDays(new Date(), validationDuration),
+                      validationState: "validated",
+                      validationCount: data.validationCount + 1,
+                      validationExpired: false,
+                      validationDate: new Date(),
+                      fundBalance: data.fundBalance + validationAmount,
+                      $push: {
+                        history: {
+                          action: "revalidated asset",
+                          validator: id,
+                        },
+                        validationDocuments: { $each: validationDocuments },
+                      },
+                    },
+                    async (err, item) => {
+                      if (!!item) {
+                        let activity = await ValidatorActivityModel.create({
+                          validatorAddress: wallet_address,
+                          validator: id,
+                          asset: data.asset,
+                          assetOwner: data.assetOwnerAddress,
+                          assetName: data.assetName,
+                          statusText: "Asset revalidated",
+                        });
+                        if (activity) {
+                          await mixpanel.track("Asset revalidated", {
+                            distinct_id: id,
+                            asset: data.asset,
+                            ip: remoteIp,
+                          });
+                          res.status(201).json({
+                            success: true,
+                            message: "Asset revalidated successfully",
+                          });
+                        }
+                      } else {
+                        res.status(401).json({ success: false });
+                      }
+                    }
+                  );
+                } else {
+                  res
+                    .status(401)
+                    .json({ success: false, message: "Wrong request" });
+                }
               }
             }
-          }
-        );
+          );
+        } else {
+          NFTValidationModel.findOneAndUpdate(
+            { _id: requestId },
+            {
+              validationType,
+              validationAmount: data.validationAmount + validationAmount,
+              validationDuration,
+              validationRoyality,
+              requestExpiresOn: addDays(new Date(), validationDuration),
+              requestState: "validated",
+              validationCount: data.validationCount + 1,
+              validationExpired: false,
+              fundBalance: data.fundBalance + validationAmount,
+            },
+            async (err, doc) => {
+              if (err) {
+                res.status(401).json({ success: false });
+              } else {
+                if (!!doc) {
+                  NftModel.findOneAndUpdate(
+                    { _id: data.asset },
+                    {
+                      validationType,
+                      validationAmount:
+                        data.validationAmount + validationAmount,
+                      validationDuration,
+                      validationRoyality,
+                      requestExpiresOn: addDays(new Date(), validationDuration),
+                      validationState: "validated",
+                      validationCount: data.validationCount + 1,
+                      validationExpired: false,
+                      validationDate: new Date(),
+                      fundBalance: data.fundBalance + validationAmount,
+                      $push: {
+                        history: {
+                          action: "revalidated asset",
+                          validator: id,
+                        },
+                      },
+                    },
+                    async (err, item) => {
+                      if (!!item) {
+                        let activity = await ValidatorActivityModel.create({
+                          validatorAddress: wallet_address,
+                          validator: id,
+                          asset: data.asset,
+                          assetOwner: data.assetOwnerAddress,
+                          assetName: data.assetName,
+                          statusText: "Asset revalidated",
+                        });
+                        if (activity) {
+                          await mixpanel.track("Asset revalidated", {
+                            distinct_id: id,
+                            asset: data.asset,
+                            ip: remoteIp,
+                          });
+                          res.status(201).json({
+                            success: true,
+                            message: "Asset revalidated successfully",
+                          });
+                        }
+                      } else {
+                        res.status(401).json({ success: false });
+                      }
+                    }
+                  );
+                } else {
+                  res
+                    .status(401)
+                    .json({ success: false, message: "Wrong request" });
+                }
+              }
+            }
+          );
+        }
       } else {
-        NFTValidationModel.findOneAndUpdate(
-          { _id: requestId },
-          {
-            validationType,
-            validationAmount: data.validationAmount + validationAmount,
-            validationDuration,
-            validationRoyality,
-            requestExpiresOn: addDays(new Date(), validationDuration),
-            requestState: "validated",
-            validationCount: data.validationCount + 1,
-            validationExpired: false,
-            fundBalance: data.fundBalance + validationAmount,
-          },
-          async (err, doc) => {
-            if (err) {
-              res.status(401).json({ success: false });
-            } else {
-              if (!!doc) {
-                NftModel.findOneAndUpdate(
-                  { _id: data.asset },
-                  {
-                    validationType,
-                    validationAmount: data.validationAmount + validationAmount,
-                    validationDuration,
-                    validationRoyality,
-                    requestExpiresOn: addDays(new Date(), validationDuration),
-                    validationState: "validated",
-                    validationCount: data.validationCount + 1,
-                    validationExpired: false,
-                    validationDate: new Date(),
-                    fundBalance: data.fundBalance + validationAmount,
-                    $push: {
-                      history: {
-                        action: "revalidated asset",
-                        validator: id,
-                      },
-                    },
-                  },
-                  async (err, item) => {
-                    if (!!item) {
-                      let activity = await ValidatorActivityModel.create({
-                        validatorAddress: wallet_address,
-                        validator: id,
-                        asset: data.asset,
-                        assetOwner: data.assetOwnerAddress,
-                        assetName: data.assetName,
-                        statusText: "Asset revalidated",
-                      });
-                      if (activity) {
-                        await mixpanel.track("Asset revalidated", {
-                          distinct_id: id,
-                          asset: data.asset,
-                        });
-                        res.status(201).json({
-                          success: true,
-                          message: "Asset revalidated successfully",
-                        });
-                      }
-                    } else {
-                      res.status(401).json({ success: false });
-                    }
-                  }
-                );
-              } else {
-                res
-                  .status(401)
-                  .json({ success: false, message: "Wrong request" });
-              }
-            }
-          }
-        );
+        res.status(403).json({ success: false, message: "Forbidden Action" });
       }
     } else {
       res.status(403).json({ success: false, message: "Forbidden Action" });
     }
-  } else {
-    res.status(403).json({ success: false, message: "Forbidden Action" });
+  } catch (err) {
+    res.status(401).json({ success: false });
   }
 });
 
@@ -1227,6 +1243,7 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 
 exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { requestId } = req.params;
     const { wallet_address, id } = req.user;
     NFTValidationModel.findOneAndDelete(
@@ -1263,6 +1280,7 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Reject validation request", {
                   distinct_id: id,
                   asset: doc.asset,
+                  ip: remoteIp,
                 });
                 res.status(200).json({
                   success: true,
@@ -1455,6 +1473,7 @@ exports.fetchAllRedeemRequests = asyncHandler(async (req, res, next) => {
 
 exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const data = await NftModel.findOne({
@@ -1480,6 +1499,7 @@ exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Accept redeem request", {
               distinct_id: id,
               asset: assetId,
+              ip: remoteIp,
             });
             res.status(201).json({
               success: true,
@@ -1515,6 +1535,7 @@ exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
 
 exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const data = await NftModel.findOne({
@@ -1540,6 +1561,7 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Cancel redeem request", {
               distinct_id: id,
               asset: assetId,
+              ip: remoteIp,
             });
             res.status(201).json({
               success: true,

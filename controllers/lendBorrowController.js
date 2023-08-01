@@ -12,9 +12,11 @@ const {
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.proposeOffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const { price, apy, duration, expiration, nftId, contractAddress } =
@@ -50,6 +52,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
           await mixpanel.track("Propose asset borrow offer", {
             distinct_id: id,
             asset: assetId,
+            ip: remoteIp,
           });
           res
             .status(201)
@@ -75,6 +78,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
 
 exports.removefromBorrow = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
@@ -110,6 +114,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
         await mixpanel.track("Removed from borrow", {
           distinct_id: id,
           asset: assetId,
+          ip: remoteIp,
         });
         res.status(201).json({
           success: true,
@@ -136,6 +141,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
 
 exports.makeOffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const { price, apy, duration, expiration, bidId, erc20Address } = req.body;
@@ -179,6 +185,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Made offer for lend", {
               distinct_id: id,
               asset: assetId,
+              ip: remoteIp,
             });
             res
               .status(201)
@@ -204,6 +211,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
 
 exports.acceptOffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { bidId } = req.body;
     const { wallet_address, id } = req.user;
@@ -270,6 +278,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                 asset: assetId,
                 bidId,
                 bidder: bid[0].bidder,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -299,6 +308,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
 
 exports.rejectOffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { bidId } = req.body;
     const { wallet_address, id } = req.user;
@@ -339,6 +349,7 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
                   distinct_id: id,
                   asset: assetId,
                   bidId,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -374,6 +385,7 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
 
 exports.paybackLoan = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
@@ -406,6 +418,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Borrowed loan paid back", {
               distinct_id: id,
               asset: assetId,
+              ip: remoteIp,
             });
             res
               .status(201)

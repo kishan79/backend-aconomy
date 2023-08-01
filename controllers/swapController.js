@@ -13,9 +13,11 @@ const {
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.listForSwap = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
@@ -37,6 +39,7 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Listed for swap", {
               distinct_id: id,
               asset: assetId,
+              ip: remoteIp,
             });
             res.status(201).json({ success: true, message: "Listed for swap" });
           } else {
@@ -66,6 +69,7 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Unlisted for swap", {
               distinct_id: id,
               asset: assetId,
+              ip: remoteIp,
             });
             res
               .status(201)
@@ -97,85 +101,93 @@ exports.listForSwap = asyncHandler(async (req, res, next) => {
 });
 
 exports.requestForSwap = asyncHandler(async (req, res, next) => {
-  const { assetId } = req.params;
-  const {
-    swapAsset,
-    nftContractAddress,
-    nftContractAddress2,
-    tokenId,
-    tokenId2,
-    swapId,
-  } = req.body;
-  const { wallet_address, id } = req.user;
-  let nftData = await NftModel.findOne({ _id: assetId });
-  if (nftData.nftOwnerAddress !== wallet_address) {
-    if (nftData.state === "swap") {
-      let swapNftData = await NftModel.findOneAndUpdate(
-        { _id: swapAsset },
-        { swapState: "requested" }
-      );
-      if (swapNftData && swapNftData.nftOwnerAddress === wallet_address) {
-        let swapData = await SwapModel.findOneAndUpdate(
-          {
-            asset: assetId,
-            status: "active",
-          },
-          {
-            $push: {
-              offers: {
-                asset: swapNftData._id,
-                assetOwner: swapNftData.nftOwner,
-                assetOwnerAddress: swapNftData.nftOwnerAddress,
-                nftContractAddress,
-                nftContractAddress2,
-                tokenId,
-                tokenId2,
-                swapId,
-              },
-            },
-          }
+  try {
+    const remoteIp = getRemoteIp(req);
+    const { assetId } = req.params;
+    const {
+      swapAsset,
+      nftContractAddress,
+      nftContractAddress2,
+      tokenId,
+      tokenId2,
+      swapId,
+    } = req.body;
+    const { wallet_address, id } = req.user;
+    let nftData = await NftModel.findOne({ _id: assetId });
+    if (nftData.nftOwnerAddress !== wallet_address) {
+      if (nftData.state === "swap") {
+        let swapNftData = await NftModel.findOneAndUpdate(
+          { _id: swapAsset },
+          { swapState: "requested" }
         );
-        if (swapData) {
-          let notification = await NotificationModel.create({
-            nft: assetId,
-            category: "swap-request",
-            user: nftData.nftOwner,
-          });
-          if (notification) {
-            await mixpanel.track("Requested for swap", {
-              distinct_id: id,
+        if (swapNftData && swapNftData.nftOwnerAddress === wallet_address) {
+          let swapData = await SwapModel.findOneAndUpdate(
+            {
               asset: assetId,
-              swapAsset,
+              status: "active",
+            },
+            {
+              $push: {
+                offers: {
+                  asset: swapNftData._id,
+                  assetOwner: swapNftData.nftOwner,
+                  assetOwnerAddress: swapNftData.nftOwnerAddress,
+                  nftContractAddress,
+                  nftContractAddress2,
+                  tokenId,
+                  tokenId2,
+                  swapId,
+                },
+              },
+            }
+          );
+          if (swapData) {
+            let notification = await NotificationModel.create({
+              nft: assetId,
+              category: "swap-request",
+              user: nftData.nftOwner,
             });
-            res.status(201).json({
-              success: true,
-              message: "Swap request sent successfully",
-            });
+            if (notification) {
+              await mixpanel.track("Requested for swap", {
+                distinct_id: id,
+                asset: assetId,
+                swapAsset,
+                ip: remoteIp,
+              });
+              res.status(201).json({
+                success: true,
+                message: "Swap request sent successfully",
+              });
+            }
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to sent request" });
           }
         } else {
           res
             .status(401)
-            .json({ success: false, message: "Failed to sent request" });
+            .json({ success: false, message: "Not a valid swap asset owner" });
         }
       } else {
         res
           .status(401)
-          .json({ success: false, message: "Not a valid swap asset owner" });
+          .json({ success: false, message: "Asset not listed for swap" });
       }
     } else {
-      res
-        .status(401)
-        .json({ success: false, message: "Asset not listed for swap" });
+      res.status(401).json({
+        success: false,
+        message: "Asset owner cannot request for swap",
+      });
     }
-  } else {
-    res
-      .status(401)
-      .json({ success: false, message: "Asset owner cannot request for swap" });
+  } catch (err) {
+    res.status(401).json({ success: false });
   }
 });
 
 exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { swapId } = req.body;
     const { wallet_address, id } = req.user;
@@ -270,6 +282,7 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                       await mixpanel.track("Swap accepted", {
                         distinct_id: id,
                         asset: assetId,
+                        ip: remoteIp,
                       });
                       res.status(201).json({
                         success: true,
@@ -328,64 +341,71 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
 });
 
 exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
-  const { assetId } = req.params;
-  const { swapId } = req.body;
-  const { wallet_address, id } = req.user;
-  let nftData = await NftModel.findOne({ _id: assetId });
-  if (nftData.nftOwnerAddress === wallet_address) {
-    let data = await SwapModel.findOneAndUpdate(
-      {
-        asset: assetId,
-        status: "active",
-        "offers.swapId": swapId,
-      },
-      {
-        $set: {
-          "offers.$.status": "rejected",
-        },
-      }
-    );
-    if (data) {
-      let offer = data.offers.filter((obj) => obj.swapId === swapId);
-      // let swapNft = await NftModel.findByIdAndUpdate(
-      //   { _id: offer[0].asset },
-      //   { swapState: "none" }
-      // );
-      let notification = await NotificationModel.create({
-        nft: offer[0].asset,
-        swapnft: assetId,
-        category: "swap-request-reject",
-        user: offer[0].assetOwner,
-        swapId: offer[0].swapId,
-        swapRequestId: data._id,
-      });
-      if (notification) {
-        await mixpanel.track("Swap request rejected", {
-          distinct_id: id,
+  try {
+    const remoteIp = getRemoteIp(req);
+    const { assetId } = req.params;
+    const { swapId } = req.body;
+    const { wallet_address, id } = req.user;
+    let nftData = await NftModel.findOne({ _id: assetId });
+    if (nftData.nftOwnerAddress === wallet_address) {
+      let data = await SwapModel.findOneAndUpdate(
+        {
           asset: assetId,
-          swapId
+          status: "active",
+          "offers.swapId": swapId,
+        },
+        {
+          $set: {
+            "offers.$.status": "rejected",
+          },
+        }
+      );
+      if (data) {
+        let offer = data.offers.filter((obj) => obj.swapId === swapId);
+        // let swapNft = await NftModel.findByIdAndUpdate(
+        //   { _id: offer[0].asset },
+        //   { swapState: "none" }
+        // );
+        let notification = await NotificationModel.create({
+          nft: offer[0].asset,
+          swapnft: assetId,
+          category: "swap-request-reject",
+          user: offer[0].assetOwner,
+          swapId: offer[0].swapId,
+          swapRequestId: data._id,
         });
-        res.status(201).json({
-          success: true,
-          message: "Request rejected successfully",
+        if (notification) {
+          await mixpanel.track("Swap request rejected", {
+            distinct_id: id,
+            asset: assetId,
+            swapId,
+            ip: remoteIp,
+          });
+          res.status(201).json({
+            success: true,
+            message: "Request rejected successfully",
+          });
+        }
+      } else {
+        res.status(401).json({
+          success: false,
+          message: "Failed to reject the request",
         });
       }
     } else {
       res.status(401).json({
         success: false,
-        message: "Failed to reject the request",
+        message: "Only asset owner can cancel a request",
       });
     }
-  } else {
-    res.status(401).json({
-      success: false,
-      message: "Only asset owner can cancel a request",
-    });
+  } catch (err) {
+    res.status(401).json({ success: false });
   }
 });
 
 exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { swapId, swapRequestId } = req.body;
     const { wallet_address, id } = req.user;
@@ -421,7 +441,8 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
                 distinct_id: id,
                 asset: assetId,
                 swapId,
-                swapRequestId
+                swapRequestId,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,

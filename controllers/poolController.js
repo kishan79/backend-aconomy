@@ -7,6 +7,7 @@ const NotificationModel = require("../models/Notification");
 const { Role, checkWhitelist, validateWhitelist } = require("../utils/utils");
 const { userSelectQuery, poolSelectQuery } = require("../utils/selectQuery");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.getPools = asyncHandler(async (req, res, next) => {
   try {
@@ -256,6 +257,7 @@ exports.fetchPool = asyncHandler(async (req, res, next) => {
 
 exports.createPool = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { wallet_address, id } = req.user;
     let whitelistData = await checkWhitelist(req.body);
     PoolModel.create(
@@ -290,6 +292,7 @@ exports.createPool = asyncHandler(async (req, res, next) => {
                 distinct_id: id,
                 poolId: doc.poolId,
                 pool: doc._id,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -318,6 +321,7 @@ exports.createPool = asyncHandler(async (req, res, next) => {
 
 exports.updatePool = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { poolId } = req.params;
     const { wallet_address, id } = req.user;
     let pool = await PoolModel.findOne({ _id: poolId });
@@ -336,6 +340,7 @@ exports.updatePool = asyncHandler(async (req, res, next) => {
               await mixpanel.track("Pool updated", {
                 distinct_id: id,
                 pool: doc._id,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -359,6 +364,7 @@ exports.updatePool = asyncHandler(async (req, res, next) => {
 
 exports.addLender = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { poolId } = req.params;
     const { wallet_address, id } = req.user;
     const { address } = req.body;
@@ -389,6 +395,7 @@ exports.addLender = asyncHandler(async (req, res, next) => {
           await mixpanel.track("Pool lender added", {
             distinct_id: id,
             pool: poolId,
+            ip: remoteIp,
           });
           res
             .status(201)
@@ -418,6 +425,7 @@ exports.addLender = asyncHandler(async (req, res, next) => {
 
 exports.removeLender = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { poolId, lenderId } = req.params;
     const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
@@ -440,6 +448,7 @@ exports.removeLender = asyncHandler(async (req, res, next) => {
         await mixpanel.track("Pool lender removed", {
           distinct_id: id,
           pool: poolId,
+          ip: remoteIp,
         });
         res
           .status(201)
@@ -558,6 +567,7 @@ exports.fetchBorrower = asyncHandler(async (req, res, next) => {
 
 exports.addBorrower = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { poolId } = req.params;
     const { wallet_address, id } = req.user;
     const { address } = req.body;
@@ -588,6 +598,7 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
           await mixpanel.track("Pool borrower added", {
             distinct_id: id,
             pool: poolId,
+            ip: remoteIp,
           });
           res
             .status(201)
@@ -617,6 +628,7 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
 
 exports.removeBorrower = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { poolId, borrowerId } = req.params;
     const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: poolId }).populate({
@@ -639,6 +651,7 @@ exports.removeBorrower = asyncHandler(async (req, res, next) => {
         await mixpanel.track("Pool borrower removed", {
           distinct_id: id,
           pool: poolId,
+          ip: remoteIp,
         });
         res
           .status(201)
@@ -662,6 +675,7 @@ exports.removeBorrower = asyncHandler(async (req, res, next) => {
 
 exports.makeoffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { pool_id } = req.params;
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
@@ -684,6 +698,7 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
               await mixpanel.track("Pool make offer", {
                 distinct_id: id,
                 pool: pool_id,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -713,6 +728,7 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
 
 exports.acceptOffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { pool_id, bid_id } = req.params;
     const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
@@ -735,6 +751,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Pool offer accepted", {
               distinct_id: id,
               pool: pool_id,
+              ip: remoteIp,
             });
             res
               .status(201)
@@ -761,6 +778,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
 
 exports.rejectOffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { pool_id, bid_id } = req.params;
     const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
@@ -783,6 +801,7 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Pool offer rejected", {
               distinct_id: id,
               pool: pool_id,
+              ip: remoteIp,
             });
             res
               .status(201)
@@ -873,6 +892,7 @@ exports.fetchLenderOffers = asyncHandler(async (req, res, next) => {
 
 exports.requestLoan = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { pool_id } = req.params;
     const { wallet_address, id, role } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
@@ -894,7 +914,8 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
             if (!!doc) {
               await mixpanel.track("Pool loan requested", {
                 distinct_id: id,
-                pool: poolId,
+                pool: pool_id,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -924,6 +945,7 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
 
 exports.acceptLoan = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { pool_id, loan_id } = req.params;
     const { id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
@@ -949,6 +971,7 @@ exports.acceptLoan = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Pool loan accepted", {
               distinct_id: id,
               pool: pool_id,
+              ip: remoteIp,
             });
             res.status(201).json({
               success: true,
@@ -1041,6 +1064,7 @@ exports.fetchLoanRequests = asyncHandler(async (req, res, next) => {
 
 exports.repayOffer = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { pool_id, bid_id } = req.params;
     const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
@@ -1057,7 +1081,8 @@ exports.repayOffer = asyncHandler(async (req, res, next) => {
           await mixpanel.track("Pool offer repaid", {
             distinct_id: id,
             pool: pool_id,
-            bidId: bid_id
+            bidId: bid_id,
+            ip: remoteIp,
           });
           res.status(201).json({
             success: true,
@@ -1085,6 +1110,7 @@ exports.repayOffer = asyncHandler(async (req, res, next) => {
 
 exports.repayLoan = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { pool_id, loan_id } = req.params;
     const { wallet_address, id } = req.user;
     let poolData = await PoolModel.findOne({ _id: pool_id });
@@ -1101,7 +1127,8 @@ exports.repayLoan = asyncHandler(async (req, res, next) => {
           await mixpanel.track("Pool loan repaid", {
             distinct_id: id,
             pool: pool_id,
-            loan: loan_id
+            loan: loan_id,
+            ip: remoteIp,
           });
           res.status(201).json({
             success: true,

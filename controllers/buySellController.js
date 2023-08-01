@@ -13,9 +13,11 @@ const {
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { price, duration, saleId, contractAddress } = req.body;
     const { assetId } = req.params;
     const { id, wallet_address } = req.user;
@@ -56,6 +58,7 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Asset listed", {
                   distinct_id: id,
                   asset: doc._id,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -83,6 +86,7 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
 
 exports.buyNft = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { id, wallet_address } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
@@ -147,10 +151,12 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                   await mixpanel.track("Asset sold", {
                     distinct_id: data.nftOwner,
                     asset: data._id,
+                    ip: remoteIp,
                   });
                   await mixpanel.track("Asset bought", {
                     distinct_id: data.id,
                     asset: data._id,
+                    ip: remoteIp,
                   });
                   res.status(201).json({
                     success: true,
@@ -180,6 +186,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
 
 exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { price, duration } = req.body;
     const { wallet_address, id } = req.user;
@@ -210,6 +217,7 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Asset listing updated", {
                   distinct_id: id,
                   asset: assetId,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -239,6 +247,7 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
 
 exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     let data = await NftModel.findOne({ _id: assetId });
@@ -268,6 +277,7 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Asset delisted", {
                   distinct_id: id,
                   asset: doc._id,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -297,6 +307,7 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
 
 exports.listNftForAuction = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { id, wallet_address } = req.user;
     const { duration, price, saleId, contractAddress } = req.body;
     const { assetId } = req.params;
@@ -346,6 +357,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Asset listed for auction", {
                   distinct_id: id,
                   asset: assetId,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -376,6 +388,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
 
 exports.placeBid = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { amount, bidId } = req.body;
     // const { amount, duration, bidId } = req.body;
     // const { auctionId } = req.params;
@@ -431,6 +444,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     await mixpanel.track("Auction bid placed", {
                       distinct_id: id,
                       asset: data._id,
+                      ip: remoteIp,
                     });
                     res.status(201).json({
                       success: true,
@@ -483,6 +497,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                     await mixpanel.track("Auction bid placed", {
                       distinct_id: id,
                       asset: data._id,
+                      ip: remoteIp,
                     });
                     res.status(201).json({
                       success: true,
@@ -519,6 +534,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
 
 exports.editAuction = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { price, duration } = req.body;
     const { wallet_address, id } = req.user;
@@ -559,6 +575,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Auction edited", {
                   distinct_id: id,
                   asset: assetId,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -588,6 +605,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
 
 exports.cancelAuction = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
@@ -644,6 +662,7 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                   await mixpanel.track("Auction cancelled", {
                     distinct_id: id,
                     asset: assetId,
+                    ip: remoteIp,
                   });
                   res.status(201).json({
                     success: true,
@@ -679,6 +698,7 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
 
 exports.acceptBid = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { bidId } = req.body;
     const { wallet_address, id } = req.user;
@@ -762,6 +782,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                   asset: assetId,
                   bidder: bid[0].bidder,
                   amount: bid[0].amount,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
@@ -797,6 +818,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
 
 exports.rejectBid = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { bidId } = req.body;
     const { wallet_address, id } = req.user;
@@ -844,6 +866,7 @@ exports.rejectBid = asyncHandler(async (req, res, next) => {
               bidId: bid[0].bidId,
               auctionId: auctionData._id,
               saleId: data.saleId,
+              ip: remoteIp,
             });
             res.status(201).json({
               success: true,
@@ -874,6 +897,7 @@ exports.rejectBid = asyncHandler(async (req, res, next) => {
 
 exports.withdrawBid = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { auctionId, bidId } = req.body;
     const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
@@ -920,7 +944,8 @@ exports.withdrawBid = asyncHandler(async (req, res, next) => {
                 distinct_id: id,
                 asset: data.asset,
                 bidId,
-                auctionId
+                auctionId,
+                ip: remoteIp,
               });
               res
                 .status(201)

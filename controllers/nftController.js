@@ -16,6 +16,7 @@ const {
 } = require("../utils/selectQuery");
 const { Role } = require("../utils/utils");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
   try {
@@ -113,6 +114,7 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
 
 exports.createNft = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { id, wallet_address, role } = req.user;
     NftModel.create(
       {
@@ -147,6 +149,7 @@ exports.createNft = asyncHandler(async (req, res, next) => {
               asset: doc._id,
               assetName: doc.name,
               assetCollection: doc.nftCollection,
+              ip: remoteIp
             });
             res.status(201).json({
               success: true,
@@ -167,6 +170,7 @@ exports.createNft = asyncHandler(async (req, res, next) => {
 
 exports.transferNft = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { receiver_address } = req.body;
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
@@ -218,6 +222,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
             distinct_id: id,
             asset: data._id,
             to: userData._id,
+            ip: remoteIp
           });
           res
             .status(201)
@@ -240,6 +245,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
 
 exports.deleteNft = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
@@ -271,6 +277,7 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Asset deleted", {
               distinct_id: id,
               asset: assetId,
+              ip: remoteIp
             });
             res
               .status(201)
@@ -302,6 +309,7 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
 
 exports.burnNft = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { receiver_address } = req.body;
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
@@ -361,6 +369,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   await mixpanel.track("Asset burned", {
                     distinct_id: id,
                     asset: assetId,
+                    ip: remoteIp
                   });
                   res.status(201).json({
                     success: true,

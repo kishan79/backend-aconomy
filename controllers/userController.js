@@ -64,6 +64,7 @@ exports.generateNonce = asyncHandler(async (req, res, next) => {
 
 exports.validateSignature = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.params;
     const { signature } = req.body;
     if (wallet_address.length && signature.length) {
@@ -95,6 +96,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
           );
           await mixpanel.track("User logged-in", {
             distinct_id: user._id,
+            ip: remoteIp,
           });
           res.status(201).json({
             success: true,
@@ -133,7 +135,7 @@ exports.onboardUser = asyncHandler(async (req, res, next) => {
     UserModel.findOneAndUpdate(
       { wallet_address: req.user.wallet_address },
       { ...req.body },
-      {new: true},
+      { new: true },
       async (err, docs) => {
         if (err) {
           res.status(400).json({ success: false });
@@ -292,7 +294,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
     UserModel.findOneAndUpdate(
       { wallet_address },
       { ...req.body },
-      {new: true},
+      { new: true },
       async (err, doc) => {
         if (err) {
           res
@@ -308,7 +310,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
               username: doc.username,
               wallet_address: doc.wallet_address,
               // $created: doc.createdAt,
-              ip: remoteIp
+              ip: remoteIp,
             });
             res
               .status(201)
@@ -491,6 +493,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
 
 exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { asset, validator, validatorAddress } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findOne({
@@ -544,6 +547,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                       distinct_id: id,
                       validator,
                       asset,
+                      ip: remoteIp,
                     });
                     res.status(201).json({
                       success: true,
@@ -570,6 +574,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
 
 exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { asset } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findOne({
@@ -616,6 +621,7 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                         distinct_id: id,
                         validator: data.validator,
                         asset,
+                        ip: remoteIp,
                       }
                     );
                     res.status(201).json({
@@ -879,6 +885,7 @@ exports.checkUsernameAvailability = asyncHandler(async (req, res, next) => {
 
 exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { id } = req.user;
     const { assetId } = req.params;
     NFTValidationModel.findOneAndDelete(
@@ -898,6 +905,7 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
               await mixpanel.track("User cancel validation request", {
                 distinct_id: id,
                 validator: doc.validator,
+                ip: remoteIp,
               });
               res.status(200).json({
                 success: true,
@@ -922,6 +930,7 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
 
 exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const data = await NftModel.findOne({
@@ -958,6 +967,7 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
               await mixpanel.track("User sent redeem request", {
                 distinct_id: id,
                 asset: assetId,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -994,6 +1004,7 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
 
 exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const data = await NftModel.findOne({
@@ -1019,6 +1030,7 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
           await mixpanel.track("User cancel redeem request", {
             distinct_id: id,
             asset: assetId,
+            ip: remoteIp,
           });
           res.status(201).json({
             success: true,
@@ -1049,6 +1061,7 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
 
 exports.redeemAsset = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const data = await NftModel.findOne({
@@ -1111,6 +1124,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               await mixpanel.track("User redeem asset", {
                 distinct_id: id,
                 asset: assetId,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -1147,6 +1161,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
 
 exports.withdrawFunds = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const { amount } = req.body;
@@ -1200,6 +1215,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
                 distinct_id: id,
                 asset: assetId,
                 amount,
+                ip: remoteIp,
               });
               res.status(201).json({
                 success: true,
@@ -1234,6 +1250,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
 
 exports.repayFunds = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const { amount } = req.body;
@@ -1290,6 +1307,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   distinct_id: id,
                   asset: assetId,
                   amount,
+                  ip: remoteIp,
                 });
                 res.status(201).json({
                   success: true,
