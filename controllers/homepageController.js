@@ -5,6 +5,7 @@ const OfferModel = require("../models/Offer");
 const CollectionModel = require("../models/Collection");
 const asyncHandler = require("../middlewares/async");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.getCarouselData = asyncHandler(async (req, res, next) => {
   try {
@@ -97,6 +98,7 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
 
 exports.getLatestNfts = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     let query;
 
     let queryStr = {
@@ -116,7 +118,9 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
 
     const results = await query;
 
-    await mixpanel.track("Homepage viewed", {});
+    await mixpanel.track("Homepage viewed", {
+      ip: remoteIp
+    });
 
     return res.status(200).json({
       success: true,
