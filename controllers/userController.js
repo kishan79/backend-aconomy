@@ -22,6 +22,7 @@ const {
 } = require("../utils/selectQuery");
 const { isBefore } = require("date-fns");
 const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -128,6 +129,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
 
 exports.onboardUser = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     UserModel.findOneAndUpdate(
       { wallet_address: req.user.wallet_address },
       { ...req.body },
@@ -136,8 +138,16 @@ exports.onboardUser = asyncHandler(async (req, res, next) => {
         if (err) {
           res.status(400).json({ success: false });
         } else {
-          await mixpanel.track("User onboard", {
-            distinct_id: docs._id,
+          // await mixpanel.track("User onboard", {
+          //   distinct_id: docs._id,
+          // });
+          await mixpanel.people(docs._id, {
+            name: docs.name,
+            username: docs.username,
+            wallet_address: docs.wallet_address,
+            $created: docs.createdAt,
+            role: docs.role,
+            ip: remoteIp,
           });
           res.status(200).json({ success: true });
         }
@@ -290,8 +300,15 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
             .json({ success: false, message: "Profile failed to update" });
         } else {
           if (!!doc) {
-            await mixpanel.track("User profile updated", {
-              distinct_id: doc._id,
+            // await mixpanel.track("User profile updated", {
+            //   distinct_id: doc._id,
+            // });
+            await mixpanel.people(doc._id, {
+              $name: doc.name,
+              username: doc.username,
+              wallet_address: doc.wallet_address,
+              // $created: doc.createdAt,
+              role: doc.role,
             });
             res
               .status(201)

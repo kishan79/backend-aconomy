@@ -6,4 +6,8 @@ async function track(event, properties) {
   await trackAsync(event, properties);
 }
 
-module.exports = { track };
+async function people(distinctId, properties) {
+  mixpanel.people.set(distinctId, properties);
+}
+
+module.exports = { track, people };
