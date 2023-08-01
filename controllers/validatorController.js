@@ -199,7 +199,6 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
               name: docs.name,
               username: docs.username,
               wallet_address: docs.wallet_address,
-              $created: docs.createdAt,
               role: docs.role,
               email: docs.email,
               ip: remoteIp,
