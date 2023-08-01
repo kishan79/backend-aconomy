@@ -175,7 +175,7 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
     ValidatorModel.findOneAndUpdate(
       { wallet_address: wallet_address },
       { ...req.body },
-      null,
+      {new: true},
       async (err, docs) => {
         if (err) {
           res.status(400).json({ success: false });
@@ -592,11 +592,12 @@ const generateFWUpsertBody = (body, wallet_address) => {
 
 exports.updateValidator = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.params;
     ValidatorModel.findOneAndUpdate(
       { wallet_address },
       { ...req.body },
-      null,
+      {new: true},
       async (err, doc) => {
         if (err) {
           res
@@ -620,12 +621,11 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
               //   distinct_id: doc._id,
               // });
               await mixpanel.people(doc._id, {
-                $name: doc.name,
+                name: doc.name,
                 username: doc.username,
                 wallet_address: doc.wallet_address,
                 // $created: doc.createdAt,
-                role: doc.role,
-                email: doc.email
+                ip: remoteIp
               });
               res.status(201).json({
                 success: true,
