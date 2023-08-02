@@ -560,7 +560,7 @@ exports.fetchValidatorByAddress = asyncHandler(async (req, res, next) => {
   }
 });
 
-const generateFWUpsertBody = (body, wallet_address) => {
+const generateFWUpsertBody = (body, v_email, wallet_address) => {
   const {
     name,
     username,
@@ -569,15 +569,18 @@ const generateFWUpsertBody = (body, wallet_address) => {
     bio,
     profileImage,
     bannerImage,
+    email
   } = body;
 
   return JSON.stringify({
     unique_identifier: {
-      cf_wallet_address: wallet_address,
+      emails: v_email
     },
     contact: {
       first_name: name,
+      emails: email,
       custom_field: {
+        cf_wallet_address: wallet_address,
         cf_asset_type: assetType,
         cf_user_name: username,
         cf_profile_image: profileImage,
@@ -599,7 +602,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
     ValidatorModel.findOneAndUpdate(
       { wallet_address },
       { ...req.body },
-      { new: true },
+      null,
       async (err, doc) => {
         if (err) {
           res
@@ -611,7 +614,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
               `${process.env.FRESHWORK_URL}/crm/sales/api/contacts/upsert`,
               {
                 method: "POST",
-                body: generateFWUpsertBody(req.body, wallet_address),
+                body: generateFWUpsertBody(req.body, doc.email, wallet_address),
                 headers: {
                   Authorization: `Token token=${process.env.FRESHWORK_API_TOKEN}`,
                   "Content-Type": "application/json",
@@ -623,9 +626,9 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
               //   distinct_id: doc._id,
               // });
               await mixpanel.people(doc._id, {
-                name: doc.name,
-                username: doc.username,
-                wallet_address: doc.wallet_address,
+                name: req.name,
+                username: req.username,
+                wallet_address,
                 // $created: doc.createdAt,
                 ip: remoteIp,
               });

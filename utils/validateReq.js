@@ -108,6 +108,11 @@ const offerValidationReqSchema = [
   body("bidId", "The bidId field is required").notEmpty(),
 ];
 
+const newsletterReqSchema = [
+  body("email", "Enter valid email").isEmail().normalizeEmail(),
+  body("email", "The email field is required").notEmpty(),
+];
+
 module.exports = {
   userValidSignature,
   validatorValidSignature,
@@ -126,4 +131,5 @@ module.exports = {
   proposeOfferValidationReqSchema,
   makeOfferValidationReqSchema,
   offerValidationReqSchema,
+  newsletterReqSchema,
 };

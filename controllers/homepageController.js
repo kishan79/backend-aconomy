@@ -6,6 +6,7 @@ const CollectionModel = require("../models/Collection");
 const asyncHandler = require("../middlewares/async");
 const mixpanel = require("../services/mixpanel");
 const { getRemoteIp } = require("../utils/utils");
+const fetch = require("node-fetch");
 
 exports.getCarouselData = asyncHandler(async (req, res, next) => {
   try {
@@ -119,7 +120,7 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
     const results = await query;
 
     await mixpanel.track("Homepage viewed", {
-      ip: remoteIp
+      ip: remoteIp,
     });
 
     return res.status(200).json({
@@ -274,5 +275,28 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
       data: [],
       message: "Failed to execute",
     });
+  }
+});
+
+exports.newsLetter = asyncHandler(async (req, res, next) => {
+  try {
+    let freshworkData = await fetch(
+      `${process.env.FRESHWORK_URL}/crm/sales/api/contacts`,
+      {
+        method: "POST",
+        body: JSON.stringify({ contact: { emails: req.body.email } }),
+        headers: {
+          Authorization: `Token token=${process.env.FRESHWORK_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (freshworkData.status === 200) {
+      res.status(201).json({ success: true });
+    } else {
+      res.status(400).json({ success: false });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
   }
 });
