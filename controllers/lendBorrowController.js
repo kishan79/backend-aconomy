@@ -291,6 +291,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
               .json({ success: false, message: "Failed to accept the offer" });
           }
         } else {
+          res.status(401).json({ success: false, message: "Bid is expired" });
         }
       } else {
         res.status(401).json({ success: false, message: "Action forbidden" });
@@ -394,7 +395,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
         let data = await NftModel.findOneAndUpdate(
           { _id: assetId },
           {
-            lendBorrowOffers: null,
+            lendBorrowOffers: [],
             state: "none",
             borrowState: "none",
           }
