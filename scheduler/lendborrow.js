@@ -73,6 +73,7 @@ const lendbrorrowCron = async () => {
           }
         }
       }
+      process.exit(0);
     } else {
       console.log("Failed to fetch data");
     }

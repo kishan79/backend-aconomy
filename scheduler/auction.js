@@ -48,6 +48,7 @@ const auctionCron = async () => {
           }
         }
       }
+      process.exit(0);
     }
   } catch (err) {
     console.log(err);
