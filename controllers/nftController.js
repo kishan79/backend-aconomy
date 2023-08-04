@@ -149,7 +149,10 @@ exports.createNft = asyncHandler(async (req, res, next) => {
               asset: doc._id,
               assetName: doc.name,
               assetCollection: doc.nftCollection,
-              ip: remoteIp
+              asset_value: doc.valueOfAsset.value,
+              token: doc.valueOfAsset.unit,
+              asset_orignal_date: doc.assetOriginationDate,
+              ip: remoteIp,
             });
             res.status(201).json({
               success: true,
@@ -222,7 +225,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
             distinct_id: id,
             asset: data._id,
             to: userData._id,
-            ip: remoteIp
+            ip: remoteIp,
           });
           res
             .status(201)
@@ -277,7 +280,7 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Asset deleted", {
               distinct_id: id,
               asset: assetId,
-              ip: remoteIp
+              ip: remoteIp,
             });
             res
               .status(201)
@@ -369,7 +372,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   await mixpanel.track("Asset burned", {
                     distinct_id: id,
                     asset: assetId,
-                    ip: remoteIp
+                    ip: remoteIp,
                   });
                   res.status(201).json({
                     success: true,

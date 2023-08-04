@@ -71,7 +71,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.params;
-    const { signature } = req.body;
+    const { signature, wallet_name } = req.body;
     if (wallet_address.length && signature.length) {
       const validator = await ValidatorModel.findOne({
         wallet_address,
@@ -99,8 +99,33 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
               expiresIn: process.env.JWT_EXPIRE,
             }
           );
+          let nftData = await NftModel.find({
+            $or: [
+              { validatorAddress: wallet_address },
+              { nftOwner: validator._id },
+            ],
+          }).select("_id validationState nftOwner redeemRequest");
+          let validatedAssets = 0,
+            burnedAssets = 0,
+            redeemedAssets = 0;
+          for (let i = 0; i < nftData.length; i++) {
+            if (nftData[i].validationState === "validated") {
+              validatedAssets += 1;
+            }
+            if (String(nftData[i].nftOwner) === String(validator._id)) {
+              burnedAssets += 1;
+            }
+            if (nftData[i].redeemRequest === "accepted") {
+              redeemedAssets += 1;
+            }
+          }
           await mixpanel.track("Validator logged-in", {
             distinct_id: validator._id,
+            wallet_name,
+            total_assests: validatedAssets,
+            total_validations: validatedAssets,
+            total_asset_burned: burnedAssets,
+            total_asset_redeemed: redeemedAssets,
             ip: remoteIp,
           });
           res.status(201).json({
@@ -569,12 +594,12 @@ const generateFWUpsertBody = (body, v_email, wallet_address) => {
     bio,
     profileImage,
     bannerImage,
-    email
+    email,
   } = body;
 
   return JSON.stringify({
     unique_identifier: {
-      emails: v_email
+      emails: v_email,
     },
     contact: {
       first_name: name,
@@ -599,6 +624,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.params;
+    const { role } = req.user;
     ValidatorModel.findOneAndUpdate(
       { wallet_address },
       { ...req.body },
@@ -629,7 +655,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
                 name: req.name,
                 username: req.username,
                 wallet_address,
-                // $created: doc.createdAt,
+                role,
                 ip: remoteIp,
               });
               res.status(201).json({
@@ -733,6 +759,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
       validationDocuments,
       validationCommission,
       contractAddress,
+      collateral_percent,
     } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findById(requestId);
@@ -806,6 +833,14 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                             await mixpanel.track("Asset validated", {
                               distinct_id: id,
                               asset: data.asset,
+                              validated_by: id,
+                              validation_type: validationType,
+                              collatoral_percentage: collateral_percent,
+                              collateral_amount: validationAmount,
+                              validation_duration: validationDuration,
+                              validator_royality: validationRoyality,
+                              one_time_commission: validationCommission,
+                              token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
                             res.status(201).json({
@@ -895,6 +930,14 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                             await mixpanel.track("Asset validated", {
                               distinct_id: id,
                               asset: data.asset,
+                              validated_by: id,
+                              validation_type: validationType,
+                              collatoral_percentage: collateral_percent,
+                              collateral_amount: validationAmount,
+                              validation_duration: validationDuration,
+                              validator_royality: validationRoyality,
+                              one_time_commission: validationCommission,
+                              token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
                             res.status(201).json({

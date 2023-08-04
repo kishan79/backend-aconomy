@@ -88,7 +88,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
         { _id: assetId },
         {
           state: "none",
-          lendBorrowOffer: null,
+          lendBorrowOffer: {},
         }
       );
       if (data) {
@@ -114,6 +114,11 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
         await mixpanel.track("Removed from borrow", {
           distinct_id: id,
           asset: assetId,
+          asset_name: nftData.name,
+          borrow_price: Object.keys(data.lendBorrowOffer).length
+            ? data.lendBorrowOffer.price
+            : null,
+          token: nftData.valueOfAsset.unit,
           ip: remoteIp,
         });
         res.status(201).json({
@@ -185,6 +190,8 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Made offer for lend", {
               distinct_id: id,
               asset: assetId,
+              lend_amount: price,
+              token: data.valueOfAsset.unit,
               ip: remoteIp,
             });
             res
@@ -278,6 +285,8 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                 asset: assetId,
                 bidId,
                 bidder: bid[0].bidder,
+                lend_amount: bid[0].price,
+                token: data.valueOfAsset.unit,
                 ip: remoteIp,
               });
               res.status(201).json({

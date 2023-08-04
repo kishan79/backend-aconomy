@@ -66,7 +66,7 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.params;
-    const { signature } = req.body;
+    const { signature, wallet_name } = req.body;
     if (wallet_address.length && signature.length) {
       const user = await UserModel.findOne({
         wallet_address,
@@ -94,8 +94,20 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
               expiresIn: process.env.JWT_EXPIRE,
             }
           );
+          let nftData = await NftModel.find({
+            nftOwnerAddress: wallet_address,
+          }).select("validationState");
+          let validatedAssets = 0;
+          for (let i = 0; i < nftData.length; i++) {
+            if (nftData[i].validationState === "validated") {
+              validatedAssets += 1;
+            }
+          }
           await mixpanel.track("User logged-in", {
             distinct_id: user._id,
+            wallet_name,
+            total_assets: nftData.length,
+            validated_assets: validatedAssets,
             ip: remoteIp,
           });
           res.status(201).json({
@@ -291,6 +303,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.params;
+    const { role } = req.user;
     UserModel.findOneAndUpdate(
       { wallet_address },
       { ...req.body },
@@ -309,7 +322,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
               name: doc.name,
               username: doc.username,
               wallet_address: doc.wallet_address,
-              // $created: doc.createdAt,
+              role,
               ip: remoteIp,
             });
             res
@@ -547,6 +560,11 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                       distinct_id: id,
                       validator,
                       asset,
+                      assetName: nftData.name,
+                      assetCollection: nftData.nftCollection,
+                      asset_value: nftData.valueOfAsset.value,
+                      token: nftData.valueOfAsset.unit,
+                      asset_orignal_date: nftData.assetOriginationDate,
                       ip: remoteIp,
                     });
                     res.status(201).json({
@@ -905,6 +923,12 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
               await mixpanel.track("User cancel validation request", {
                 distinct_id: id,
                 validator: doc.validator,
+                asset: nftData._id,
+                assetCollection: nftData.nftCollection,
+                assetName: nftData.name,
+                asset_value: nftData.valueOfAsset.value,
+                token: nftData.valueOfAsset.unit,
+                asset_orignal_date: nftData.assetOriginationDate,
                 ip: remoteIp,
               });
               res.status(200).json({
@@ -1215,6 +1239,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
                 distinct_id: id,
                 asset: assetId,
                 amount,
+                token: data.valueOfAsset.unit,
                 ip: remoteIp,
               });
               res.status(201).json({
@@ -1307,6 +1332,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   distinct_id: id,
                   asset: assetId,
                   amount,
+                  token: nftData.valueOfAsset.unit,
                   ip: remoteIp,
                 });
                 res.status(201).json({

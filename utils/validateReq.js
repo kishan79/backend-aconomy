@@ -2,10 +2,12 @@ const { body } = require("express-validator");
 
 const userValidSignature = [
   body("signature", "The signature field is required").notEmpty(),
+  // body("wallet_name", "The wallet name field is required").notEmpty(),
 ];
 
 const validatorValidSignature = [
   body("signature", "The signature field is required").notEmpty(),
+  // body("wallet_name", "The wallet name field is required").notEmpty(),
 ];
 
 const validatorOnBoardReqSchema = [
