@@ -152,10 +152,15 @@ exports.onboardUser = asyncHandler(async (req, res, next) => {
         if (err) {
           res.status(400).json({ success: false });
         } else {
-          // await mixpanel.track("User onboard", {
-          //   distinct_id: docs._id,
-          // });
           await mixpanel.people(docs._id, {
+            name: docs.name,
+            username: docs.username,
+            wallet_address: docs.wallet_address,
+            role: docs.role,
+            ip: remoteIp,
+          });
+          await mixpanel.track("User onboard", {
+            distinct_id: docs._id,
             name: docs.name,
             username: docs.username,
             wallet_address: docs.wallet_address,
@@ -315,10 +320,15 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
             .json({ success: false, message: "Profile failed to update" });
         } else {
           if (!!doc) {
-            // await mixpanel.track("User profile updated", {
-            //   distinct_id: doc._id,
-            // });
             await mixpanel.people(doc._id, {
+              name: doc.name,
+              username: doc.username,
+              wallet_address: doc.wallet_address,
+              role,
+              ip: remoteIp,
+            });
+            await mixpanel.track("User profile updated", {
+              distinct_id: doc._id,
               name: doc.name,
               username: doc.username,
               wallet_address: doc.wallet_address,

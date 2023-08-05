@@ -219,10 +219,16 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
             }
           );
           if (freshworkData) {
-            // await mixpanel.track("Validator onboard", {
-            //   distinct_id: docs._id,
-            // });
             await mixpanel.people(docs._id, {
+              name: docs.name,
+              username: docs.username,
+              wallet_address: docs.wallet_address,
+              role: docs.role,
+              email: docs.email,
+              ip: remoteIp,
+            });
+            await mixpanel.track("Validator onboard", {
+              distinct_id: docs._id,
               name: docs.name,
               username: docs.username,
               wallet_address: docs.wallet_address,
@@ -648,10 +654,15 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
               }
             );
             if (freshworkData) {
-              // await mixpanel.track("Validator profile updated", {
-              //   distinct_id: doc._id,
-              // });
               await mixpanel.people(doc._id, {
+                name: req.name,
+                username: req.username,
+                wallet_address,
+                role,
+                ip: remoteIp,
+              });
+              await mixpanel.track("Validator profile updated", {
+                distinct_id: doc._id,
                 name: req.name,
                 username: req.username,
                 wallet_address,
