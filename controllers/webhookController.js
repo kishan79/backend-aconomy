@@ -2,8 +2,11 @@ const asyncHandler = require("../middlewares/async");
 const crypto = require("crypto");
 const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
+const mixpanel = require("../services/mixpanel");
+const { getRemoteIp } = require("../utils/utils");
 
-const saveDataToDb = async (payload) => {
+const saveDataToDb = async (payload, req) => {
+  const remoteIp = getRemoteIp(req);
   let applicantUser = await UserModel.find({ _id: payload.externalUserId });
   if (applicantUser.length) {
     let data = await UserModel.findOneAndUpdate(
@@ -17,6 +20,17 @@ const saveDataToDb = async (payload) => {
         reviewStatus: payload.reviewStatus,
       }
     );
+    if (data) {
+      await mixpanel.track("KYC verification approved", {
+        distinct_id: payload.externalUserId,
+        name: data.name,
+        user_name: data.username,
+        wallet_address: data.wallet_address,
+        profile_type: data.role,
+        email: !!data.email ? data.email : "",
+        ip: remoteIp,
+      });
+    }
   } else {
     let data = await ValidatorModel.findOneAndUpdate(
       { _id: payload.externalUserId },
@@ -29,6 +43,17 @@ const saveDataToDb = async (payload) => {
         reviewStatus: payload.reviewStatus,
       }
     );
+    if (data) {
+      await mixpanel.track("KYC verification approved", {
+        distinct_id: payload.externalUserId,
+        name: data.name,
+        user_name: data.username,
+        wallet_address: data.wallet_address,
+        profile_type: data.role,
+        email: !!data.email ? data.email : "",
+        ip: remoteIp,
+      });
+    }
   }
 };
 
@@ -58,7 +83,7 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
       //       );
       //       break;
       //   }
-      await saveDataToDb(payload);
+      await saveDataToDb(payload, req);
       res.sendStatus(200);
     } else {
       console.log("Invalid signature");
