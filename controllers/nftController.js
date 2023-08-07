@@ -150,7 +150,7 @@ exports.createNft = asyncHandler(async (req, res, next) => {
               assetName: doc.name,
               assetCollection: doc.nftCollection,
               asset_value: doc.valueOfAsset.value,
-              token: doc.valueOfAsset.unit,
+              asset_token: doc.valueOfAsset.unit,
               asset_orignal_date: doc.assetOriginationDate,
               ip: remoteIp,
             });

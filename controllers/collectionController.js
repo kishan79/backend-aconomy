@@ -199,7 +199,7 @@ exports.updateCollection = asyncHandler(async (req, res, next) => {
               await mixpanel.track("Collection updated", {
                 distinct_id: id,
                 collection_name: doc.name,
-                asset_type: doc.assetType,
+                asset_type: doc.assetType[0],
                 ip: remoteIp,
               });
               res.status(201).json({

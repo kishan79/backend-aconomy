@@ -58,6 +58,9 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
                 await mixpanel.track("Asset listed", {
                   distinct_id: id,
                   asset: doc._id,
+                  asset_name: doc.name,
+                  list_amount: price,
+                  asset_token: doc.valueOfAsset.unit,
                   ip: remoteIp,
                 });
                 res.status(201).json({
@@ -152,7 +155,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                     distinct_id: data.nftOwner,
                     asset: data._id,
                     asset_name: data.name,
-                    token: data.valueOfAsset.unit,
+                    asset_token: data.valueOfAsset.unit,
                     sold_by: data.nftOwner,
                     bought_by: id,
                     ip: remoteIp,
@@ -161,7 +164,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                     distinct_id: id,
                     asset: data._id,
                     asset_name: data.name,
-                    token: data.valueOfAsset.unit,
+                    asset_token: data.valueOfAsset.unit,
                     sold_by: data.nftOwner,
                     bought_by: id,
                     ip: remoteIp,
@@ -228,6 +231,7 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
                   asset_name: data.name,
                   current_amount: doc.listingPrice,
                   updated_amount: price,
+                  asset_token: doc.valueOfAsset.unit,
                   ip: remoteIp,
                 });
                 res.status(201).json({
@@ -290,7 +294,7 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
                   asset: doc._id,
                   asset_name: doc.name,
                   list_amount: doc.listingPrice,
-                  token: doc.valueOfAsset.unit,
+                  asset_token: doc.valueOfAsset.unit,
                   ip: remoteIp,
                 });
                 res.status(201).json({
@@ -463,7 +467,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                       asset: data._id,
                       asset_name: data.name,
                       bid_amount: amount,
-                      token: data.valueOfAsset.unit,
+                      asset_token: data.valueOfAsset.unit,
                       ip: remoteIp,
                     });
                     res.status(201).json({
@@ -519,7 +523,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
                       asset: data._id,
                       asset_name: data.name,
                       bid_amount: amount,
-                      token: data.valueOfAsset.unit,
+                      asset_token: data.valueOfAsset.unit,
                       ip: remoteIp,
                     });
                     res.status(201).json({
@@ -805,7 +809,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                   asset: assetId,
                   bidder: bid[0].bidder,
                   amount: bid[0].amount,
-                  token: nftData.valueOfAsset.unit,
+                  asset_token: nftData.valueOfAsset.unit,
                   ip: remoteIp,
                 });
                 res.status(201).json({

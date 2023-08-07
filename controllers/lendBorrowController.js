@@ -52,6 +52,9 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
           await mixpanel.track("Propose asset borrow offer", {
             distinct_id: id,
             asset: assetId,
+            asset_name: nftData.name,
+            borrow_price: price,
+            asset_token: nftData.valueOfAsset.unit, 
             ip: remoteIp,
           });
           res
@@ -118,7 +121,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
           borrow_price: Object.keys(data.lendBorrowOffer).length
             ? data.lendBorrowOffer.price
             : null,
-          token: nftData.valueOfAsset.unit,
+          asset_token: nftData.valueOfAsset.unit,
           ip: remoteIp,
         });
         res.status(201).json({
@@ -286,7 +289,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                 bidId,
                 bidder: bid[0].bidder,
                 lend_amount: bid[0].price,
-                token: data.valueOfAsset.unit,
+                asset_token: data.valueOfAsset.unit,
                 ip: remoteIp,
               });
               res.status(201).json({

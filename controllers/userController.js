@@ -322,17 +322,19 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
           if (!!doc) {
             await mixpanel.people(doc._id, {
               name: doc.name,
-              username: doc.username,
+              user_name: doc.username,
               wallet_address: doc.wallet_address,
-              role,
+              email: !!doc.email ? doc.email : "",
+              profile_type: role,
               ip: remoteIp,
             });
             await mixpanel.track("User profile updated", {
               distinct_id: doc._id,
               name: doc.name,
-              username: doc.username,
+              user_name: doc.username,
               wallet_address: doc.wallet_address,
-              role,
+              email: !!doc.email ? doc.email : "",
+              profile_type: role,
               ip: remoteIp,
             });
             res
@@ -573,7 +575,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                       assetName: nftData.name,
                       assetCollection: nftData.nftCollection,
                       asset_value: nftData.valueOfAsset.value,
-                      token: nftData.valueOfAsset.unit,
+                      asset_token: nftData.valueOfAsset.unit,
                       asset_orignal_date: nftData.assetOriginationDate,
                       ip: remoteIp,
                     });
@@ -937,7 +939,7 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
                 assetCollection: nftData.nftCollection,
                 assetName: nftData.name,
                 asset_value: nftData.valueOfAsset.value,
-                token: nftData.valueOfAsset.unit,
+                asset_token: nftData.valueOfAsset.unit,
                 asset_orignal_date: nftData.assetOriginationDate,
                 ip: remoteIp,
               });
@@ -1249,7 +1251,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
                 distinct_id: id,
                 asset: assetId,
                 amount,
-                token: data.valueOfAsset.unit,
+                asset_token: data.valueOfAsset.unit,
                 ip: remoteIp,
               });
               res.status(201).json({
@@ -1342,7 +1344,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   distinct_id: id,
                   asset: assetId,
                   amount,
-                  token: nftData.valueOfAsset.unit,
+                  asset_token: nftData.valueOfAsset.unit,
                   ip: remoteIp,
                 });
                 res.status(201).json({
