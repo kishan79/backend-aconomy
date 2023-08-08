@@ -776,7 +776,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
     const data = await NFTValidationModel.findById(requestId);
     if (data.validatorAddress === wallet_address) {
       if (data.requestState === "pending") {
-        if (validationDocuments) {
+        if (validationDocuments && validationDocuments.length) {
           NFTValidationModel.findOneAndUpdate(
             { _id: requestId },
             {
@@ -789,7 +789,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
               validationExpired: false,
               validationCommission,
               validationCount: 1,
-              erc20ContractAddress: contractAddress,
+              erc20ContractAddress: !!contractAddress ? contractAddress : "",
               fundBalance: validationAmount,
               $push: { validationDocuments: { $each: validationDocuments } },
             },
@@ -813,7 +813,9 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validationCommission,
                       validationDate: new Date(),
                       validationCount: 1,
-                      erc20ContractAddress: contractAddress,
+                      erc20ContractAddress: !!contractAddress
+                        ? contractAddress
+                        : "",
                       fundBalance: validationAmount,
                       $push: {
                         history: {
@@ -887,7 +889,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
               validationExpired: false,
               validationCommission,
               validationCount: 1,
-              erc20ContractAddress: contractAddress,
+              erc20ContractAddress: !!contractAddress ? contractAddress : "",
               fundBalance: validationAmount,
             },
             async (err, doc) => {
@@ -911,7 +913,9 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validationCommission,
                       validationDate: new Date(),
                       validationCount: 1,
-                      erc20ContractAddress: contractAddress,
+                      erc20ContractAddress: !!contractAddress
+                        ? contractAddress
+                        : "",
                       fundBalance: validationAmount,
                       $push: {
                         history: {

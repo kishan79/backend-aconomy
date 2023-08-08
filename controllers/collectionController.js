@@ -17,7 +17,9 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
 
     const { sortby, search, category } = req.query;
 
-    let queryStr = {};
+    let queryStr = {
+      isPublic: false
+    };
 
     if (search) {
       queryStr = { ...queryStr, name: { $regex: search, $options: "i" } };
