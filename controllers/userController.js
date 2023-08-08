@@ -1127,14 +1127,14 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
             }
           );
           if (nftData) {
-            let validationData = await NFTValidationModel.findOneAndUpdate(
+            let validationData = await NFTValidationModel.findOneAndDelete(
               {
                 assetOwnerAddress: wallet_address,
                 asset: assetId,
-              },
-              {
-                requestState: "unvalidated",
               }
+              // {
+              //   requestState: "unvalidated",
+              // }
             );
             let activity = await UserActivityModel.create({
               userAddress: wallet_address,
