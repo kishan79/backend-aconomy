@@ -20,7 +20,11 @@ const saveDataToDb = async (payload, req) => {
         reviewStatus: payload.reviewStatus,
       }
     );
-    if (data) {
+    if (
+      data &&
+      payload.reviewStatus === "completed" &&
+      payload.reviewResult.reviewAnswer === "GREEN"
+    ) {
       await mixpanel.track("KYC verification approved", {
         distinct_id: payload.externalUserId,
         name: data.name,
@@ -43,7 +47,11 @@ const saveDataToDb = async (payload, req) => {
         reviewStatus: payload.reviewStatus,
       }
     );
-    if (data) {
+    if (
+      data &&
+      payload.reviewStatus === "completed" &&
+      payload.reviewResult.reviewAnswer === "GREEN"
+    ) {
       await mixpanel.track("KYC verification approved", {
         distinct_id: payload.externalUserId,
         name: data.name,
