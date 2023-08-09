@@ -853,7 +853,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               validation_duration: validationDuration,
                               validator_royality: validationRoyality,
                               one_time_commission: validationCommission,
-                              token: item.valueOfAsset.unit,
+                              asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
                             res.status(201).json({
@@ -952,7 +952,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               validation_duration: validationDuration,
                               validator_royality: validationRoyality,
                               one_time_commission: validationCommission,
-                              token: item.valueOfAsset.unit,
+                              asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
                             res.status(201).json({

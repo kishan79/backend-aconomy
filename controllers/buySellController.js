@@ -377,7 +377,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                   asset: assetId,
                   asset_name: nftData.name,
                   list_amount: price,
-                  token: nftData.valueOfAsset.unit,
+                  asset_token: nftData.valueOfAsset.unit,
                   ip: remoteIp,
                 });
                 res.status(201).json({

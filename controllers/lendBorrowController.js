@@ -194,7 +194,7 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
               distinct_id: id,
               asset: assetId,
               lend_amount: price,
-              token: data.valueOfAsset.unit,
+              asset_token: data.valueOfAsset.unit,
               ip: remoteIp,
             });
             res
