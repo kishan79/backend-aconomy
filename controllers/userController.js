@@ -1160,6 +1160,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               await mixpanel.track("User redeem asset", {
                 distinct_id: id,
                 asset: assetId,
+                redeem_amount: data.validationAmount,
                 ip: remoteIp,
               });
               res.status(201).json({
