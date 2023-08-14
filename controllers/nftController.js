@@ -374,6 +374,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   await mixpanel.track("Asset burned", {
                     distinct_id: id,
                     asset: assetId,
+                    burned_amount: nftData.validationAmount,
                     asset_type: data.assetType[0],
                     ip: remoteIp,
                   });

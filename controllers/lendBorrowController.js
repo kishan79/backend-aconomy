@@ -434,6 +434,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Borrowed loan paid back", {
               distinct_id: id,
               asset: assetId,
+              amount: nftData.lendBorrowOffer.price,
               ip: remoteIp,
             });
             res

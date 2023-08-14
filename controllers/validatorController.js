@@ -1562,6 +1562,7 @@ exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Accept redeem request", {
               distinct_id: id,
               asset: assetId,
+              redeem_amount: nftData.validationAmount,
               asset_type: nftData.assetType[0],
               ip: remoteIp,
             });

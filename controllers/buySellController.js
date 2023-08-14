@@ -158,6 +158,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                     asset_name: data.name,
                     asset_type: data.assetType[0],
                     asset_token: data.valueOfAsset.unit,
+                    amount: data.listingPrice,
                     sold_by: data.nftOwner,
                     bought_by: id,
                     ip: remoteIp,
@@ -169,6 +170,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
                     asset_type: data.assetType[0],
                     asset_token: data.valueOfAsset.unit,
                     sold_by: data.nftOwner,
+                    amount: data.listingPrice,
                     bought_by: id,
                     ip: remoteIp,
                   });

@@ -32,6 +32,7 @@ const saveDataToDb = async (payload, req) => {
         wallet_address: data.wallet_address,
         profile_type: data.role,
         email: !!data.email ? data.email : "",
+        user_id: payload.externalUserId,
         ip: remoteIp,
       });
     }
@@ -59,6 +60,7 @@ const saveDataToDb = async (payload, req) => {
         wallet_address: data.wallet_address,
         profile_type: data.role,
         email: !!data.email ? data.email : "",
+        user_id: payload.externalUserId,
         ip: remoteIp,
       });
     }
