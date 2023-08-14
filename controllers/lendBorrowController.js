@@ -53,6 +53,7 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
             distinct_id: id,
             asset: assetId,
             asset_name: nftData.name,
+            asset_type: nftData.assetType[0],
             borrow_price: price,
             asset_token: nftData.valueOfAsset.unit, 
             ip: remoteIp,
@@ -121,6 +122,7 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
           borrow_price: Object.keys(data.lendBorrowOffer).length
             ? data.lendBorrowOffer.price
             : null,
+          asset_type: nftData.assetType[0],
           asset_token: nftData.valueOfAsset.unit,
           ip: remoteIp,
         });
@@ -289,6 +291,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                 bidId,
                 bidder: bid[0].bidder,
                 lend_amount: bid[0].price,
+                asset_type: data.assetType[0],
                 asset_token: data.valueOfAsset.unit,
                 ip: remoteIp,
               });

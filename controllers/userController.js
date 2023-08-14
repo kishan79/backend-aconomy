@@ -574,6 +574,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                       asset,
                       assetName: nftData.name,
                       assetCollection: nftData.nftCollection,
+                      asset_type: nftData.assetType[0],
                       asset_value: nftData.valueOfAsset.value,
                       asset_token: nftData.valueOfAsset.unit,
                       asset_orignal_date: nftData.assetOriginationDate,
@@ -938,6 +939,7 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
                 asset: nftData._id,
                 assetCollection: nftData.nftCollection,
                 assetName: nftData.name,
+                asset_type: nftData.assetType[0],
                 asset_value: nftData.valueOfAsset.value,
                 asset_token: nftData.valueOfAsset.unit,
                 asset_orignal_date: nftData.assetOriginationDate,
@@ -1003,6 +1005,7 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
               await mixpanel.track("User sent redeem request", {
                 distinct_id: id,
                 asset: assetId,
+                asset_type: nftData.assetType[0],
                 ip: remoteIp,
               });
               res.status(201).json({
@@ -1160,6 +1163,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               await mixpanel.track("User redeem asset", {
                 distinct_id: id,
                 asset: assetId,
+                asset_type: nftData.assetType[0],
                 redeem_amount: data.validationAmount,
                 ip: remoteIp,
               });
@@ -1252,6 +1256,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
                 distinct_id: id,
                 asset: assetId,
                 amount,
+                asset_type: data.assetType[0],
                 asset_token: data.valueOfAsset.unit,
                 ip: remoteIp,
               });
@@ -1345,6 +1350,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   distinct_id: id,
                   asset: assetId,
                   amount,
+                  asset_type: nftData.assetType[0],
                   asset_token: nftData.valueOfAsset.unit,
                   ip: remoteIp,
                 });

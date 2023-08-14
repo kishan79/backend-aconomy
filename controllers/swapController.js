@@ -151,6 +151,7 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
               await mixpanel.track("Requested for swap", {
                 distinct_id: id,
                 asset: assetId,
+                asset_type: nftData.assetType[0],
                 swapAsset,
                 ip: remoteIp,
               });
@@ -282,6 +283,7 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                       await mixpanel.track("Swap accepted", {
                         distinct_id: id,
                         asset: assetId,
+                        asset_type: nftData.assetType[0],
                         ip: remoteIp,
                       });
                       res.status(201).json({
@@ -378,6 +380,7 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
           await mixpanel.track("Swap request rejected", {
             distinct_id: id,
             asset: assetId,
+            asset_type: nftData.assetType[0],
             swapId,
             ip: remoteIp,
           });
@@ -440,6 +443,7 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
               await mixpanel.track("Swap request cancelled", {
                 distinct_id: id,
                 asset: assetId,
+                asset_type: swapNft.assetType[0],
                 swapId,
                 swapRequestId,
                 ip: remoteIp,

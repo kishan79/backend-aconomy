@@ -853,6 +853,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               validation_duration: validationDuration,
                               validator_royality: validationRoyality,
                               one_time_commission: validationCommission,
+                              asset_type: item.assetType[0],
                               asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
@@ -952,6 +953,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               validation_duration: validationDuration,
                               validator_royality: validationRoyality,
                               one_time_commission: validationCommission,
+                              asset_type: item.assetType[0],
                               asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
@@ -1560,6 +1562,7 @@ exports.acceptRedeemRequest = asyncHandler(async (req, res, next) => {
             await mixpanel.track("Accept redeem request", {
               distinct_id: id,
               asset: assetId,
+              asset_type: nftData.assetType[0],
               ip: remoteIp,
             });
             res.status(201).json({
