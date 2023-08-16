@@ -45,7 +45,48 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
     const total = await CollectionModel.countDocuments(queryStr);
     query = query.skip(startIndex).limit(limit);
 
-    const results = await query;
+    const results = await query.lean();
+
+    let dataArr = [];
+      for (let i = 0; i < results.length; i++) {
+        let data = await NftModel.find({
+          nftCollection: results[i]._id,
+          nftOwner: { $ne: null },
+        })
+          .select(
+            "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
+          )
+          .populate({ path: "nftOwner", select: "_id name wallet_address" })
+          .lean();
+        let tvl = 0,
+          listed = 0,
+          owners = [];
+        for (let j = 0; j < data.length; j++) {
+          if (data[j].validationState === "validated") {
+            tvl += data[j].validationAmount;
+          }
+          if (data[j].state === "sale" || data[j].state === "auction") {
+            listed += 1;
+          }
+          if (data[j].nftOwner) {
+            owners.push({
+              name: data[j].nftOwner.name,
+              wallet_address: data[j].nftOwner.wallet_address,
+            });
+          }
+        }
+        dataArr.push({
+          ...results[i],
+          tvl,
+          listed: data.length ? Math.round((listed / data.length) * 100) : 0,
+          totalAssets: data.length,
+          owners: [
+            ...new Map(
+              owners.map((item) => [item["wallet_address"], item])
+            ).values(),
+          ],
+        });
+      }
 
     const pagination = {};
 
@@ -67,7 +108,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
       success: true,
       count: results.length,
       pagination,
-      data: results,
+      data: dataArr,
     });
   } catch (err) {
     res.status(400).json({

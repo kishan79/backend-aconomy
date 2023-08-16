@@ -33,6 +33,15 @@ router
   );
 
 router
+  .route("/withdrawOffer/:assetId")
+  .post(
+    protect,
+    authorize("user"),
+    validate(offerValidationReqSchema),
+    lendborrowController.withdrawOffer
+  );
+
+router
   .route("/acceptOffer/:assetId")
   .post(
     protect,
