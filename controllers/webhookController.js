@@ -7,60 +7,42 @@ const { getRemoteIp } = require("../utils/utils");
 
 const saveDataToDb = async (payload, req) => {
   const remoteIp = getRemoteIp(req);
-  let applicantUser = await UserModel.find({ _id: payload.externalUserId });
-  if (applicantUser.length) {
+  if (payload.event === "verification.accepted") {
     let data = await UserModel.findOneAndUpdate(
-      { _id: payload.externalUserId },
+      { _id: payload.reference },
       {
-        applicantType: payload.applicantType,
-        reviewResult: !!payload.reviewResult ? payload.reviewResult : {},
-        levelName: payload.levelName,
-        sandboxMode: payload.sandboxMode,
-        kycEventType: payload.type,
-        reviewStatus: payload.reviewStatus,
+        kycEventType: payload.event,
       }
     );
-    if (
-      data &&
-      payload.reviewStatus === "completed" &&
-      payload.reviewResult.reviewAnswer === "GREEN"
-    ) {
+    if (data) {
       await mixpanel.track("KYC verification approved", {
-        distinct_id: payload.externalUserId,
+        distinct_id: payload.reference,
         name: data.name,
         user_name: data.username,
         wallet_address: data.wallet_address,
         profile_type: data.role,
         email: !!data.email ? data.email : "",
-        user_id: payload.externalUserId,
+        user_id: payload.reference,
         ip: remoteIp,
       });
     }
   } else {
-    let data = await ValidatorModel.findOneAndUpdate(
-      { _id: payload.externalUserId },
+    let data = await UserModel.findOneAndUpdate(
+      { _id: payload.reference },
       {
-        applicantType: payload.applicantType,
-        reviewResult: !!payload.reviewResult ? payload.reviewResult : {},
-        levelName: payload.levelName,
-        sandboxMode: payload.sandboxMode,
-        kycEventType: payload.type,
-        reviewStatus: payload.reviewStatus,
+        verification_url: payload.verification_url,
+        kycEventType: payload.event,
       }
     );
-    if (
-      data &&
-      payload.reviewStatus === "completed" &&
-      payload.reviewResult.reviewAnswer === "GREEN"
-    ) {
-      await mixpanel.track("KYC verification approved", {
-        distinct_id: payload.externalUserId,
+    if (data) {
+      await mixpanel.track("KYC initiated", {
+        distinct_id: payload.reference,
         name: data.name,
         user_name: data.username,
         wallet_address: data.wallet_address,
         profile_type: data.role,
         email: !!data.email ? data.email : "",
-        user_id: payload.externalUserId,
+        user_id: payload.reference,
         ip: remoteIp,
       });
     }
@@ -69,38 +51,35 @@ const saveDataToDb = async (payload, req) => {
 
 exports.kycWebhook = asyncHandler(async (req, res, next) => {
   try {
-    const signature = req.get("x-payload-digest");
-
     let payload = req.body;
+    const signature = req.get("signature");
 
-    const hmac = crypto
-      .createHmac("sha1", process.env.SUMSUB_WEBHOOK_SECRET_KEY)
-      .update(payload)
+    const hashed_secret_key = crypto
+      .createHash("sha256")
+      .update(process.env.SHUFTI_PRO_SECRET_KEY)
       .digest("hex");
 
-    payload = JSON.parse(payload.toString());
-    console.log(payload);
-    if (signature === hmac) {
-      //   switch (payload.type) {
-      //     case "applicantCreated":
-      //       await saveDataToDb(payload);
-      //       console.log(`Identity has been verified for ${payload.applicantId}`);
-      //       break;
-      //     case "applicantReviewed":
-      //       await saveDataToDb(payload);
-      //       console.log(
-      //         `New document has been uploaded by ${payload.applicantId}`
-      //       );
-      //       break;
-      //   }
-      await saveDataToDb(payload, req);
-      res.sendStatus(200);
+    const calculated_signature = crypto
+      .createHash("sha256")
+      .update(payload + hashed_secret_key)
+      .digest("hex");
+
+    if (signature === calculated_signature) {
+      let data = JSON.parse(payload);
+      if (
+        data.event === "verification.accepted" ||
+        data.event === "request.pending"
+      ) {
+        await saveDataToDb(data, req);
+        res.sendStatus(200);
+      } else {
+        res.sendStatus(400);
+      }
     } else {
-      console.log("Invalid signature");
       res.sendStatus(400);
     }
   } catch (err) {
     console.log(err);
-    res.sendStatus(400);
+    res.sendstatus(400);
   }
 });

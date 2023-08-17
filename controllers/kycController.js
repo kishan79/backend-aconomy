@@ -8,11 +8,10 @@ exports.initiateKYC = asyncHandler(async (req, res, next) => {
     const { id } = req.user;
     let payload = {
       reference: id,
-      //URL where you will receive the webhooks from Shufti Pro
       // callback_url: "https://yourdomain.com/profile/sp-notify-callback",
+      callback_url: "https://ef9d-103-165-115-34.ngrok-free.app/webhook/kyc-webhook",
       language: "EN",
-      //URL where end-user will be redirected after verification completed
-      // redirect_url: `${process.env.ACONOMY_URL}/user/${id}`,
+      redirect_url: `${process.env.ACONOMY_URL}/user/${id}`,
       verification_mode: "any",
       allow_offline: "1",
       allow_online: "1",
@@ -21,17 +20,17 @@ exports.initiateKYC = asyncHandler(async (req, res, next) => {
       show_consent: "1",
       show_feedback_form: "0",
     };
-    payload["face"] = "";
+    // payload["face"] = "";
     payload["document"] = {};
-    payload["document_two"] = {};
+    // payload["document_two"] = {};
     payload["address"] = {};
-    payload["consent"] = {
-      proof: "",
-      supported_types: ["handwritten", "printed"],
-      text: "this is a customised text",
-    };
-    payload["phone"] = {};
-    payload["background_checks"] = {};
+    // payload["consent"] = {
+    //   proof: "",
+    //   supported_types: ["handwritten", "printed"],
+    //   text: "this is a customised text",
+    // };
+    // payload["phone"] = {};
+    // payload["background_checks"] = {};
 
     const auth = `${process.env.SHUFTI_PRO_CLIENTID}:${process.env.SHUFTI_PRO_SECRET_KEY}`;
     const b64Val = Buffer.from(auth).toString("base64");
@@ -58,14 +57,14 @@ exports.initiateKYC = asyncHandler(async (req, res, next) => {
           .digest("hex");
         if (sp_signature === calculated_signature) {
           let data = JSON.parse(response.data);
-          let user = await UserModel.findOneAndUpdate(
-            { _id: id },
-            {
-              verification_url: data.verification_url,
-              kycEventType: data.event,
-            }
-          );
-          if (user) {
+          // let user = await UserModel.findOneAndUpdate(
+          //   { _id: id },
+          //   {
+          //     verification_url: data.verification_url,
+          //     kycEventType: data.event,
+          //   }
+          // );
+          // if (user) {
             res
               .status(200)
               .json({
@@ -75,7 +74,7 @@ exports.initiateKYC = asyncHandler(async (req, res, next) => {
                   event: data.event,
                 },
               });
-          }
+          // }
         } else {
           console.log(`Invalid signature: ${response.data}`);
           res.status(400).json({ success: false });
