@@ -3,6 +3,7 @@ const router = express.Router();
 
 const webhookController = require("../controllers/webhookController");
 
-router.route("/kyc-webhook").post(webhookController.kycWebhook);
+router.route("/kyb").post(webhookController.kybWebhook);
+router.route("/kyc").post(webhookController.kycWebhook);
 
 module.exports = router;
