@@ -381,7 +381,7 @@ exports.addLender = asyncHandler(async (req, res, next) => {
 
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
-          { _id: poolId },
+          { _id: poolId, "lenders.lender": { $ne: user._id } },
           {
             $push: {
               lenders: {
@@ -584,7 +584,7 @@ exports.addBorrower = asyncHandler(async (req, res, next) => {
 
       if (user) {
         let data = await PoolModel.findOneAndUpdate(
-          { _id: poolId },
+          { _id: poolId, "borrowers.borrower": { $ne: user._id } },
           {
             $push: {
               borrowers: {
@@ -695,6 +695,17 @@ exports.makeoffer = asyncHandler(async (req, res, next) => {
             res.status(401).json({ success: false, err });
           } else {
             if (!!doc) {
+              await PoolModel.findOneAndUpdate(
+                { _id: pool_id, "lenders.lender": { $ne: id } },
+                {
+                  $push: {
+                    lenders: {
+                      lender: id,
+                      lenderType: Role[role],
+                    },
+                  },
+                }
+              );
               await mixpanel.track("Pool make offer", {
                 distinct_id: id,
                 pool: pool_id,
@@ -912,6 +923,17 @@ exports.requestLoan = asyncHandler(async (req, res, next) => {
             res.status(401).json({ success: false });
           } else {
             if (!!doc) {
+              await PoolModel.findOneAndUpdate(
+                { _id: pool_id, "borrowers.borrower": { $ne: id } },
+                {
+                  $push: {
+                    borrowers: {
+                      borrower: id,
+                      borrowerType: Role[role],
+                    },
+                  },
+                }
+              );
               await mixpanel.track("Pool loan requested", {
                 distinct_id: id,
                 pool: pool_id,
