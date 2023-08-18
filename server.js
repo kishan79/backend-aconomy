@@ -23,6 +23,7 @@ const swap = require("./routes/swap");
 const notification = require("./routes/notification");
 const dashboard = require("./routes/dashboard");
 const homepage = require("./routes/homepage");
+const kyb = require("./routes/kyb");
 const kyc = require("./routes/kyc");
 const webhook = require("./routes/webhook");
 
@@ -55,6 +56,7 @@ app.use("/api/v1/swap", swap);
 app.use("/api/v1/notifications", notification);
 app.use("/api/v1/dashboard", dashboard);
 app.use("/api/v1/home", homepage);
+app.use("/api/v1/kyb", kyb);
 app.use("/api/v1/kyc", kyc);
 
 // app.use(errorHandler);

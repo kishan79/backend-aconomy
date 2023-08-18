@@ -1,201 +1,97 @@
 const axios = require("axios");
 const crypto = require("crypto");
-const fs = require("fs");
-const FormData = require("form-data");
 const asyncHandler = require("../middlewares/async");
 const UserModel = require("../models/User");
-const ValidatorModel = require("../models/Validator");
 
-const SUMSUB_APP_TOKEN = process.env.SUMSUB_APP_TOKEN; // Example: sbx:uY0CgwELmgUAEyl4hNWxLngb.0WSeQeiYny4WEqmAALEAiK2qTC96fBad - Please don't forget to change when switching to production
-const SUMSUB_SECRET_KEY = process.env.SUMSUB_SECRET_KEY; // Example: Hej2ch71kG2kTd1iIUDZFNsO5C1lh5Gq - Please don't forget to change when switching to production
-const SUMSUB_BASE_URL = process.env.SUMSUB_BASE_URL;
-const userKYClevelName = process.env.SUMSUB_USER_KYC_LEVELNAME;
-
-var config = {};
-config.baseURL = SUMSUB_BASE_URL;
-
-axios.interceptors.request.use(createSignature, function (error) {
-  return Promise.reject(error);
-});
-
-function createSignature(config) {
-  console.log("Creating a signature for the request...");
-
-  var ts = Math.floor(Date.now() / 1000);
-  const signature = crypto.createHmac("sha256", SUMSUB_SECRET_KEY);
-  signature.update(ts + config.method.toUpperCase() + config.url);
-
-  if (config.data instanceof FormData) {
-    signature.update(config.data.getBuffer());
-  } else if (config.data) {
-    signature.update(config.data);
-  }
-
-  config.headers["X-App-Access-Ts"] = ts;
-  config.headers["X-App-Access-Sig"] = signature.digest("hex");
-
-  return config;
-}
-
-function createApplicant(externalUserId, levelName, fixedInfo) {
-  console.log("Creating an applicant...");
-
-  var method = "post";
-  var url = "/resources/applicants?levelName=" + levelName;
-  var ts = Math.floor(Date.now() / 1000);
-
-  var body = {
-    externalUserId: externalUserId,
-    fixedInfo: fixedInfo,
-  };
-
-  var headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    "X-App-Token": SUMSUB_APP_TOKEN,
-  };
-
-  config.method = method;
-  config.url = url;
-  config.headers = headers;
-  config.data = JSON.stringify(body);
-
-  return config;
-}
-
-exports.createApplicant = asyncHandler(async (req, res, next) => {
+exports.initiateKYC = asyncHandler(async (req, res, next) => {
   try {
-    const { id, role } = req.user;
-    const { externalUserId, fixedInfo } = req.body;
-    let response = await axios(
-      createApplicant(externalUserId, userKYClevelName, fixedInfo)
-    );
-    if (response) {
-      // console.log("Response:\n", response.data);
-      if (role === "user") {
-        let userData = await UserModel.findByIdAndUpdate(
-          { _id: id },
-          { applicantId: response.data.id }
-        );
-        if (userData) {
-          res.status(201).json({ success: true });
+    const { id } = req.user;
+    let payload = {
+      reference: id,
+      callback_url: `${process.env.SERVER_URL}/webhook/kyc`,
+      language: "EN",
+      redirect_url: `${process.env.ACONOMY_URL}/user/${id}`,
+      verification_mode: "any",
+      allow_offline: "1",
+      allow_online: "1",
+      show_privacy_policy: "1",
+      show_results: "1",
+      show_consent: "1",
+      show_feedback_form: "0",
+    };
+    // payload["face"] = "";
+    payload["document"] = {};
+    // payload["document_two"] = {};
+    payload["address"] = {};
+    // payload["consent"] = {
+    //   proof: "",
+    //   supported_types: ["handwritten", "printed"],
+    //   text: "this is a customised text",
+    // };
+    // payload["phone"] = {};
+    // payload["background_checks"] = {};
+
+    const auth = `${process.env.SHUFTI_PRO_CLIENTID}:${process.env.SHUFTI_PRO_SECRET_KEY}`;
+    const b64Val = Buffer.from(auth).toString("base64");
+
+    axios
+      .post(process.env.SHUFTI_PRO_URL, payload, {
+        headers: {
+          Authorization: `Basic ${b64Val}`,
+          "Content-Type": "application/json",
+        },
+        responseType: "text",
+      })
+      .then(async (response) => {
+        const sp_signature = response.headers.signature;
+
+        const hashed_secret_key = crypto
+          .createHash("sha256")
+          .update(process.env.SHUFTI_PRO_SECRET_KEY)
+          .digest("hex");
+
+        const calculated_signature = crypto
+          .createHash("sha256")
+          .update(response.data + hashed_secret_key)
+          .digest("hex");
+        if (sp_signature === calculated_signature) {
+          let data = JSON.parse(response.data);
+          // let user = await UserModel.findOneAndUpdate(
+          //   { _id: id },
+          //   {
+          //     verification_url: data.verification_url,
+          //     kycEventType: data.event,
+          //   }
+          // );
+          // if (user) {
+            res
+              .status(200)
+              .json({
+                success: true,
+                data: {
+                  verification_url: data.verification_url,
+                  event: data.event,
+                },
+              });
+          // }
         } else {
-          res.status(401).json({ success: false });
+          console.log(`Invalid signature: ${response.data}`);
+          res.status(400).json({ success: false });
         }
-      } else {
-        let validatorData = await ValidatorModel.findByIdAndUpdate(
-          { _id: id },
-          { applicantId: response.data.id }
-        );
-        if (validatorData) {
-          res.status(201).json({ success: true });
-        } else {
-          res.status(401).json({ success: false });
-        }
-      }
-      // res.status(201).json({ success: true, data: response.data });
-    } else {
-      res.status(401).json({ success: false, data: {} });
-    }
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      err,
-    });
-  }
-});
-
-function createAccessToken(
-  externalUserId,
-  levelName,
-  ttlInSecs,
-) {
-  console.log("Creating an access token for initializng SDK...");
-
-  var method = "post";
-  var url = `/resources/accessTokens?userId=${externalUserId}&ttlInSecs=${ttlInSecs}&levelName=${levelName}`;
-
-  var headers = {
-    Accept: "application/json",
-    "X-App-Token": SUMSUB_APP_TOKEN,
-  };
-
-  config.method = method;
-  config.url = url;
-  config.headers = headers;
-  config.data = null;
-
-  return config;
-}
-
-exports.createAccessToken = asyncHandler(async (req, res, next) => {
-  try {
-    const { id, role } = req.user;
-    const { externalUserId } = req.body;
-    let response = await axios(
-      createAccessToken(externalUserId, userKYClevelName, 1200)
-    );
-    if (response) {
-      // console.log("Response:\n", response.data);
-      if (role === "user") {
-        let userData = await UserModel.findOne({ _id: id });
-        if (userData) {
-          res.status(201).json({
+      })
+      .catch(async (error) => {
+        let user = await UserModel.findOne({ _id: id });
+        if (user) {
+          res.status(200).json({
             success: true,
-            data: { ...response.data, applicantId: userData.applicantId },
+            data: {
+              verification_url: user.verification_url,
+              event: user.kycEventType,
+            },
           });
-        } else {
-          res.status(401).json({ success: false, data: {} });
         }
-      } else {
-        let validatorData = await ValidatorModel.findOne({ _id: id });
-        if (validatorData) {
-          res.status(201).json({
-            success: true,
-            data: { ...response.data, applicantId: validatorData.applicantId },
-          });
-        } else {
-          res.status(401).json({ success: false, data: {} });
-        }
-      }
-      // res.status(201).json({ success: true, data: response.data });
-    } else {
-      res.status(401).json({ success: false, data: {} });
-    }
+      });
   } catch (err) {
-    res.status(400).json({ success: false, err });
-  }
-});
-
-function getApplicantStatus(applicantId) {
-  console.log("Getting the applicant status...");
-
-  var method = "get";
-  var url = `/resources/applicants/${applicantId}/status`;
-
-  var headers = {
-    Accept: "application/json",
-    "X-App-Token": SUMSUB_APP_TOKEN,
-  };
-
-  config.method = method;
-  config.url = url;
-  config.headers = headers;
-  config.data = null;
-
-  return config;
-}
-
-exports.getApplicantStatus = asyncHandler(async (req, res, next) => {
-  try {
-    const { applicantId } = req.params;
-    let response = await axios(getApplicantStatus(applicantId));
-    if (response) {
-      res.status(201).json({ success: true, data: response.data });
-    } else {
-      res.status(401).json({ success: false, data: {} });
-    }
-  } catch (err) {
-    res.status(400).json({ success: false, err });
+    res.status(400).json({ success: false });
   }
 });
