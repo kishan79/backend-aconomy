@@ -8,8 +8,7 @@ exports.initiateKYC = asyncHandler(async (req, res, next) => {
     const { id } = req.user;
     let payload = {
       reference: id,
-      // callback_url: "https://yourdomain.com/profile/sp-notify-callback",
-      callback_url: "https://ef9d-103-165-115-34.ngrok-free.app/webhook/kyc-webhook",
+      callback_url: `${process.env.SERVER_URL}/webhook/kyc`,
       language: "EN",
       redirect_url: `${process.env.ACONOMY_URL}/user/${id}`,
       verification_mode: "any",

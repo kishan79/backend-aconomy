@@ -8,7 +8,7 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
     const { id, name } = req.user;
     let payload = {
       reference: `SP_REQUEST_${Math.random()}`,
-      callback_url: "https://ef9d-103-165-115-34.ngrok-free.app/webhook/kyb-webhook",
+      callback_url: `${process.env.SERVER_URL}/webhook/kyb`,
     };
     payload["kyb"] = {
       company_name: name,
