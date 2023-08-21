@@ -396,7 +396,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
       { path: "nftOwner", select: userSelectQuery },
       { path: "nftCreator", select: userSelectQuery },
       { path: "validator", select: validatorSelectQuery },
-    ]);
+    ]).select("name mediaLinks state validationState nftOwner validator listingPrice listingDate listingDuration");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");

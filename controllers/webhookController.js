@@ -7,23 +7,32 @@ const { getRemoteIp } = require("../utils/utils");
 
 const saveKYBDataToDb = async (payload, req) => {
   const remoteIp = getRemoteIp(req);
-  let data = await ValidatorModel.findOneAndUpdate(
-    { _id: payload.reference },
-    {
-      kycEventType: payload.event,
+  if (payload.event === "verification.accepted") {
+    let data = await ValidatorModel.findOneAndUpdate(
+      { _id: payload.reference },
+      {
+        kycEventType: payload.event,
+      }
+    );
+    if (data) {
+      await mixpanel.track("KYB verification approved", {
+        distinct_id: payload.reference,
+        name: data.name,
+        user_name: data.username,
+        wallet_address: data.wallet_address,
+        profile_type: data.role,
+        email: !!data.email ? data.email : "",
+        validator_id: payload.reference,
+        ip: remoteIp,
+      });
     }
-  );
-  if (data) {
-    await mixpanel.track("KYB verification approved", {
-      distinct_id: payload.reference,
-      name: data.name,
-      user_name: data.username,
-      wallet_address: data.wallet_address,
-      profile_type: data.role,
-      email: !!data.email ? data.email : "",
-      validator_id: payload.reference,
-      ip: remoteIp,
-    });
+  } else {
+    await ValidatorModel.findOneAndUpdate(
+      { _id: payload.reference },
+      {
+        kycEventType: payload.event,
+      }
+    );
   }
 };
 
@@ -44,7 +53,7 @@ exports.kybWebhook = asyncHandler(async (req, res, next) => {
 
     if (signature === calculated_signature) {
       let data = JSON.parse(payload);
-      if (data.event === "verification.accepted") {
+      if (!!data.event) {
         await saveKYBDataToDb(data, req);
         res.sendStatus(200);
       } else {
@@ -80,26 +89,21 @@ const saveKYCDataToDb = async (payload, req) => {
         ip: remoteIp,
       });
     }
-  } else {
-    let data = await UserModel.findOneAndUpdate(
+  } else if (payload.event === "request.pending") {
+    await UserModel.findOneAndUpdate(
       { _id: payload.reference },
       {
         verification_url: payload.verification_url,
         kycEventType: payload.event,
       }
     );
-    if (data) {
-      await mixpanel.track("KYC initiated", {
-        distinct_id: payload.reference,
-        name: data.name,
-        user_name: data.username,
-        wallet_address: data.wallet_address,
-        profile_type: data.role,
-        email: !!data.email ? data.email : "",
-        user_id: payload.reference,
-        ip: remoteIp,
-      });
-    }
+  } else {
+    await UserModel.findOneAndUpdate(
+      { _id: payload.reference },
+      {
+        kycEventType: payload.event,
+      }
+    );
   }
 };
 
@@ -120,10 +124,7 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
 
     if (signature === calculated_signature) {
       let data = JSON.parse(payload);
-      if (
-        data.event === "verification.accepted" ||
-        data.event === "request.pending"
-      ) {
+      if (!!data.event) {
         await saveKYCDataToDb(data, req);
         res.sendStatus(200);
       } else {
