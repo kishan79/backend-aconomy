@@ -14,6 +14,7 @@ exports.initiateKYC = asyncHandler(async (req, res, next) => {
       verification_mode: "any",
       allow_offline: "1",
       allow_online: "1",
+      allow_retry: "1",
       show_privacy_policy: "1",
       show_results: "1",
       show_consent: "1",
@@ -64,15 +65,13 @@ exports.initiateKYC = asyncHandler(async (req, res, next) => {
           //   }
           // );
           // if (user) {
-            res
-              .status(200)
-              .json({
-                success: true,
-                data: {
-                  verification_url: data.verification_url,
-                  event: data.event,
-                },
-              });
+          res.status(200).json({
+            success: true,
+            data: {
+              verification_url: data.verification_url,
+              event: data.event,
+            },
+          });
           // }
         } else {
           console.log(`Invalid signature: ${response.data}`);
