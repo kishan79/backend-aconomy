@@ -388,15 +388,19 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
       };
     }
 
-    query = NftModel.find(queryStr).populate([
-      {
-        path: "nftCollection",
-        select: collectionSelectQuery,
-      },
-      { path: "nftOwner", select: userSelectQuery },
-      { path: "nftCreator", select: userSelectQuery },
-      { path: "validator", select: validatorSelectQuery },
-    ]).select("name mediaLinks state validationState nftOwner validator listingPrice listingDate listingDuration");
+    query = NftModel.find(queryStr)
+      .populate([
+        // {
+        //   path: "nftCollection",
+        //   select: collectionSelectQuery,
+        // },
+        { path: "nftOwner", select: userSelectQuery },
+        // { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: validatorSelectQuery },
+      ])
+      .select(
+        "name mediaLinks state validationState nftOwner nftOwnerType validator listingPrice listingDate listingDuration"
+      );
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -458,15 +462,17 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
       swapState: "none",
     };
 
-    query = NftModel.find(queryStr).populate([
-      {
-        path: "nftCollection",
-        select: collectionSelectQuery,
-      },
-      { path: "nftOwner", select: userSelectQuery },
-      { path: "nftCreator", select: userSelectQuery },
-      { path: "validator", select: validatorSelectQuery },
-    ]);
+    query = NftModel.find(queryStr)
+      .populate([
+        // {
+        //   path: "nftCollection",
+        //   select: collectionSelectQuery,
+        // },
+        { path: "nftOwner", select: userSelectQuery },
+        // { path: "nftCreator", select: userSelectQuery },
+        // { path: "validator", select: validatorSelectQuery },
+      ])
+      .select("_id name nftOwner nftOwnerType mediaLinks assetType");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -703,8 +709,8 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
       .select(activitySelectQuery)
       .populate([
         { path: "asset", select: nftActivitySelectQuery },
-        { path: "user", select: userSelectQuery },
-        { path: "assetCollection", select: collectionSelectQuery },
+        { path: "user", select: "name" },
+        { path: "assetCollection", select: "name assetType profileImage" },
       ]);
 
     if (sortby) {
@@ -777,7 +783,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
       queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
-    query = CollectionModel.find(queryStr).select(collectionSelectQuery);
+    query = CollectionModel.find(queryStr).select("_id name profileImage bannerImage");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -1420,23 +1426,25 @@ exports.fetchNftForBorrow = asyncHandler(async (req, res, next) => {
     }
 
     query = NftModel.find(queryStr)
-      .select(nftSelectQuery)
+      .select(
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+      )
       .populate([
-        {
-          path: "nftCollection",
-          select: collectionSelectQuery,
-        },
-        { path: "nftOwner", select: userSelectQuery },
-        { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: validatorSelectQuery },
-        {
-          path: "history.user",
-          select: userHistorySelectQuery,
-        },
-        {
-          path: "history.validator",
-          select: validatorHistorySelectQuery,
-        },
+        // {
+        //   path: "nftCollection",
+        //   select: collectionSelectQuery,
+        // },
+        { path: "nftOwner", select: "_id name profileImage" },
+        // { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: "_id name profileImage" },
+        // {
+        //   path: "history.user",
+        //   select: userHistorySelectQuery,
+        // },
+        // {
+        //   path: "history.validator",
+        //   select: validatorHistorySelectQuery,
+        // },
       ]);
 
     if (sortby) {
@@ -1670,23 +1678,25 @@ exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
     }
 
     query = NftModel.find(queryStr)
-      .select(nftSelectQuery)
+      .select(
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+      )
       .populate([
-        {
-          path: "nftCollection",
-          select: collectionSelectQuery,
-        },
-        { path: "nftOwner", select: userSelectQuery },
-        { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: validatorSelectQuery },
-        {
-          path: "history.user",
-          select: userHistorySelectQuery,
-        },
-        {
-          path: "history.validator",
-          select: validatorHistorySelectQuery,
-        },
+        // {
+        //   path: "nftCollection",
+        //   select: collectionSelectQuery,
+        // },
+        { path: "nftOwner", select: "_id name profileImage" },
+        // { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: "_id name profileImage" },
+        // {
+        //   path: "history.user",
+        //   select: userHistorySelectQuery,
+        // },
+        // {
+        //   path: "history.validator",
+        //   select: validatorHistorySelectQuery,
+        // },
       ]);
 
     if (sortby) {
@@ -1784,12 +1794,12 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
           {
             path: "nftOwner",
             model: "User",
-            select: "name profileImage",
+            select: "_id name profileImage",
           },
           {
             path: "validator",
             model: "Validator",
-            select: "name profileImage",
+            select: "_id name profileImage",
           },
         ],
       },
@@ -1902,23 +1912,25 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
     }
 
     query = NftModel.find(queryStr)
-      .select(nftSelectQuery)
+      .select(
+        "_id name validationState state nftOwner nftOwnerType validator mediaLinks listingPrice listingDate listingDuration"
+      )
       .populate([
-        {
-          path: "nftCollection",
-          select: collectionSelectQuery,
-        },
-        { path: "nftOwner", select: userSelectQuery },
-        { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: validatorSelectQuery },
-        {
-          path: "history.user",
-          select: userHistorySelectQuery,
-        },
-        {
-          path: "history.validator",
-          select: validatorHistorySelectQuery,
-        },
+        // {
+        //   path: "nftCollection",
+        //   select: collectionSelectQuery,
+        // },
+        { path: "nftOwner", select: "_id name profileImage" },
+        // { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: "_id name profileImage" },
+        // {
+        //   path: "history.user",
+        //   select: userHistorySelectQuery,
+        // },
+        // {
+        //   path: "history.validator",
+        //   select: validatorHistorySelectQuery,
+        // },
       ]);
 
     if (sortby) {

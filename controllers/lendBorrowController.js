@@ -573,23 +573,25 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
 
     query = NftModel.find(queryStr)
       .populate([
-        {
-          path: "nftCollection",
-          select: collectionSelectQuery,
-        },
-        { path: "nftOwner", select: userSelectQuery },
-        { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: validatorSelectQuery },
-        {
-          path: "history.user",
-          select: userHistorySelectQuery,
-        },
-        {
-          path: "history.validator",
-          select: validatorHistorySelectQuery,
-        },
+        // {
+        //   path: "nftCollection",
+        //   select: collectionSelectQuery,
+        // },
+        { path: "nftOwner", select: "_id name profileImage" },
+        // { path: "nftCreator", select: userSelectQuery },
+        { path: "validator", select: "_id name profileImage" },
+        // {
+        //   path: "history.user",
+        //   select: userHistorySelectQuery,
+        // },
+        // {
+        //   path: "history.validator",
+        //   select: validatorHistorySelectQuery,
+        // },
       ])
-      .select(nftSelectQuery);
+      .select(
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+      );
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");

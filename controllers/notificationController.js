@@ -4,7 +4,7 @@ const {
   userSelectQuery,
   validatorSelectQuery,
   nftSelectQuery,
-  poolSelectQuery
+  poolSelectQuery,
 } = require("../utils/selectQuery");
 
 exports.fetchNotifications = asyncHandler(async (req, res, next) => {
@@ -24,14 +24,16 @@ exports.fetchNotifications = asyncHandler(async (req, res, next) => {
     }
 
     query = NotificationModel.find(queryStr)
-      .select("-__v -updatedAt")
+      .select(
+        "_id category createdAt nft swapnft pool read user user2 validator amount swapId swapRequestId bidId saleId auctionId action tokenId"
+      )
       .populate([
         { path: "nft", select: nftSelectQuery },
         { path: "user", select: userSelectQuery },
         { path: "validator", select: validatorSelectQuery },
-        { path: "swapnft", select: nftSelectQuery},
+        { path: "swapnft", select: nftSelectQuery },
         { path: "pool", select: poolSelectQuery },
-        { path: "user2", select: userSelectQuery},
+        { path: "user2", select: userSelectQuery },
       ]);
 
     if (sortby) {
@@ -109,7 +111,9 @@ exports.readAllNotifications = asyncHandler(async (req, res, next) => {
         { read: true }
       );
       if (data) {
-        res.status(201).json({ success: true, message: "All notification read" });
+        res
+          .status(201)
+          .json({ success: true, message: "All notification read" });
       } else {
         res
           .status(401)
@@ -121,7 +125,9 @@ exports.readAllNotifications = asyncHandler(async (req, res, next) => {
         { read: true }
       );
       if (data) {
-        res.status(201).json({ success: true, message: "All notification read" });
+        res
+          .status(201)
+          .json({ success: true, message: "All notification read" });
       } else {
         res
           .status(401)

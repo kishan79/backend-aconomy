@@ -145,7 +145,9 @@ exports.getTopValidators = asyncHandler(async (req, res, next) => {
     };
 
     query = ValidatorModel.find(queryStr)
-      .select("name username address profileImage bannerImage")
+      .select(
+        "_id name username wallet_address address profileImage bannerImage"
+      )
       .lean();
 
     const results = await query;

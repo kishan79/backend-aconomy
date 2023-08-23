@@ -18,7 +18,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
     const { sortby, search, category } = req.query;
 
     let queryStr = {
-      isPublic: false
+      isPublic: false,
     };
 
     if (search) {
@@ -29,7 +29,9 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
       queryStr = { ...queryStr, assetType: { $in: category.split(",") } };
     }
 
-    query = CollectionModel.find(queryStr).select(collectionSelectQuery);
+    query = CollectionModel.find(queryStr).select(
+      "_id name profileImage bannerImage"
+    );
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -48,45 +50,45 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
     const results = await query.lean();
 
     let dataArr = [];
-      for (let i = 0; i < results.length; i++) {
-        let data = await NftModel.find({
-          nftCollection: results[i]._id,
-          nftOwner: { $ne: null },
-        })
-          .select(
-            "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
-          )
-          .populate({ path: "nftOwner", select: "_id name wallet_address" })
-          .lean();
-        let tvl = 0,
-          listed = 0,
-          owners = [];
-        for (let j = 0; j < data.length; j++) {
-          if (data[j].validationState === "validated") {
-            tvl += data[j].validationAmount;
-          }
-          if (data[j].state === "sale" || data[j].state === "auction") {
-            listed += 1;
-          }
-          if (data[j].nftOwner) {
-            owners.push({
-              name: data[j].nftOwner.name,
-              wallet_address: data[j].nftOwner.wallet_address,
-            });
-          }
+    for (let i = 0; i < results.length; i++) {
+      let data = await NftModel.find({
+        nftCollection: results[i]._id,
+        nftOwner: { $ne: null },
+      })
+        .select(
+          "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
+        )
+        .populate({ path: "nftOwner", select: "_id name wallet_address" })
+        .lean();
+      let tvl = 0,
+        listed = 0,
+        owners = [];
+      for (let j = 0; j < data.length; j++) {
+        if (data[j].validationState === "validated") {
+          tvl += data[j].validationAmount;
         }
-        dataArr.push({
-          ...results[i],
-          tvl,
-          listed: data.length ? Math.round((listed / data.length) * 100) : 0,
-          totalAssets: data.length,
-          owners: [
-            ...new Map(
-              owners.map((item) => [item["wallet_address"], item])
-            ).values(),
-          ],
-        });
+        if (data[j].state === "sale" || data[j].state === "auction") {
+          listed += 1;
+        }
+        if (data[j].nftOwner) {
+          owners.push({
+            name: data[j].nftOwner.name,
+            wallet_address: data[j].nftOwner.wallet_address,
+          });
+        }
       }
+      dataArr.push({
+        ...results[i],
+        tvl,
+        listed: data.length ? Math.round((listed / data.length) * 100) : 0,
+        totalAssets: data.length,
+        owners: [
+          ...new Map(
+            owners.map((item) => [item["wallet_address"], item])
+          ).values(),
+        ],
+      });
+    }
 
     const pagination = {};
 
@@ -283,7 +285,9 @@ exports.fetchAllCollectionNfts = asyncHandler(async (req, res, next) => {
     }
 
     query = NftModel.find(queryStr)
-      .select(nftSelectQuery)
+      .select(
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+      )
       .populate([
         { path: "nftOwner", select: userSelectQuery },
         { path: "validator", select: validatorSelectQuery },
@@ -408,11 +412,13 @@ exports.fetchCollectionActivities = asyncHandler(async (req, res, next) => {
       queryStr = { ...queryStr, statusText: { $in: type.split(",") } };
     }
 
-    query = UserActivityModel.find(queryStr).populate([
-      { path: "asset", select: "_id name mediaLinks assetType" },
-      { path: "user", select: "_id name profileImage" },
-      { path: "assetCollection", select: "_id name profileImage assetType" },
-    ]);
+    query = UserActivityModel.find(queryStr)
+      .populate([
+        { path: "asset", select: "_id name mediaLinks assetType" },
+        { path: "user", select: "_id name profileImage" },
+        { path: "assetCollection", select: "_id name profileImage assetType" },
+      ])
+      .select("_id assetName user statusText asset createdAt assetCollection");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
