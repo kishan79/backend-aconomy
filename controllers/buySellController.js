@@ -1126,7 +1126,7 @@ exports.fetchAllListedNfts = asyncHandler(async (req, res, next) => {
         //   path: "nftCollection",
         //   select: collectionSelectQuery,
         // },
-        { path: "nftOwner", select: "_id nane profileImage" },
+        { path: "nftOwner", select: "_id name profileImage" },
         // { path: "nftCreator", select: userSelectQuery },
         { path: "validator", select: "_id name profileImage" },
         // {
