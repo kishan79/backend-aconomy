@@ -783,7 +783,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
       queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
-    query = CollectionModel.find(queryStr).select("_id name profileImage bannerImage");
+    query = CollectionModel.find(queryStr).select("_id name profileImage bannerImage collectionAddress");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
