@@ -17,7 +17,7 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
         { path: "nftOwner", select: "name profileImage" },
         { path: "validator", select: "name profileImage" },
       ])
-      .select("name nftOwner nftOwnerType mediaLinks validator listingPrice");
+      .select("name nftOwner nftOwnerType mediaLinks validator listingPrice validationState");
     let collectionData = await CollectionModel.find()
       .sort({ createdAt: -1 })
       .limit(1)
