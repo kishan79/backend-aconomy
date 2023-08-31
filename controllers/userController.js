@@ -472,7 +472,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
         // { path: "nftCreator", select: userSelectQuery },
         // { path: "validator", select: validatorSelectQuery },
       ])
-      .select("_id name nftOwner nftOwnerType mediaLinks assetType");
+      .select("_id name nftOwner nftOwnerType mediaLinks assetType nftContractAddress tokenId");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
