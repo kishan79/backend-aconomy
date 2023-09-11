@@ -1066,18 +1066,16 @@ exports.fetchLastestAuctionByAsset = asyncHandler(async (req, res, next) => {
     let data = await AuctionModel.findOne({
       asset: assetId,
       status: "active",
-    })
-      .populate([
-        // {
-        //   path: "auctionOwner",
-        //   select: userSelectQuery,
-        // },
-        {
-          path: "bids.bidder",
-          select: "_id bidder expireOn amount bidId status",
-        },
-      ])
-      .select("auctionOwnerAddress bids");
+    }).populate([
+      // {
+      //   path: "auctionOwner",
+      //   select: userSelectQuery,
+      // },
+      {
+        path: "bids.bidder",
+        select: "_id bidder expireOn amount bidId status",
+      },
+    ]);
     if (data) {
       res.status(200).json({ success: true, data });
     } else {
