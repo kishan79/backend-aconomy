@@ -3,6 +3,7 @@ const ValidatorModel = require("../models/Validator");
 const PoolModel = require("../models/Pool");
 const OfferModel = require("../models/Offer");
 const CollectionModel = require("../models/Collection");
+const AuctionModel = require("../models/Auction");
 const asyncHandler = require("../middlewares/async");
 const mixpanel = require("../services/mixpanel");
 const { getRemoteIp } = require("../utils/utils");
@@ -17,7 +18,24 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
         { path: "nftOwner", select: "name profileImage" },
         { path: "validator", select: "name profileImage" },
       ])
-      .select("name nftOwner nftOwnerType mediaLinks validator listingPrice validationState");
+      .select(
+        "name nftOwner nftOwnerType mediaLinks validator listingPrice validationState"
+      ).lean();
+    if (auctionData.length) {
+      let data = await AuctionModel.findOne({
+        asset: auctionData[0]._id,
+        status: "active",
+      }).lean();
+      let highestBid = data.bids[data.bids.length - 1].amount;
+      auctionData[0] = [
+        {
+          ...auctionData[0],
+          highestBid,
+          listingDate: data.createdAt,
+          listingDuration: data.duration,
+        },
+      ];
+    }
     let collectionData = await CollectionModel.find()
       .sort({ createdAt: -1 })
       .limit(1)

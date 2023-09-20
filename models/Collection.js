@@ -17,6 +17,7 @@ const CollectionSchema = new mongoose.Schema(
     symbol: String,
     description: String,
     blockchain: String,
+    chainId: Number,
     assetType: [String],
     royalities: [
       {
