@@ -41,14 +41,14 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
 
         if (sp_signature === calculated_signature) {
           let data = JSON.parse(response.data);
-          let validator = await ValidatorModel.findOneAndUpdate(
-            { _id: id },
-            {
-              verification_url: data.verification_url,
-              kycEventType: data.event,
-            }
-          );
-          if (validator) {
+          // let validator = await ValidatorModel.findOneAndUpdate(
+          //   { _id: id },
+          //   {
+          //     verification_url: data.verification_url,
+          //     kycEventType: data.event,
+          //   }
+          // );
+          // if (validator) {
             res.status(200).json({
               success: true,
               data: {
@@ -56,7 +56,7 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
                 event: data.event,
               },
             });
-          }
+          // }
         } else {
           console.log(`Invalid signature: ${response.data}`);
           res.status(400).json({ success: false });
