@@ -11,7 +11,10 @@ const fetch = require("node-fetch");
 
 exports.getCarouselData = asyncHandler(async (req, res, next) => {
   try {
-    let auctionData = await NftModel.find({ state: "auction" })
+    let auctionData = await NftModel.find({
+      state: "auction",
+      validationState: "validated",
+    })
       .sort({ createdAt: -1 })
       .limit(1)
       .populate([
@@ -28,7 +31,9 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
         status: "active",
       }).lean();
       if (data) {
-        let highestBid = data.bids[data.bids.length - 1].amount;
+        let highestBid = data.bids.length
+          ? data.bids[data.bids.length - 1].amount
+          : data.baseAuctionPrice;
         auctionData[0] = [
           {
             ...auctionData[0],

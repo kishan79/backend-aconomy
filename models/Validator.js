@@ -46,7 +46,7 @@ const ValidatorSchema = new mongoose.Schema(
     // levelName: String,
     // sandboxMode: Boolean,
     verification_url: String,
-    kycEventType: String,
+    kybEventType: String,
     reviewStatus: String,
   },
   { timestamps: true }

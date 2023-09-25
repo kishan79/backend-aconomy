@@ -21,10 +21,10 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
     axios
       .post(process.env.SHUFTI_PRO_URL, payload, {
         headers: {
-          Accept: "application/json",
           Authorization: `Basic ${b64Val}`,
           "Content-Type": "application/json",
         },
+        responseType: "text",
       })
       .then(async (response) => {
         const sp_signature = response.headers.signature;
@@ -41,22 +41,12 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
 
         if (sp_signature === calculated_signature) {
           let data = JSON.parse(response.data);
-          // let validator = await ValidatorModel.findOneAndUpdate(
-          //   { _id: id },
-          //   {
-          //     verification_url: data.verification_url,
-          //     kycEventType: data.event,
-          //   }
-          // );
-          // if (validator) {
-            res.status(200).json({
-              success: true,
-              data: {
-                verification_url: data.verification_url,
-                event: data.event,
-              },
-            });
-          // }
+          res.status(200).json({
+            success: true,
+            data: {
+              event: data.event,
+            },
+          });
         } else {
           console.log(`Invalid signature: ${response.data}`);
           res.status(400).json({ success: false });
@@ -68,7 +58,6 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
           res.status(200).json({
             success: true,
             data: {
-              verification_url: validator.verification_url,
               event: validator.kycEventType,
             },
           });

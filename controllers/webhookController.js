@@ -11,7 +11,7 @@ const saveKYBDataToDb = async (payload, req) => {
     let data = await ValidatorModel.findOneAndUpdate(
       { _id: payload.reference },
       {
-        kycEventType: payload.event,
+        kybEventType: payload.event,
       }
     );
     if (data) {
@@ -30,7 +30,7 @@ const saveKYBDataToDb = async (payload, req) => {
     await ValidatorModel.findOneAndUpdate(
       { _id: payload.reference },
       {
-        kycEventType: payload.event,
+        kybEventType: payload.event,
       }
     );
   }
