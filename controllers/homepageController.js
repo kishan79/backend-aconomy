@@ -20,21 +20,24 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice validationState"
-      ).lean();
+      )
+      .lean();
     if (auctionData.length) {
       let data = await AuctionModel.findOne({
         asset: auctionData[0]._id,
         status: "active",
       }).lean();
-      let highestBid = data.bids[data.bids.length - 1].amount;
-      auctionData[0] = [
-        {
-          ...auctionData[0],
-          highestBid,
-          listingDate: data.createdAt,
-          listingDuration: data.duration,
-        },
-      ];
+      if (data) {
+        let highestBid = data.bids[data.bids.length - 1].amount;
+        auctionData[0] = [
+          {
+            ...auctionData[0],
+            highestBid,
+            listingDate: data.createdAt,
+            listingDuration: data.duration,
+          },
+        ];
+      }
     }
     let collectionData = await CollectionModel.find()
       .sort({ createdAt: -1 })
