@@ -522,11 +522,10 @@ exports.fetchSwapNfts = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby, search, type, blockchain, validation, chainId } = req.query;
+    const { sortby, search, type, blockchain, validation } = req.query;
 
     let queryStr = {
       state: "swap",
-      chainId
     };
 
     if (search) {

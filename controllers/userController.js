@@ -453,13 +453,14 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
 exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
   try {
     let query;
-    const { sortby } = req.query;
+    const { sortby, chainId } = req.query;
 
     let queryStr = {
       nftOwner: req.user.id,
       state: "none",
       validationState: "validated",
       swapState: "none",
+      chainId
     };
 
     query = NftModel.find(queryStr)
