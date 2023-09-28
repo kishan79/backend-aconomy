@@ -5,15 +5,23 @@ const ValidatorModel = require("../models/Validator");
 
 exports.initiateKYB = asyncHandler(async (req, res, next) => {
   try {
-    const { id, name } = req.user;
+    const { id } = req.user;
+    const { company_name, company_registration_number } = req.body;
     let payload = {
       reference: `SP_REQUEST_${Math.random()}`,
       callback_url: `${process.env.SERVER_URL}/webhook/kyb`,
       allow_retry: "1",
     };
-    payload["kyb"] = {
-      company_name: name,
-    };
+    if (company_name) {
+      payload["kyb"] = {
+        company_name,
+      };
+    }
+    if (company_registration_number) {
+      payload["kyb"] = {
+        company_registration_number,
+      };
+    }
 
     const auth = `${process.env.SHUFTI_PRO_CLIENTID}:${process.env.SHUFTI_PRO_SECRET_KEY}`;
     const b64Val = Buffer.from(auth).toString("base64");
