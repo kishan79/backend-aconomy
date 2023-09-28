@@ -1073,7 +1073,7 @@ exports.fetchLastestAuctionByAsset = asyncHandler(async (req, res, next) => {
       // },
       {
         path: "bids.bidder",
-        select: "_id bidder expireOn amount bidId status",
+        select: "_id profileImage name wallet_address",
       },
     ]);
     if (data) {

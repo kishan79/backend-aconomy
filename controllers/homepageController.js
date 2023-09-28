@@ -8,6 +8,7 @@ const asyncHandler = require("../middlewares/async");
 const mixpanel = require("../services/mixpanel");
 const { getRemoteIp } = require("../utils/utils");
 const fetch = require("node-fetch");
+const { ASSET_TYPES } = require("../utils/utils");
 
 exports.getCarouselData = asyncHandler(async (req, res, next) => {
   try {
@@ -265,37 +266,29 @@ exports.getLatestPools = asyncHandler(async (req, res, next) => {
 
 exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
   try {
-    const ASSET_TYPES = [
-      "Art",
-      "Books",
-      "Collectibles",
-      "Fossils & Minerals",
-      "Handbags",
-      "Jewellery",
-      "Sculptures",
-      "Sneakers",
-      "Watches",
-    ];
-    let dataObj = {};
-    for (let i = 0; i < ASSET_TYPES.length; i++) {
-      let data = await NftModel.find({
-        state: "sale",
-        assetType: ASSET_TYPES[i],
-      })
-        .populate([
-          { path: "nftOwner", select: "name profileImage" },
-          { path: "validator", select: "name profileImage" },
-        ])
-        .select(
-          "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
-        )
-        .sort("-createdAt")
-        .limit(12);
-      dataObj[ASSET_TYPES[i]] = data;
+    
+    const { category } = req.query;
+    let queryStr = {
+      state: { $ne: "none" },
+    };
+
+    if (category && category !== "All") {
+      queryStr = { ...queryStr, assetType: { $in: ASSET_TYPES[category] } };
     }
+
+    let data = await NftModel.find(queryStr)
+      .populate([
+        { path: "nftOwner", select: "name profileImage" },
+        { path: "validator", select: "name profileImage" },
+      ])
+      .select(
+        "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
+      )
+      .sort("-createdAt")
+      .limit(12);
     return res.status(200).json({
       success: true,
-      data: dataObj,
+      data,
     });
   } catch (err) {
     res.status(400).json({
