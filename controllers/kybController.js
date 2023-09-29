@@ -6,9 +6,13 @@ const ValidatorModel = require("../models/Validator");
 exports.initiateKYB = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.user;
-    const { company_name, company_registration_number } = req.body;
+    const {
+      company_name,
+      company_registration_number,
+      company_jurisdiction_code,
+    } = req.body;
     let payload = {
-      reference: `SP_REQUEST_${Math.random()}`,
+      reference: id,
       callback_url: `${process.env.SERVER_URL}/webhook/kyb`,
       allow_retry: "1",
     };
@@ -17,9 +21,10 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
         company_name,
       };
     }
-    if (company_registration_number) {
+    if (company_registration_number && company_jurisdiction_code) {
       payload["kyb"] = {
         company_registration_number,
+        company_jurisdiction_code,
       };
     }
 
@@ -66,7 +71,7 @@ exports.initiateKYB = asyncHandler(async (req, res, next) => {
           res.status(200).json({
             success: true,
             data: {
-              event: validator.kycEventType,
+              event: validator.kybEventType,
             },
           });
         }

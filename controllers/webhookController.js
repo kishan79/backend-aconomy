@@ -64,7 +64,7 @@ exports.kybWebhook = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     console.log(err);
-    res.sendstatus(400);
+    res.sendStatus(400);
   }
 });
 
@@ -135,6 +135,6 @@ exports.kycWebhook = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     console.log(err);
-    res.sendstatus(400);
+    res.sendStatus(400);
   }
 });
