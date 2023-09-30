@@ -51,6 +51,7 @@ const NftSchema = new mongoose.Schema(
     name: String,
     summary: String,
     blockchain: String,
+    chainId: Number,
     mediaLinks: [
       {
         mediaType: { type: String, enum: ["image", "video", "audio"] },

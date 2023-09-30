@@ -27,7 +27,7 @@ const userOnBoardReqSchema = [
 const collectionCreateReqSchema = [
   body("name", "The name field is required").notEmpty(),
   body("assetType", "The assetType field is required").notEmpty(),
-  // body("symbol", "The symbol field is required").notEmpty(),
+  body("chainId", "The chainId field is required").notEmpty(),
   body(
     "collectionAddress",
     "The collectionAddress field is required"
@@ -37,7 +37,7 @@ const collectionCreateReqSchema = [
 const nftCreateReqSchema = [
   body("tokenId", "The tokenId field is required").notEmpty(),
   body("name", "The name field is required").notEmpty(),
-  // body("blockchain", "The blockchain field is required").notEmpty(),
+  body("chainId", "The chainId field is required").notEmpty(),
   body("assetType", "The assetType field is required").notEmpty(),
   body("nftCollection", "The nftCollection field is required").notEmpty(),
   body("mediaLinks", "The mediaLinks field is required").notEmpty(),
