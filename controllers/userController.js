@@ -460,7 +460,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
       state: "none",
       validationState: "validated",
       swapState: "none",
-      chainId
+      chainId,
     };
 
     query = NftModel.find(queryStr)
@@ -473,7 +473,9 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
         // { path: "nftCreator", select: userSelectQuery },
         // { path: "validator", select: validatorSelectQuery },
       ])
-      .select("_id name nftOwner nftOwnerType mediaLinks assetType nftContractAddress tokenId");
+      .select(
+        "_id name nftOwner nftOwnerType mediaLinks assetType nftContractAddress tokenId"
+      );
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -784,7 +786,9 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
       queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
-    query = CollectionModel.find(queryStr).select("_id name profileImage bannerImage collectionAddress chainId");
+    query = CollectionModel.find(queryStr).select(
+      "_id name profileImage bannerImage collectionAddress chainId"
+    );
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
@@ -1218,7 +1222,8 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
       if (nftData.validationState === "validated") {
         let availableBalance = nftData.fundBalance;
         if (amount <= availableBalance) {
-          let balance = availableBalance - amount;
+          // let balance = availableBalance - amount;
+          let balance = parseFloat((availableBalance - amount).toFixed(3));
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
             {
