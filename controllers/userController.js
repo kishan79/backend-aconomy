@@ -1132,6 +1132,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               validationDuration: null,
               validationRoyality: null,
               validationDocuments: null,
+              isOneTimeCommissionGiven: false,
               $push: {
                 history: {
                   action: "Redeemed asset",

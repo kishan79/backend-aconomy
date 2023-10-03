@@ -105,6 +105,7 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
             state: "none",
             listingDate: null,
             listingDuration: null,
+            isOneTimeCommissionGiven: true,
             $push: {
               history: {
                 action: "bought",
@@ -773,6 +774,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                 state: "none",
                 nftOwnerAddress: bid[0].bidderAddress,
                 nftOwner: bid[0].bidder,
+                isOneTimeCommissionGiven: true,
               }
             );
             if (nftData) {
