@@ -107,14 +107,14 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
               });
             }
           }
-          let activity = await UserActivityModel.create({
-            userAddress: wallet_address,
-            user: id,
-            asset: nftData._id,
-            assetName: nftData.name,
-            assetCollection: nftData.nftCollection,
-            statusText: "Remove an offer",
-          });
+          // let activity = await UserActivityModel.create({
+          //   userAddress: wallet_address,
+          //   user: id,
+          //   asset: nftData._id,
+          //   assetName: nftData.name,
+          //   assetCollection: nftData.nftCollection,
+          //   statusText: "Remove an offer",
+          // });
           await mixpanel.track("Removed from borrow", {
             distinct_id: id,
             asset: assetId,
@@ -254,20 +254,26 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                 },
                 borrowState: "active",
               },
+              $push: {
+                history: {
+                  action: "Accepted an offer",
+                  user: id,
+                },
+              },
             },
             {
               new: true,
             }
           );
           if (data) {
-            let activity = await UserActivityModel.create({
-              userAddress: wallet_address,
-              user: id,
-              asset: nftData._id,
-              assetName: nftData.name,
-              assetCollection: nftData.nftCollection,
-              statusText: "Accepted an offer",
-            });
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset: nftData._id,
+            //   assetName: nftData.name,
+            //   assetCollection: nftData.nftCollection,
+            //   statusText: "Accepted an offer",
+            // });
             let notification = await NotificationModel.create({
               nft: nftData._id,
               category: "lend-offer-accept",
@@ -342,17 +348,23 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
                 $set: {
                   "lendBorrowOffers.$.status": "rejected",
                 },
+                $push: {
+                  history: {
+                    action: "Rejected an offer",
+                    user: id,
+                  },
+                },
               }
             );
             if (data) {
-              let activity = await UserActivityModel.create({
-                userAddress: wallet_address,
-                user: id,
-                asset: nftData._id,
-                assetName: nftData.name,
-                assetCollection: nftData.nftCollection,
-                statusText: "Rejected an offer",
-              });
+              // let activity = await UserActivityModel.create({
+              //   userAddress: wallet_address,
+              //   user: id,
+              //   asset: nftData._id,
+              //   assetName: nftData.name,
+              //   assetCollection: nftData.nftCollection,
+              //   statusText: "Rejected an offer",
+              // });
               // let notification = await NotificationModel.create({
               //   nft: nftData._id,
               //   category: "lend-offer-reject",
@@ -428,14 +440,14 @@ exports.withdrawOffer = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
-            let activity = await UserActivityModel.create({
-              userAddress: wallet_address,
-              user: id,
-              asset: nftData._id,
-              assetName: nftData.name,
-              assetCollection: nftData.nftCollection,
-              statusText: "Withdrawn an offer",
-            });
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset: nftData._id,
+            //   assetName: nftData.name,
+            //   assetCollection: nftData.nftCollection,
+            //   statusText: "Withdrawn an offer",
+            // });
             let notification = await NotificationModel.create({
               nft: nftData._id,
               category: "lend-offer-withdraw",
@@ -496,14 +508,14 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
           }
         );
         if (data) {
-          let activity = await UserActivityModel.create({
-            userAddress: wallet_address,
-            user: id,
-            asset: nftData._id,
-            assetName: nftData.name,
-            assetCollection: nftData.nftCollection,
-            statusText: "Loan paid back",
-          });
+          // let activity = await UserActivityModel.create({
+          //   userAddress: wallet_address,
+          //   user: id,
+          //   asset: nftData._id,
+          //   assetName: nftData.name,
+          //   assetCollection: nftData.nftCollection,
+          //   statusText: "Loan paid back",
+          // });
           let notification = await NotificationModel.create({
             nft: nftData._id,
             category: "lend-borrow-loan-repaid",

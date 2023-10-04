@@ -271,14 +271,14 @@ exports.deleteNft = asyncHandler(async (req, res, next) => {
             }
           );
           if (data) {
-            let activity = await UserActivityModel.create({
-              userAddress: wallet_address,
-              user: id,
-              asset: data._id,
-              assetName: data.name,
-              assetCollection: data.nftCollection,
-              statusText: "NFT Deleted",
-            });
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset: data._id,
+            //   assetName: data.name,
+            //   assetCollection: data.nftCollection,
+            //   statusText: "NFT Deleted",
+            // });
             await mixpanel.track("Asset deleted", {
               distinct_id: id,
               asset: assetId,

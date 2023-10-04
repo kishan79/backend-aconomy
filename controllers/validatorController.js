@@ -1014,17 +1014,25 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
                 {
                   validationAmount: data.validationAmount + amount,
                   fundBalance: data.fundBalance + amount,
+                  $push: {
+                    history: {
+                      action: "Added more funds",
+                      user: id,
+                      amount,
+                    },
+                  },
                 }
               );
-              let activity = await ValidatorActivityModel.create({
-                validatorAddress: wallet_address,
-                validator: id,
-                asset: data.asset,
-                assetOwner: data.assetOwnerAddress,
-                assetName: data.assetName,
-                statusText: "Added more funds",
-              });
-              if (activity) {
+              // let activity = await ValidatorActivityModel.create({
+              //   validatorAddress: wallet_address,
+              //   validator: id,
+              //   asset: data.asset,
+              //   assetOwner: data.assetOwnerAddress,
+              //   assetName: data.assetName,
+              //   statusText: "Added more funds",
+              // });
+              // if (activity) {
+              if (nftData) {
                 await mixpanel.track("Funding asset", {
                   distinct_id: id,
                   asset: data.asset,
@@ -1035,6 +1043,7 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
                   message: "Successfully added more funds",
                 });
               }
+              // }
             } else {
               res
                 .status(400)
@@ -1323,14 +1332,14 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
                 validationState: "unvalidated",
               }
             );
-            let activity = await UserActivityModel.create({
-              userAddress: doc.assetOwnerAddress,
-              user: doc.assetOwner,
-              asset: doc.asset,
-              assetName: doc.assetName,
-              statusText: `Validation request rejected by validator ${wallet_address}`,
-            });
-            if (activity) {
+            // let activity = await UserActivityModel.create({
+            //   userAddress: doc.assetOwnerAddress,
+            //   user: doc.assetOwner,
+            //   asset: doc.asset,
+            //   assetName: doc.assetName,
+            //   statusText: `Validation request rejected by validator ${wallet_address}`,
+            // });
+            // if (activity) {
               let notification = await NotificationModel.create({
                 nft: doc.asset,
                 category: "asset-validation-reject",
@@ -1348,7 +1357,7 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
                   message: "Validation request rejected",
                 });
               }
-            }
+            // }
           } else {
             res.status(400).json({
               success: false,

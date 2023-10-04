@@ -561,15 +561,15 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                   { _id: asset },
                   { validationId: doc._id }
                 );
-                let activity = await UserActivityModel.create({
-                  userAddress: wallet_address,
-                  user: id,
-                  asset,
-                  assetName: nftData.name,
-                  assetCollection: nftData.nftCollection,
-                  statusText: "Sent validation request",
-                });
-                if (activity) {
+                // let activity = await UserActivityModel.create({
+                //   userAddress: wallet_address,
+                //   user: id,
+                //   asset,
+                //   assetName: nftData.name,
+                //   assetCollection: nftData.nftCollection,
+                //   statusText: "Sent validation request",
+                // });
+                // if (activity) {
                   let notification = await NotificationModel.create({
                     nft: asset,
                     category: "asset-validation-request",
@@ -594,7 +594,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                       message: "Validation request sent",
                     });
                   }
-                }
+                // }
               } else {
                 res.status(401).json({ success: false, message: "not done" });
               }
@@ -639,15 +639,15 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                 }
               );
               if (nftData) {
-                let activity = await UserActivityModel.create({
-                  userAddress: wallet_address,
-                  user: id,
-                  asset,
-                  assetName: nftData.name,
-                  assetCollection: nftData.nftCollection,
-                  statusText: "Sent revalidation request",
-                });
-                if (activity) {
+                // let activity = await UserActivityModel.create({
+                //   userAddress: wallet_address,
+                //   user: id,
+                //   asset,
+                //   assetName: nftData.name,
+                //   assetCollection: nftData.nftCollection,
+                //   statusText: "Sent revalidation request",
+                // });
+                // if (activity) {
                   let notification = await NotificationModel.create({
                     nft: asset,
                     category: "asset-validation-extend-request",
@@ -669,7 +669,7 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                       message: "Extend validation request sent",
                     });
                   }
-                }
+                // }
               }
             } else {
               res.status(201).json({
@@ -999,14 +999,14 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
             }
           );
           if (nftData) {
-            let activity = await UserActivityModel.create({
-              userAddress: wallet_address,
-              user: id,
-              asset: assetId,
-              assetName: nftData.name,
-              assetCollection: nftData.nftCollection,
-              statusText: "Sent redeem request",
-            });
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset: assetId,
+            //   assetName: nftData.name,
+            //   assetCollection: nftData.nftCollection,
+            //   statusText: "Sent redeem request",
+            // });
             let notification = await NotificationModel.create({
               nft: assetId,
               category: "sent-redeem-request",
@@ -1069,14 +1069,14 @@ exports.cancelRedeemRequest = asyncHandler(async (req, res, next) => {
           }
         );
         if (nftData) {
-          let activity = await UserActivityModel.create({
-            userAddress: wallet_address,
-            user: id,
-            asset: assetId,
-            assetName: nftData.name,
-            assetCollection: nftData.nftCollection,
-            statusText: "Cancelled redeem request",
-          });
+          // let activity = await UserActivityModel.create({
+          //   userAddress: wallet_address,
+          //   user: id,
+          //   asset: assetId,
+          //   assetName: nftData.name,
+          //   assetCollection: nftData.nftCollection,
+          //   statusText: "Cancelled redeem request",
+          // });
           await mixpanel.track("User cancel redeem request", {
             distinct_id: id,
             asset: assetId,
@@ -1230,13 +1230,13 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
             {
               fundBalance: balance,
               state: "withdraw",
-              $push: {
-                history: {
-                  action: "Withdrawn fund",
-                  user: id,
-                  amount,
-                },
-              },
+              // $push: {
+              //   history: {
+              //     action: "Withdrawn fund",
+              //     user: id,
+              //     amount,
+              //   },
+              // },
             }
           );
           if (data) {
@@ -1249,14 +1249,14 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
                 fundBalance: balance,
               }
             );
-            let activity = await UserActivityModel.create({
-              userAddress: wallet_address,
-              user: id,
-              asset: nftData._id,
-              assetName: nftData.name,
-              assetCollection: nftData.nftCollection,
-              statusText: "Withdrawn fund",
-            });
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset: nftData._id,
+            //   assetName: nftData.name,
+            //   assetCollection: nftData.nftCollection,
+            //   statusText: "Withdrawn fund",
+            // });
             let notification = await NotificationModel.create({
               nft: nftData._id,
               category: "validation-fund-withdraw",
@@ -1324,13 +1324,13 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   nftData.fundBalance + amount === nftData.validationAmount
                     ? "none"
                     : "withdraw",
-                $push: {
-                  history: {
-                    action: "Repaid fund",
-                    user: id,
-                    amount,
-                  },
-                },
+                // $push: {
+                //   history: {
+                //     action: "Repaid fund",
+                //     user: id,
+                //     amount,
+                //   },
+                // },
               }
             );
             if (data) {
@@ -1343,14 +1343,14 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   fundBalance: nftData.fundBalance + amount,
                 }
               );
-              let activity = await UserActivityModel.create({
-                userAddress: wallet_address,
-                user: id,
-                asset: nftData._id,
-                assetName: nftData.name,
-                assetCollection: nftData.nftCollection,
-                statusText: "Repaied fund",
-              });
+              // let activity = await UserActivityModel.create({
+              //   userAddress: wallet_address,
+              //   user: id,
+              //   asset: nftData._id,
+              //   assetName: nftData.name,
+              //   assetCollection: nftData.nftCollection,
+              //   statusText: "Repaied fund",
+              // });
               let notification = await NotificationModel.create({
                 nft: nftData._id,
                 category: "validation-fund-repay",

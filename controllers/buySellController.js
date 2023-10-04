@@ -33,13 +33,13 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
             listingDuration: duration,
             saleId,
             nftContractAddress: contractAddress,
-            $push: {
-              history: {
-                action: "Listed",
-                user: id,
-                amount: price,
-              },
-            },
+            // $push: {
+            //   history: {
+            //     action: "Listed",
+            //     user: id,
+            //     amount: price,
+            //   },
+            // },
           },
           null,
           async (err, doc) => {
@@ -106,13 +106,13 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
             listingDate: null,
             listingDuration: null,
             isOneTimeCommissionGiven: true,
-            $push: {
-              history: {
-                action: "bought",
-                user: id,
-                amount: data.listingPrice,
-              },
-            },
+            // $push: {
+            //   history: {
+            //     action: "bought",
+            //     user: id,
+            //     amount: data.listingPrice,
+            //   },
+            // },
           },
           null,
           async (err, doc) => {
@@ -210,7 +210,17 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress === wallet_address) {
       if (data.state === "sale") {
-        let obj = { state: "sale", listingPrice: price };
+        let obj = {
+          state: "sale",
+          listingPrice: price,
+          $push: {
+            history: {
+              action: "Sale edited",
+              user: id,
+              amount: price,
+            },
+          },
+        };
         if (duration) {
           obj = { ...obj, listingDuration: duration };
         }
@@ -223,14 +233,14 @@ exports.editFixedPriceSale = asyncHandler(async (req, res, next) => {
               res.status(401).json({ success: false });
             } else {
               if (!!doc) {
-                let activity = await UserActivityModel.create({
-                  userAddress: wallet_address,
-                  user: id,
-                  asset: doc._id,
-                  assetName: doc.name,
-                  assetCollection: doc.nftCollection,
-                  statusText: "Sale edited",
-                });
+                // let activity = await UserActivityModel.create({
+                //   userAddress: wallet_address,
+                //   user: id,
+                //   asset: doc._id,
+                //   assetName: doc.name,
+                //   assetCollection: doc.nftCollection,
+                //   statusText: "Sale edited",
+                // });
                 await mixpanel.track("Asset listing updated", {
                   distinct_id: id,
                   asset: assetId,
@@ -281,6 +291,12 @@ exports.cancelFixedPriceSale = asyncHandler(async (req, res, next) => {
             listingPrice: null,
             state: "none",
             listingDuration: null,
+            $push: {
+              history: {
+                action: "Sale Cancelled",
+                user: id,
+              },
+            },
           },
           null,
           async (err, doc) => {
@@ -365,21 +381,21 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                     nftContractAddress: contractAddress,
                     $push: {
                       history: {
-                        action: "Listed for auction",
+                        action: "NFT Listed on Auction",
                         user: id,
                         amount: price,
                       },
                     },
                   }
                 );
-                let activity = await UserActivityModel.create({
-                  userAddress: wallet_address,
-                  user: id,
-                  asset: nftData._id,
-                  assetName: nftData.name,
-                  assetCollection: nftData.nftCollection,
-                  statusText: "NFT Listed on Auction",
-                });
+                // let activity = await UserActivityModel.create({
+                //   userAddress: wallet_address,
+                //   user: id,
+                //   asset: nftData._id,
+                //   assetName: nftData.name,
+                //   assetCollection: nftData.nftCollection,
+                //   statusText: "NFT Listed on Auction",
+                // });
                 await mixpanel.track("Asset listed for auction", {
                   distinct_id: id,
                   asset: assetId,
@@ -600,16 +616,23 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
                   {
                     listingPrice: price,
                     listingDuration: duration,
+                    $push: {
+                      history: {
+                        action: "Auction edited",
+                        user: id,
+                        amount: price
+                      },
+                    },
                   }
                 );
-                let activity = await UserActivityModel.create({
-                  userAddress: wallet_address,
-                  user: id,
-                  asset: doc._id,
-                  assetName: doc.name,
-                  assetCollection: doc.nftCollection,
-                  statusText: "Auction edited",
-                });
+                // let activity = await UserActivityModel.create({
+                //   userAddress: wallet_address,
+                //   user: id,
+                //   asset: doc._id,
+                //   assetName: doc.name,
+                //   assetCollection: doc.nftCollection,
+                //   statusText: "Auction edited",
+                // });
                 await mixpanel.track("Auction edited", {
                   distinct_id: id,
                   asset: assetId,
@@ -778,24 +801,24 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
               }
             );
             if (nftData) {
-              let activity = await UserActivityModel.insertMany([
-                {
-                  userAddress: wallet_address,
-                  user: id,
-                  asset: nftData._id,
-                  assetName: nftData.name,
-                  assetCollection: nftData.nftCollection,
-                  statusText: "Accepted Bid",
-                },
-                {
-                  userAddress: bid[0].bidderAddress,
-                  user: bid[0].bidder,
-                  asset: nftData._id,
-                  assetName: nftData.name,
-                  assetCollection: nftData.nftCollection,
-                  statusText: "Bid got accepted",
-                },
-              ]);
+              // let activity = await UserActivityModel.insertMany([
+              //   {
+              //     userAddress: wallet_address,
+              //     user: id,
+              //     asset: nftData._id,
+              //     assetName: nftData.name,
+              //     assetCollection: nftData.nftCollection,
+              //     statusText: "Accepted Bid",
+              //   },
+              //   {
+              //     userAddress: bid[0].bidderAddress,
+              //     user: bid[0].bidder,
+              //     asset: nftData._id,
+              //     assetName: nftData.name,
+              //     assetCollection: nftData.nftCollection,
+              //     statusText: "Bid got accepted",
+              //   },
+              // ]);
               let notification = await NotificationModel.create({
                 nft: nftData._id,
                 category: "accepted-bid",
