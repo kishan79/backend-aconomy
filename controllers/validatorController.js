@@ -161,37 +161,25 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
 });
 
 const generateFWBody = (body, wallet_address) => {
-  const {
-    name,
-    email,
-    username,
-    assetType,
-    socialLinks,
-    address,
-    bio,
-    profileImage,
-    bannerImage,
-  } = body;
+  const { name, email, username, assetType, socialLinks, address, bio } = body;
 
   return JSON.stringify({
-    contact: {
-      first_name: name,
-      address: address.area ? address.area : "",
-      country: address.country ? address.country : "",
-      emails: email ? email : "",
-      custom_field: {
-        cf_wallet_address: wallet_address,
-        cf_asset_type: assetType,
-        cf_user_name: username,
-        cf_profile_image: profileImage,
-        cf_banner_image: bannerImage,
-        cf_your_website: socialLinks.website ? socialLinks.website : "",
-        cf_discord: socialLinks.discord ? socialLinks.discord : "",
-        cf_twitter_handle: socialLinks.twitter ? socialLinks.twitter : "",
-        cf_linkedin_handle: socialLinks.linkedin ? socialLinks.linkedin : "",
-        cf_bio: bio,
-      },
+    SingleLine: name,
+    SingleLine1: username,
+    MultiLine: bio,
+    Email: email,
+    Checkbox: assetType,
+    Address: {
+      Address_Country: address.country ? address.country : "",
+      Address_AddressLine2: address.area ? address.area : "",
     },
+    Website: socialLinks.website ? socialLinks.website : "",
+    Website1: socialLinks.twitter ? socialLinks.twitter : "",
+    Website2: socialLinks.discord ? socialLinks.discord : "",
+    Website3: socialLinks.linkedin ? socialLinks.linkedin : "",
+    SingleLine2: wallet_address,
+    REFERRER_NAME:
+      "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/thankyou/formperma/y-4pCmLBOsrMiMuHgN2TxMlmsIc2jJnKI5MBl3vf4ZE",
   });
 };
 
@@ -207,18 +195,20 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
         if (err) {
           res.status(400).json({ success: false });
         } else {
-          let freshworkData = await fetch(
-            `${process.env.FRESHWORK_URL}/crm/sales/api/contacts`,
+          let data = await fetch(
+            "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/formperma/y-4pCmLBOsrMiMuHgN2TxMlmsIc2jJnKI5MBl3vf4ZE/records",
             {
               method: "POST",
+              maxBodyLength: Infinity,
               body: generateFWBody(req.body, wallet_address),
               headers: {
-                Authorization: `Token token=${process.env.FRESHWORK_API_TOKEN}`,
                 "Content-Type": "application/json",
               },
             }
           );
-          if (freshworkData) {
+          const zohoData = await data.json();
+
+          if (zohoData && zohoData.hasOwnProperty("thankyou_page_URL")) {
             await mixpanel.people(docs._id, {
               name: docs.name,
               username: docs.username,
