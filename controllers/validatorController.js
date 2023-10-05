@@ -162,53 +162,65 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
 
 const generateFWBody = (body, wallet_address) => {
   const { name, email, username, assetType, socialLinks, address, bio } = body;
-
-  return JSON.stringify({
+  let obj = {
     SingleLine: name,
     SingleLine1: username,
-    MultiLine: bio,
-    Email: email,
-    Checkbox: assetType,
     Address: {
       Address_Country: address.country ? address.country : "",
       Address_AddressLine2: address.area ? address.area : "",
     },
-    Website: socialLinks.website ? socialLinks.website : "",
-    Website1: socialLinks.twitter ? socialLinks.twitter : "",
-    Website2: socialLinks.discord ? socialLinks.discord : "",
-    Website3: socialLinks.linkedin ? socialLinks.linkedin : "",
+    Checkbox: assetType,
+    Email: email,
     SingleLine2: wallet_address,
     REFERRER_NAME:
       "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/thankyou/formperma/y-4pCmLBOsrMiMuHgN2TxMlmsIc2jJnKI5MBl3vf4ZE",
-  });
+  };
+  if (bio.length) {
+    obj["MultiLine"] = bio;
+  }
+
+  if (socialLinks.website) {
+    obj["Website"] = socialLinks.website;
+  }
+  if (socialLinks.twitter) {
+    obj["Website1"] = socialLinks.twitter;
+  }
+  if (socialLinks.discord) {
+    obj["Website2"] = socialLinks.discord;
+  }
+  if (socialLinks.linkedin) {
+    obj["Website3"] = socialLinks.linkedin;
+  }
+
+  return JSON.stringify(obj);
 };
 
 exports.onboardValidator = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
     const { wallet_address } = req.user;
-    ValidatorModel.findOneAndUpdate(
-      { wallet_address: wallet_address },
-      { ...req.body },
-      { new: true },
-      async (err, docs) => {
-        if (err) {
-          res.status(400).json({ success: false });
-        } else {
-          let data = await fetch(
-            "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/formperma/y-4pCmLBOsrMiMuHgN2TxMlmsIc2jJnKI5MBl3vf4ZE/records",
-            {
-              method: "POST",
-              maxBodyLength: Infinity,
-              body: generateFWBody(req.body, wallet_address),
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          const zohoData = await data.json();
+    let data = await fetch(
+      "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/formperma/y-4pCmLBOsrMiMuHgN2TxMlmsIc2jJnKI5MBl3vf4ZE/records",
+      {
+        method: "POST",
+        maxBodyLength: Infinity,
+        body: generateFWBody(req.body, wallet_address),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const zohoData = await data.json();
 
-          if (zohoData && zohoData.hasOwnProperty("thankyou_page_URL")) {
+    if (zohoData && zohoData.hasOwnProperty("thankyou_page_URL")) {
+      ValidatorModel.findOneAndUpdate(
+        { wallet_address: wallet_address },
+        { ...req.body },
+        { new: true },
+        async (err, docs) => {
+          if (err) {
+            res.status(400).json({ success: false });
+          } else {
             await mixpanel.people(docs._id, {
               name: docs.name,
               username: docs.username,
@@ -227,12 +239,12 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
               ip: remoteIp,
             });
             res.status(201).json({ success: true });
-          } else {
-            res.status(400).json({ success: false });
           }
         }
-      }
-    );
+      );
+    } else {
+      res.status(400).json({ success: false });
+    }
   } catch (err) {
     res.status(400).json({ success: false });
   }
@@ -1340,23 +1352,23 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
             //   statusText: `Validation request rejected by validator ${wallet_address}`,
             // });
             // if (activity) {
-              let notification = await NotificationModel.create({
-                nft: doc.asset,
-                category: "asset-validation-reject",
-                user: doc.assetOwner,
-                validator: id,
+            let notification = await NotificationModel.create({
+              nft: doc.asset,
+              category: "asset-validation-reject",
+              user: doc.assetOwner,
+              validator: id,
+            });
+            if (notification) {
+              await mixpanel.track("Reject validation request", {
+                distinct_id: id,
+                asset: doc.asset,
+                ip: remoteIp,
               });
-              if (notification) {
-                await mixpanel.track("Reject validation request", {
-                  distinct_id: id,
-                  asset: doc.asset,
-                  ip: remoteIp,
-                });
-                res.status(200).json({
-                  success: true,
-                  message: "Validation request rejected",
-                });
-              }
+              res.status(200).json({
+                success: true,
+                message: "Validation request rejected",
+              });
+            }
             // }
           } else {
             res.status(400).json({
