@@ -71,7 +71,7 @@ const listAuctionValidationReqSchema = [
 
 const placeBidValidationReqSchema = [
   body("amount", "The amount field is required").notEmpty(),
-  body("duration", "The duration field is required").notEmpty(),
+  // body("duration", "The duration field is required").notEmpty(),
   body("bidId", "The bidId field is required").notEmpty(),
 ];
 
