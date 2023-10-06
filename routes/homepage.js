@@ -15,8 +15,7 @@ router
 router
   .route("/newsletter")
   .post(validate(newsletterReqSchema), homepageController.newsLetter);
-router
-  .route("/journals")
-  .get(homepageController.getJournals);
+router.route("/journals").get(homepageController.getJournals);
+router.route("/topassetowners").get(homepageController.getTopAssetOwners);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const NftModel = require("../models/NFT");
+const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
 const PoolModel = require("../models/Pool");
 const OfferModel = require("../models/Offer");
@@ -341,5 +342,45 @@ exports.getJournals = asyncHandler(async (req, res, next) => {
     }
   } catch (err) {
     res.status(400).json({ success: false });
+  }
+});
+
+exports.getTopAssetOwners = asyncHandler(async (req, res, next) => {
+  try {
+    let query = UserModel.find().select("_id name profileImage").lean();
+
+    const results = await query;
+
+    for (let i = 0; i < results.length; i++) {
+      let data = await NftModel.find({
+        nftOwner: results[i]._id,
+        validationState: "validated",
+      }).select("validationAmount");
+
+      if (data) {
+        let tvl = 0;
+        for (let j = 0; j < data.length; j++) {
+          tvl += data[j].validationAmount;
+        }
+        results[i] = {
+          ...results[i],
+          tvl,
+        };
+      }
+    }
+
+    results.sort((a, b) => b.tvl - a.tvl);
+    data = results.splice(0, 8);
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      message: "Failed to execute",
+    });
   }
 });
