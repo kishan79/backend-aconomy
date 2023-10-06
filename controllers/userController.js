@@ -1217,14 +1217,14 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
     const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
-    const { amount } = req.body;
+    const { amount, balance } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.validationState === "validated") {
-        let availableBalance = nftData.fundBalance;
-        if (amount <= availableBalance) {
+        // let availableBalance = nftData.fundBalance;
+        // if (amount <= availableBalance) {
           // let balance = availableBalance - amount;
-          let balance = parseFloat((availableBalance - amount).toFixed(3));
+          // let balance = parseFloat((availableBalance - amount).toFixed(3));
           let data = await NftModel.findOneAndUpdate(
             { _id: assetId },
             {
@@ -1283,11 +1283,11 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
               .status(401)
               .json({ success: false, message: "Failed to withdraw amount" });
           }
-        } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Insufficient balance" });
-        }
+        // } else {
+        //   res
+        //     .status(401)
+        //     .json({ success: false, message: "Insufficient balance" });
+        // }
       } else {
         res
           .status(401)
@@ -1309,19 +1309,24 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
     const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
-    const { amount } = req.body;
+    const { amount, balance } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
       if (nftData.validationState === "validated") {
         if (nftData.state === "withdraw") {
-          let availableBalance = nftData.validationAmount - nftData.fundBalance;
-          if (amount > 0 && amount <= availableBalance) {
+          // let availableBalance = nftData.validationAmount - nftData.fundBalance;
+          // if (amount > 0 && amount <= availableBalance) {
             let data = await NftModel.findOneAndUpdate(
               { _id: assetId },
               {
-                fundBalance: nftData.fundBalance + amount,
+                // fundBalance: nftData.fundBalance + amount,
+                fundBalance: balance,
+                // state:
+                //   nftData.fundBalance + amount === nftData.validationAmount
+                //     ? "none"
+                //     : "withdraw",
                 state:
-                  nftData.fundBalance + amount === nftData.validationAmount
+                  balance + amount === nftData.validationAmount
                     ? "none"
                     : "withdraw",
                 // $push: {
@@ -1340,7 +1345,8 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                   asset: assetId,
                 },
                 {
-                  fundBalance: nftData.fundBalance + amount,
+                  // fundBalance: nftData.fundBalance + amount,
+                  fundBalance: balance,
                 }
               );
               // let activity = await UserActivityModel.create({
@@ -1377,11 +1383,11 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
                 .status(401)
                 .json({ success: false, message: "Failed to repay amount" });
             }
-          } else {
-            res
-              .status(401)
-              .json({ success: false, message: "Balance mismatch" });
-          }
+          // } else {
+          //   res
+          //     .status(401)
+          //     .json({ success: false, message: "Balance mismatch" });
+          // }
         } else {
           res.status(401).json({ success: false, message: "Forbidden action" });
         }
