@@ -266,7 +266,6 @@ exports.getLatestPools = asyncHandler(async (req, res, next) => {
 
 exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
   try {
-    
     const { category } = req.query;
     let queryStr = {
       state: { $ne: "none" },
@@ -314,6 +313,29 @@ exports.newsLetter = asyncHandler(async (req, res, next) => {
     );
     if (freshworkData.status === 200) {
       res.status(201).json({ success: true });
+    } else {
+      res.status(400).json({ success: false });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.getJournals = asyncHandler(async (req, res, next) => {
+  try {
+    let data = await fetch(
+      `https://api.webflow.com/v2/collections/64e1df12eba14476ccc34376/items`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const webflowData = await data.json();
+    if (data.status === 200) {
+      res.status(201).json({ success: true, data: webflowData.items });
     } else {
       res.status(400).json({ success: false });
     }

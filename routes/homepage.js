@@ -15,5 +15,8 @@ router
 router
   .route("/newsletter")
   .post(validate(newsletterReqSchema), homepageController.newsLetter);
+router
+  .route("/journals")
+  .get(homepageController.getJournals);
 
 module.exports = router;
