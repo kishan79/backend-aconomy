@@ -570,30 +570,30 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
                 //   statusText: "Sent validation request",
                 // });
                 // if (activity) {
-                  let notification = await NotificationModel.create({
-                    nft: asset,
-                    category: "asset-validation-request",
-                    user: id,
+                let notification = await NotificationModel.create({
+                  nft: asset,
+                  category: "asset-validation-request",
+                  user: id,
+                  validator,
+                });
+                if (notification) {
+                  await mixpanel.track("User sent validation request", {
+                    distinct_id: id,
                     validator,
+                    asset,
+                    assetName: nftData.name,
+                    assetCollection: nftData.nftCollection,
+                    asset_type: nftData.assetType[0],
+                    asset_value: nftData.valueOfAsset.value,
+                    asset_token: nftData.valueOfAsset.unit,
+                    asset_orignal_date: nftData.assetOriginationDate,
+                    ip: remoteIp,
                   });
-                  if (notification) {
-                    await mixpanel.track("User sent validation request", {
-                      distinct_id: id,
-                      validator,
-                      asset,
-                      assetName: nftData.name,
-                      assetCollection: nftData.nftCollection,
-                      asset_type: nftData.assetType[0],
-                      asset_value: nftData.valueOfAsset.value,
-                      asset_token: nftData.valueOfAsset.unit,
-                      asset_orignal_date: nftData.assetOriginationDate,
-                      ip: remoteIp,
-                    });
-                    res.status(201).json({
-                      success: true,
-                      message: "Validation request sent",
-                    });
-                  }
+                  res.status(201).json({
+                    success: true,
+                    message: "Validation request sent",
+                  });
+                }
                 // }
               } else {
                 res.status(401).json({ success: false, message: "not done" });
@@ -648,27 +648,24 @@ exports.sendExtendValidationRequest = asyncHandler(async (req, res, next) => {
                 //   statusText: "Sent revalidation request",
                 // });
                 // if (activity) {
-                  let notification = await NotificationModel.create({
-                    nft: asset,
-                    category: "asset-validation-extend-request",
-                    user: id,
+                let notification = await NotificationModel.create({
+                  nft: asset,
+                  category: "asset-validation-extend-request",
+                  user: id,
+                  validator: data.validator,
+                });
+                if (notification) {
+                  await mixpanel.track("User sent extend validation request", {
+                    distinct_id: id,
                     validator: data.validator,
+                    asset,
+                    ip: remoteIp,
                   });
-                  if (notification) {
-                    await mixpanel.track(
-                      "User sent extend validation request",
-                      {
-                        distinct_id: id,
-                        validator: data.validator,
-                        asset,
-                        ip: remoteIp,
-                      }
-                    );
-                    res.status(201).json({
-                      success: true,
-                      message: "Extend validation request sent",
-                    });
-                  }
+                  res.status(201).json({
+                    success: true,
+                    message: "Extend validation request sent",
+                  });
+                }
                 // }
               }
             } else {
@@ -1220,69 +1217,72 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
     const { amount, balance } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.validationState === "validated") {
+      if (
+        nftData.validationState === "validated" ||
+        nftData.validationExpired === true
+      ) {
         // let availableBalance = nftData.fundBalance;
         // if (amount <= availableBalance) {
-          // let balance = availableBalance - amount;
-          // let balance = parseFloat((availableBalance - amount).toFixed(3));
-          let data = await NftModel.findOneAndUpdate(
-            { _id: assetId },
+        // let balance = availableBalance - amount;
+        // let balance = parseFloat((availableBalance - amount).toFixed(3));
+        let data = await NftModel.findOneAndUpdate(
+          { _id: assetId },
+          {
+            fundBalance: balance,
+            state: "withdraw",
+            // $push: {
+            //   history: {
+            //     action: "Withdrawn fund",
+            //     user: id,
+            //     amount,
+            //   },
+            // },
+          }
+        );
+        if (data) {
+          let validationData = await NFTValidationModel.findOneAndUpdate(
+            {
+              assetOwnerAddress: wallet_address,
+              asset: assetId,
+            },
             {
               fundBalance: balance,
-              state: "withdraw",
-              // $push: {
-              //   history: {
-              //     action: "Withdrawn fund",
-              //     user: id,
-              //     amount,
-              //   },
-              // },
             }
           );
-          if (data) {
-            let validationData = await NFTValidationModel.findOneAndUpdate(
-              {
-                assetOwnerAddress: wallet_address,
-                asset: assetId,
-              },
-              {
-                fundBalance: balance,
-              }
-            );
-            // let activity = await UserActivityModel.create({
-            //   userAddress: wallet_address,
-            //   user: id,
-            //   asset: nftData._id,
-            //   assetName: nftData.name,
-            //   assetCollection: nftData.nftCollection,
-            //   statusText: "Withdrawn fund",
-            // });
-            let notification = await NotificationModel.create({
-              nft: nftData._id,
-              category: "validation-fund-withdraw",
-              validator: nftData.validator,
-              user: id,
+          // let activity = await UserActivityModel.create({
+          //   userAddress: wallet_address,
+          //   user: id,
+          //   asset: nftData._id,
+          //   assetName: nftData.name,
+          //   assetCollection: nftData.nftCollection,
+          //   statusText: "Withdrawn fund",
+          // });
+          let notification = await NotificationModel.create({
+            nft: nftData._id,
+            category: "validation-fund-withdraw",
+            validator: nftData.validator,
+            user: id,
+            amount,
+          });
+          if (notification) {
+            await mixpanel.track("User withdraw funds", {
+              distinct_id: id,
+              asset: assetId,
               amount,
+              asset_type: data.assetType[0],
+              asset_token: data.valueOfAsset.unit,
+              ip: remoteIp,
             });
-            if (notification) {
-              await mixpanel.track("User withdraw funds", {
-                distinct_id: id,
-                asset: assetId,
-                amount,
-                asset_type: data.assetType[0],
-                asset_token: data.valueOfAsset.unit,
-                ip: remoteIp,
-              });
-              res.status(201).json({
-                success: true,
-                message: "Amount withdrawn successfully",
-              });
-            }
-          } else {
-            res
-              .status(401)
-              .json({ success: false, message: "Failed to withdraw amount" });
+            res.status(201).json({
+              success: true,
+              message: "Amount withdrawn successfully",
+            });
           }
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Failed to withdraw amount" });
+        }
         // } else {
         //   res
         //     .status(401)
@@ -1312,77 +1312,77 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
     const { amount, balance } = req.body;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.validationState === "validated") {
+      if (
+        nftData.validationState === "validated" ||
+        nftData.validationExpired === true
+      ) {
         if (nftData.state === "withdraw") {
           // let availableBalance = nftData.validationAmount - nftData.fundBalance;
           // if (amount > 0 && amount <= availableBalance) {
-            let data = await NftModel.findOneAndUpdate(
-              { _id: assetId },
+          let data = await NftModel.findOneAndUpdate(
+            { _id: assetId },
+            {
+              // fundBalance: nftData.fundBalance + amount,
+              fundBalance: balance,
+              // state:
+              //   nftData.fundBalance + amount === nftData.validationAmount
+              //     ? "none"
+              //     : "withdraw",
+              state: balance === nftData.validationAmount ? "none" : "withdraw",
+              // $push: {
+              //   history: {
+              //     action: "Repaid fund",
+              //     user: id,
+              //     amount,
+              //   },
+              // },
+            }
+          );
+          if (data) {
+            let validationData = await NFTValidationModel.findOneAndUpdate(
+              {
+                assetOwnerAddress: wallet_address,
+                asset: assetId,
+              },
               {
                 // fundBalance: nftData.fundBalance + amount,
                 fundBalance: balance,
-                // state:
-                //   nftData.fundBalance + amount === nftData.validationAmount
-                //     ? "none"
-                //     : "withdraw",
-                state:
-                  balance === nftData.validationAmount
-                    ? "none"
-                    : "withdraw",
-                // $push: {
-                //   history: {
-                //     action: "Repaid fund",
-                //     user: id,
-                //     amount,
-                //   },
-                // },
               }
             );
-            if (data) {
-              let validationData = await NFTValidationModel.findOneAndUpdate(
-                {
-                  assetOwnerAddress: wallet_address,
-                  asset: assetId,
-                },
-                {
-                  // fundBalance: nftData.fundBalance + amount,
-                  fundBalance: balance,
-                }
-              );
-              // let activity = await UserActivityModel.create({
-              //   userAddress: wallet_address,
-              //   user: id,
-              //   asset: nftData._id,
-              //   assetName: nftData.name,
-              //   assetCollection: nftData.nftCollection,
-              //   statusText: "Repaied fund",
-              // });
-              let notification = await NotificationModel.create({
-                nft: nftData._id,
-                category: "validation-fund-repay",
-                validator: nftData.validator,
-                user: id,
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset: nftData._id,
+            //   assetName: nftData.name,
+            //   assetCollection: nftData.nftCollection,
+            //   statusText: "Repaied fund",
+            // });
+            let notification = await NotificationModel.create({
+              nft: nftData._id,
+              category: "validation-fund-repay",
+              validator: nftData.validator,
+              user: id,
+              amount,
+            });
+            if (notification) {
+              await mixpanel.track("User repay funds", {
+                distinct_id: id,
+                asset: assetId,
                 amount,
+                asset_type: nftData.assetType[0],
+                asset_token: nftData.valueOfAsset.unit,
+                ip: remoteIp,
               });
-              if (notification) {
-                await mixpanel.track("User repay funds", {
-                  distinct_id: id,
-                  asset: assetId,
-                  amount,
-                  asset_type: nftData.assetType[0],
-                  asset_token: nftData.valueOfAsset.unit,
-                  ip: remoteIp,
-                });
-                res.status(201).json({
-                  success: true,
-                  message: "Amount repaid successfully",
-                });
-              }
-            } else {
-              res
-                .status(401)
-                .json({ success: false, message: "Failed to repay amount" });
+              res.status(201).json({
+                success: true,
+                message: "Amount repaid successfully",
+              });
             }
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to repay amount" });
+          }
           // } else {
           //   res
           //     .status(401)
