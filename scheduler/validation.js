@@ -20,7 +20,7 @@ const validationCron = async () => {
       for (let i = 0; i < nftData.length; i++) {
         if (!nftData[i].validationExpired) {
           const data = await NFTValidationModel.findOne({
-            assetOwnerAddress: nftData[i].nftOwnerAddress,
+            // assetOwnerAddress: nftData[i].nftOwnerAddress,
             asset: nftData[i]._id,
           });
           if (data) {
