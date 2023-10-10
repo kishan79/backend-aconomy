@@ -1124,6 +1124,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
               validator: null,
               validatorAddress: null,
               validationState: "unvalidated",
+              validationExpired: false,
               validationType: null,
               validationAmount: null,
               validationDuration: null,

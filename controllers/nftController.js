@@ -345,7 +345,7 @@ exports.burnNft = asyncHandler(async (req, res, next) => {
                   validationDocuments: null,
                   requestExpiresOn: null,
                   validationState: "unvalidated",
-                  validationExpired: true,
+                  validationExpired: false,
                   state: "burned",
                   $push: {
                     history: {
