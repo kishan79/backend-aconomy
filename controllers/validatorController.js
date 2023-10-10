@@ -1328,8 +1328,10 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
     const remoteIp = getRemoteIp(req);
     const { requestId } = req.params;
     const { wallet_address, id } = req.user;
-    NFTValidationModel.findOneAndDelete(
+    NFTValidationModel.findOneAndUpdate(
       { _id: requestId },
+      { requestState: "unvalidated" },
+      null,
       async (err, doc) => {
         if (err) {
           res.status(200).json({ success: false, data: {} });
@@ -1338,9 +1340,9 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
             let nftData = await NftModel.findOneAndUpdate(
               { _id: doc.asset },
               {
-                validator: null,
-                validatorAddress: null,
-                validationId: null,
+                // validator: null,
+                // validatorAddress: null,
+                // validationId: null,
                 validationState: "unvalidated",
               }
             );
