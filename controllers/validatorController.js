@@ -725,7 +725,7 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
       const sortBy = sortby.split(",").join(" ");
       query = query.sort(sortBy);
     } else {
-      query = query.sort("-createdAt");
+      query = query.sort("-updatedAt");
     }
 
     const page = parseInt(req.query.page, 10) || 1;
