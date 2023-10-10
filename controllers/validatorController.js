@@ -719,7 +719,7 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
         { path: "asset", select: "name mediaLinks assetType _id" },
         { path: "assetOwner", select: "name profileImage bannerImage _id" },
       ])
-      .select("_id assetName asset assetOwner createdAt");
+      .select("_id assetName asset assetOwner createdAt updatedAt");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
