@@ -784,7 +784,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
     }
 
     query = CollectionModel.find(queryStr).select(
-      "_id name profileImage bannerImage collectionAddress chainId"
+      "_id name profileImage bannerImage collectionAddress chainId assetType"
     );
 
     if (sortby) {
