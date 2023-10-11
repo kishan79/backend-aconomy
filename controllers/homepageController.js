@@ -20,8 +20,8 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       .sort({ createdAt: -1 })
       .limit(1)
       .populate([
-        { path: "nftOwner", select: "name profileImage" },
-        { path: "validator", select: "name profileImage" },
+        { path: "nftOwner", select: "name profileImage kycEventType" },
+        { path: "validator", select: "name profileImage kybEventType" },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice validationState"
@@ -69,7 +69,7 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       ];
     }
     let validatorData = await ValidatorModel.find({ whitelisted: true })
-      .select("name username address profileImage bannerImage bio")
+      .select("name username address profileImage bannerImage bio kybEventType")
       .sort({ createdAt: -1 })
       .limit(1)
       .lean();

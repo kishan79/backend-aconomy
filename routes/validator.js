@@ -70,7 +70,6 @@ router
     protect,
     authorize("validator"),
     validate(validatorScheduleMeetingReqSchema),
-    validateOwner,
     validatorController.scheduleMeeting
   );
 

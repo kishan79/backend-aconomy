@@ -589,9 +589,9 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
         //   path: "nftCollection",
         //   select: collectionSelectQuery,
         // },
-        { path: "nftOwner", select: "_id name profileImage" },
+        { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage" },
+        { path: "validator", select: "_id name profileImage kybEventType" },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,
