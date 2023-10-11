@@ -23,7 +23,7 @@ exports.globalSearch = asyncHandler(async (req, res, next) => {
           },
           { role: { $ne: "admin" } },
         ],
-      }).select("_id name username profileImage");
+      }).select("_id name username profileImage kycEventType");
 
       const validatorData = await ValidatorModel.find({
         $and: [
@@ -35,7 +35,7 @@ exports.globalSearch = asyncHandler(async (req, res, next) => {
           },
           { whitelisted: true },
         ],
-      }).select("_id name username profileImage");
+      }).select("_id name username profileImage kybEventType");
 
       const poolData = await PoolModel.find({
         name: { $regex: q, $options: "i" },
