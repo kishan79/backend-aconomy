@@ -927,48 +927,98 @@ exports.cancelValidationRequest = asyncHandler(async (req, res, next) => {
     const remoteIp = getRemoteIp(req);
     const { id } = req.user;
     const { assetId } = req.params;
-    NFTValidationModel.findOneAndDelete(
-      { asset: assetId },
-      async (err, doc) => {
-        if (err) {
-          res.status(200).json({ success: false, data: {} });
-        } else {
-          if (!!doc) {
-            let nftData = await NftModel.findOneAndUpdate(
-              { _id: assetId },
-              {
-                validationState: "unvalidated",
-              }
-            );
-            if (nftData) {
-              await mixpanel.track("User cancel validation request", {
-                distinct_id: id,
-                validator: doc.validator,
-                asset: nftData._id,
-                assetCollection: nftData.nftCollection,
-                assetName: nftData.name,
-                asset_type: nftData.assetType[0],
-                asset_value: nftData.valueOfAsset.value,
-                asset_token: nftData.valueOfAsset.unit,
-                asset_orignal_date: nftData.assetOriginationDate,
-                ip: remoteIp,
-              });
-              res.status(200).json({
-                success: true,
-                message: "Validation request cancelled",
-              });
-            } else {
-              res.status(400).json({ success: false });
-            }
+    const data = await NftModel.findOne({
+      _id: assetId,
+    });
+    if (!data.validationExpired) {
+      NFTValidationModel.findOneAndDelete(
+        { asset: assetId },
+        async (err, doc) => {
+          if (err) {
+            res.status(200).json({ success: false, data: {} });
           } else {
-            res.status(400).json({
-              success: false,
-              message: "Wrong inputs",
-            });
+            if (!!doc) {
+              let nftData = await NftModel.findOneAndUpdate(
+                { _id: assetId },
+                {
+                  validationState: "unvalidated",
+                }
+              );
+              if (nftData) {
+                await mixpanel.track("User cancel validation request", {
+                  distinct_id: id,
+                  validator: doc.validator,
+                  asset: nftData._id,
+                  assetCollection: nftData.nftCollection,
+                  assetName: nftData.name,
+                  asset_type: nftData.assetType[0],
+                  asset_value: nftData.valueOfAsset.value,
+                  asset_token: nftData.valueOfAsset.unit,
+                  asset_orignal_date: nftData.assetOriginationDate,
+                  ip: remoteIp,
+                });
+                res.status(200).json({
+                  success: true,
+                  message: "Validation request cancelled",
+                });
+              } else {
+                res.status(400).json({ success: false });
+              }
+            } else {
+              res.status(400).json({
+                success: false,
+                message: "Wrong inputs",
+              });
+            }
           }
         }
-      }
-    );
+      );
+    } else {
+      NFTValidationModel.findOneAndUpdate(
+        { asset: assetId },
+        { requestState: "unvalidated" },
+        null,
+        async (err, doc) => {
+          if (err) {
+            res.status(200).json({ success: false, data: {} });
+          } else {
+            if (!!doc) {
+              let nftData = await NftModel.findOneAndUpdate(
+                { _id: assetId },
+                {
+                  validationState: "unvalidated",
+                }
+              );
+              if (nftData) {
+                await mixpanel.track("User cancel validation request", {
+                  distinct_id: id,
+                  validator: doc.validator,
+                  asset: nftData._id,
+                  assetCollection: nftData.nftCollection,
+                  assetName: nftData.name,
+                  asset_type: nftData.assetType[0],
+                  asset_value: nftData.valueOfAsset.value,
+                  asset_token: nftData.valueOfAsset.unit,
+                  asset_orignal_date: nftData.assetOriginationDate,
+                  ip: remoteIp,
+                });
+                res.status(200).json({
+                  success: true,
+                  message: "Validation request cancelled",
+                });
+              } else {
+                res.status(400).json({ success: false });
+              }
+            } else {
+              res.status(400).json({
+                success: false,
+                message: "Wrong inputs",
+              });
+            }
+          }
+        }
+      );
+    }
   } catch (err) {
     res.status(400).json({ success: false });
   }
