@@ -274,7 +274,7 @@ exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
 
     query = ValidatorModel.find(queryStr)
       .select(
-        "_id name username address profileImage bannerImage wallet_address"
+        "_id name username address profileImage bannerImage wallet_address kybEventType"
       )
       .lean();
 
