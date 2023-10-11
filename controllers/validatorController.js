@@ -699,6 +699,39 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.scheduleMeeting = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.user;
+    ValidatorModel.findOneAndUpdate(
+      { wallet_address },
+      { ...req.body },
+      null,
+      async (err, doc) => {
+        if (err) {
+          res
+            .status(400)
+            .json({ success: false, message: "Failed to schedule a meeting" });
+        } else {
+          if (!!doc) {
+            res.status(201).json({
+              success: true,
+              message: "Meeting successfully scheduled",
+            });
+          } else {
+            res
+              .status(400)
+              .json({ success: false, message: "Wrong wallet address" });
+          }
+        }
+      }
+    );
+  } catch (err) {
+    res
+      .status(400)
+      .json({ success: false, message: "Failed to schedule a meeting" });
+  }
+});
+
 exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
   try {
     let query;

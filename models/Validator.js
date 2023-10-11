@@ -48,6 +48,10 @@ const ValidatorSchema = new mongoose.Schema(
     verification_url: String,
     kybEventType: String,
     reviewStatus: String,
+    meetScheduled: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

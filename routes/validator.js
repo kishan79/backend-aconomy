@@ -6,6 +6,7 @@ const validate = require("../middlewares/validateReqSchema");
 const {
   validatorValidSignature,
   validatorOnBoardReqSchema,
+  validatorScheduleMeetingReqSchema
 } = require("../utils/validateReq");
 const { protect, authorize, validateOwner } = require("../middlewares/auth");
 const { validatorSelectQuery } = require("../utils/selectQuery");
@@ -61,6 +62,16 @@ router
     authorize("validator"),
     validateOwner,
     validatorController.updateValidator
+  );
+
+router
+  .route("/meeting")
+  .put(
+    protect,
+    authorize("validator"),
+    validate(validatorScheduleMeetingReqSchema),
+    validateOwner,
+    validatorController.scheduleMeeting
   );
 
 router

@@ -115,6 +115,10 @@ const newsletterReqSchema = [
   body("email", "The email field is required").notEmpty(),
 ];
 
+const validatorScheduleMeetingReqSchema = [
+  body("meetScheduled", "The meetScheduled field is required").notEmpty(),
+];
+
 module.exports = {
   userValidSignature,
   validatorValidSignature,
@@ -134,4 +138,5 @@ module.exports = {
   makeOfferValidationReqSchema,
   offerValidationReqSchema,
   newsletterReqSchema,
+  validatorScheduleMeetingReqSchema
 };
