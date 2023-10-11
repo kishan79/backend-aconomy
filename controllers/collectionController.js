@@ -191,12 +191,12 @@ exports.createCollection = asyncHandler(async (req, res, next) => {
           res.status(401).json({ success: false });
         } else {
           if (!!doc) {
-            // let activity = await UserActivityModel.create({
-            //   userAddress: wallet_address,
-            //   user: id,
-            //   assetCollection: doc._id,
-            //   statusText: "Collection created",
-            // });
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              assetCollection: doc._id,
+              statusText: "Collection created",
+            });
             await mixpanel.track("Collection created", {
               distinct_id: id,
               assetCollection: doc.id,
