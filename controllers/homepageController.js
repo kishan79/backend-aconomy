@@ -136,8 +136,8 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
 
     query = NftModel.find(queryStr)
       .populate([
-        { path: "nftOwner", select: "name profileImage" },
-        { path: "validator", select: "name profileImage" },
+        { path: "nftOwner", select: "name profileImage kycEventType" },
+        { path: "validator", select: "name profileImage kybEventType" },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
@@ -174,7 +174,7 @@ exports.getTopValidators = asyncHandler(async (req, res, next) => {
 
     query = ValidatorModel.find(queryStr)
       .select(
-        "_id name username wallet_address address profileImage bannerImage"
+        "_id name username wallet_address address profileImage bannerImage kybEventType"
       )
       .lean();
 
@@ -278,8 +278,8 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
 
     let data = await NftModel.find(queryStr)
       .populate([
-        { path: "nftOwner", select: "name profileImage" },
-        { path: "validator", select: "name profileImage" },
+        { path: "nftOwner", select: "name profileImage kycEventType" },
+        { path: "validator", select: "name profileImage kybEventType" },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
@@ -347,7 +347,7 @@ exports.getJournals = asyncHandler(async (req, res, next) => {
 
 exports.getTopAssetOwners = asyncHandler(async (req, res, next) => {
   try {
-    let query = UserModel.find().select("_id name profileImage").lean();
+    let query = UserModel.find().select("_id name profileImage kycEventType").lean();
 
     const results = await query;
 
