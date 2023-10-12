@@ -1062,7 +1062,7 @@ exports.addMoreFunds = asyncHandler(async (req, res, next) => {
                   $push: {
                     history: {
                       action: "Added more funds",
-                      user: id,
+                      validator: id,
                       amount,
                     },
                   },
