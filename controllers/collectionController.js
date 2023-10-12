@@ -15,7 +15,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
   try {
     let query;
 
-    const { sortby, search, category } = req.query;
+    const { sortby, search, category, blockchain } = req.query;
 
     let queryStr = {
       isPublic: false,
@@ -27,6 +27,10 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
 
     if (category) {
       queryStr = { ...queryStr, assetType: { $in: category.split(",") } };
+    }
+
+    if (blockchain) {
+      queryStr = { ...queryStr, blockchain: { $in: blockchain.split(",") } };
     }
 
     query = CollectionModel.find(queryStr).select(
