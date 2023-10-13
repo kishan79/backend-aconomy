@@ -776,99 +776,100 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
       // status: "active",
-      cancelled: false
+      cancelled: false,
     });
     // if (auctionData.status === "active") {
-      if (auctionData.auctionOwnerAddress === wallet_address) {
-        let bid = auctionData.bids.filter((item) => item.bidId === bidId);
-        if (
-          // isBefore(
-          //   new Date(),
-          //   addDays(auctionData.createdAt, auctionData.duration)
-          // ) &&
-          bid[0].status === "none"
-        ) {
-          let data = await AuctionModel.findOneAndUpdate(
-            // { "bids.bidId": bidId },
-            { _id: auctionData._id, "bids.bidId": bidId },
-            {
-              $set: {
-                "bids.$.status": "accepted",
-                status: "inactive",
-              },
-              cancelled: true,
+    if (auctionData.auctionOwnerAddress === wallet_address) {
+      let bid = auctionData.bids.filter((item) => item.bidId === bidId);
+      if (
+        // isBefore(
+        //   new Date(),
+        //   addDays(auctionData.createdAt, auctionData.duration)
+        // ) &&
+        bid[0].status === "none"
+      ) {
+        let data = await AuctionModel.findOneAndUpdate(
+          // { "bids.bidId": bidId },
+          { _id: auctionData._id, "bids.bidId": bidId },
+          {
+            $set: {
+              "bids.$.status": "accepted",
+              status: "inactive",
             },
+            cancelled: true,
+          },
+          {
+            new: true,
+          }
+        );
+        if (data) {
+          let nftData = await NftModel.findOneAndUpdate(
+            { _id: assetId },
             {
-              new: true,
+              state: "none",
+              nftOwnerAddress: bid[0].bidderAddress,
+              nftOwner: bid[0].bidder,
+              isOneTimeCommissionGiven: true,
             }
           );
-          if (data) {
-            let nftData = await NftModel.findOneAndUpdate(
-              { _id: assetId },
-              {
-                state: "none",
-                nftOwnerAddress: bid[0].bidderAddress,
-                nftOwner: bid[0].bidder,
-                isOneTimeCommissionGiven: true,
-              }
-            );
-            if (nftData) {
-              // let activity = await UserActivityModel.insertMany([
-              //   {
-              //     userAddress: wallet_address,
-              //     user: id,
-              //     asset: nftData._id,
-              //     assetName: nftData.name,
-              //     assetCollection: nftData.nftCollection,
-              //     statusText: "Accepted Bid",
-              //   },
-              //   {
-              //     userAddress: bid[0].bidderAddress,
-              //     user: bid[0].bidder,
-              //     asset: nftData._id,
-              //     assetName: nftData.name,
-              //     assetCollection: nftData.nftCollection,
-              //     statusText: "Bid got accepted",
-              //   },
-              // ]);
-              let notification = await NotificationModel.create({
-                nft: nftData._id,
-                category: "accepted-bid",
-                user: bid[0].bidder,
-                amount: bid[0].amount,
-              });
-              if (notification) {
-                for (let i = 0; i < data.bids.length; i++) {
-                  if (data.bids[i].status === "none") {
-                    let notification2 = await NotificationModel.create({
-                      nft: data.asset,
-                      category: "bid-rejected",
-                      user: data.bids[i].bidder,
-                      amount: data.bids[i].amount,
-                      bidId: data.bids[i].bidId,
-                      auctionId: auctionData._id,
-                      saleId: auctionData.saleId,
-                    });
-                  }
+          if (nftData) {
+            // let activity = await UserActivityModel.insertMany([
+            //   {
+            //     userAddress: wallet_address,
+            //     user: id,
+            //     asset: nftData._id,
+            //     assetName: nftData.name,
+            //     assetCollection: nftData.nftCollection,
+            //     statusText: "Accepted Bid",
+            //   },
+            //   {
+            //     userAddress: bid[0].bidderAddress,
+            //     user: bid[0].bidder,
+            //     asset: nftData._id,
+            //     assetName: nftData.name,
+            //     assetCollection: nftData.nftCollection,
+            //     statusText: "Bid got accepted",
+            //   },
+            // ]);
+            let notification = await NotificationModel.create({
+              nft: nftData._id,
+              category: "accepted-bid",
+              user: bid[0].bidder,
+              amount: bid[0].amount,
+            });
+            let notification2 = await NotificationModel.findOneAndDelete({
+              nft: nftData._id,
+              category: "bid-rejected",
+              bidId,
+              saleId: auctionData.saleId,
+            });
+            if (notification) {
+              for (let i = 0; i < data.bids.length; i++) {
+                if (data.bids[i].status === "none") {
+                  let notification2 = await NotificationModel.create({
+                    nft: data.asset,
+                    category: "bid-rejected",
+                    user: data.bids[i].bidder,
+                    amount: data.bids[i].amount,
+                    bidId: data.bids[i].bidId,
+                    auctionId: auctionData._id,
+                    saleId: auctionData.saleId,
+                  });
                 }
-                await mixpanel.track("Auction bid accepted", {
-                  distinct_id: id,
-                  asset: assetId,
-                  bidder: bid[0].bidder,
-                  amount: bid[0].amount,
-                  asset_type: nftData.assetType[0],
-                  asset_token: nftData.valueOfAsset.unit,
-                  ip: remoteIp,
-                });
-                res.status(201).json({
-                  success: true,
-                  message: "Bid accepted successfully",
-                });
               }
-            } else {
-              res
-                .status(401)
-                .json({ success: false, message: "Failed to accept the bid" });
+              await mixpanel.track("Auction bid accepted", {
+                distinct_id: id,
+                asset: assetId,
+                bidder: bid[0].bidder,
+                amount: bid[0].amount,
+                asset_type: nftData.assetType[0],
+                asset_token: nftData.valueOfAsset.unit,
+                ip: remoteIp,
+              });
+              res.status(201).json({
+                success: true,
+                message: "Bid accepted successfully",
+              });
             }
           } else {
             res
@@ -876,14 +877,19 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
               .json({ success: false, message: "Failed to accept the bid" });
           }
         } else {
-          res.status(401).json({ success: false, message: "Bid is expired" });
+          res
+            .status(401)
+            .json({ success: false, message: "Failed to accept the bid" });
         }
       } else {
-        res.status(401).json({
-          success: false,
-          message: "Only Asset owner can accept the bid",
-        });
+        res.status(401).json({ success: false, message: "Bid is expired" });
       }
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Only Asset owner can accept the bid",
+      });
+    }
     // } else {
     //   res.status(401).json({ success: false, message: "Auction is closed" });
     // }
