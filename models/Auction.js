@@ -29,10 +29,6 @@ const BidBuySellSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    cancelled: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true }
 );
@@ -58,6 +54,10 @@ const AuctionSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive"],
       default: "active",
+    },
+    cancelled: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
