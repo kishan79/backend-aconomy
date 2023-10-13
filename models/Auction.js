@@ -8,7 +8,7 @@ const BidBuySellSchema = new mongoose.Schema(
     },
     bidder: {
       type: mongoose.Schema.ObjectId,
-      ref: "User"
+      ref: "User",
     },
     bidderAddress: String,
     bidId: Number,
@@ -28,6 +28,10 @@ const BidBuySellSchema = new mongoose.Schema(
     expireOn: {
       type: Date,
       required: true,
+    },
+    cancelled: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

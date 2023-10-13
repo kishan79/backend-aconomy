@@ -620,7 +620,7 @@ exports.editAuction = asyncHandler(async (req, res, next) => {
                       history: {
                         action: "Auction edited",
                         user: id,
-                        amount: price
+                        amount: price,
                       },
                     },
                   }
@@ -671,85 +671,95 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
-      status: "active",
+      // status: "active",
+      cancelled: false,
     });
-    let data = await NftModel.findOne({ _id: assetId });
-    if (data.nftOwnerAddress === wallet_address) {
-      if (data.state === "auction") {
-        AuctionModel.findOneAndDelete(
-          { _id: auctionData._id },
-          async (err, doc) => {
-            if (err) {
-              res.status(401).json({ success: false });
-            } else {
-              if (!!doc) {
-                let nftData = await NftModel.findOneAndUpdate(
-                  { _id: assetId },
-                  {
-                    state: "none",
-                    listingPrice: null,
-                    listingDate: null,
-                    listingDuration: null,
-                    $push: {
-                      history: {
-                        action: "Auction cancelled",
-                        user: id,
-                      },
-                    },
-                  }
-                );
-                let activity = await UserActivityModel.create({
-                  userAddress: wallet_address,
-                  user: id,
-                  asset: nftData._id,
-                  assetName: nftData.name,
-                  assetCollection: nftData.nftCollection,
-                  statusText: "Auction Cancelled",
-                });
-                if (nftData) {
-                  for (let i = 0; i < doc.bids.length; i++) {
-                    if (doc.bids[i].status === "none") {
-                      let notification = await NotificationModel.create({
-                        nft: doc.asset,
-                        category: "bid-rejected",
-                        user: doc.bids[i].bidder,
-                        amount: doc.bids[i].amount,
-                        bidId: doc.bids[i].bidId,
-                        auctionId: doc._id,
-                        saleId: doc.saleId,
-                      });
-                    }
-                  }
-                  await mixpanel.track("Auction cancelled", {
-                    distinct_id: id,
-                    asset: assetId,
-                    ip: remoteIp,
-                  });
-                  res.status(201).json({
-                    success: true,
-                    message: "Auction cancelled successfully",
-                  });
-                } else {
-                  res.status(401).json({
-                    success: false,
-                    message: "Failed to cancel auction",
-                  });
-                }
-              } else {
+    if (auctionData) {
+      let data = await NftModel.findOne({ _id: assetId });
+      if (data.nftOwnerAddress === wallet_address) {
+        if (data.state === "auction") {
+          AuctionModel.findOneAndUpdate(
+            { _id: auctionData._id },
+            { cancelled: true },
+            null,
+            async (err, doc) => {
+              if (err) {
                 res.status(401).json({ success: false });
+              } else {
+                if (!!doc) {
+                  let nftData = await NftModel.findOneAndUpdate(
+                    { _id: assetId },
+                    {
+                      state: "none",
+                      listingPrice: null,
+                      listingDate: null,
+                      listingDuration: null,
+                      $push: {
+                        history: {
+                          action: "Auction cancelled",
+                          user: id,
+                        },
+                      },
+                    }
+                  );
+                  let activity = await UserActivityModel.create({
+                    userAddress: wallet_address,
+                    user: id,
+                    asset: nftData._id,
+                    assetName: nftData.name,
+                    assetCollection: nftData.nftCollection,
+                    statusText: "Auction Cancelled",
+                  });
+                  if (nftData) {
+                    for (let i = 0; i < doc.bids.length; i++) {
+                      if (doc.bids[i].status === "none") {
+                        let notification = await NotificationModel.create({
+                          nft: doc.asset,
+                          category: "bid-rejected",
+                          user: doc.bids[i].bidder,
+                          amount: doc.bids[i].amount,
+                          bidId: doc.bids[i].bidId,
+                          auctionId: doc._id,
+                          saleId: doc.saleId,
+                        });
+                      }
+                    }
+                    await mixpanel.track("Auction cancelled", {
+                      distinct_id: id,
+                      asset: assetId,
+                      ip: remoteIp,
+                    });
+                    res.status(201).json({
+                      success: true,
+                      message: "Auction cancelled successfully",
+                    });
+                  } else {
+                    res.status(401).json({
+                      success: false,
+                      message: "Failed to cancel auction",
+                    });
+                  }
+                } else {
+                  res.status(401).json({ success: false });
+                }
               }
             }
-          }
-        );
+          );
+        } else {
+          res
+            .status(401)
+            .json({ success: false, message: "Asset not listed for auction" });
+        }
       } else {
-        res
-          .status(401)
-          .json({ success: false, message: "Asset not listed for auction" });
+        res.status(401).json({
+          success: false,
+          message: "Only owner can cancel auction",
+        });
       }
     } else {
-      res.status(401).json({
+      res.status(400).json({
         success: false,
-        message: "Only owner can cancel auction",
+        message: "Auction has expired",
       });
     }
   } catch (err) {
@@ -785,6 +795,7 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
                 "bids.$.status": "accepted",
                 status: "inactive",
               },
+              cancelled: true,
             },
             {
               new: true,
@@ -1090,7 +1101,8 @@ exports.fetchLastestAuctionByAsset = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     let data = await AuctionModel.findOne({
       asset: assetId,
-      status: "active",
+      // status: "active",
+      cancelled: false,
     }).populate([
       // {
       //   path: "auctionOwner",
