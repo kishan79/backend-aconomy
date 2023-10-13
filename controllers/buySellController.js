@@ -775,16 +775,17 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
-      status: "active",
+      // status: "active",
+      cancelled: false
     });
-    if (auctionData.status === "active") {
+    // if (auctionData.status === "active") {
       if (auctionData.auctionOwnerAddress === wallet_address) {
         let bid = auctionData.bids.filter((item) => item.bidId === bidId);
         if (
-          isBefore(
-            new Date(),
-            addDays(auctionData.createdAt, auctionData.duration)
-          ) &&
+          // isBefore(
+          //   new Date(),
+          //   addDays(auctionData.createdAt, auctionData.duration)
+          // ) &&
           bid[0].status === "none"
         ) {
           let data = await AuctionModel.findOneAndUpdate(
@@ -883,9 +884,9 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
           message: "Only Asset owner can accept the bid",
         });
       }
-    } else {
-      res.status(401).json({ success: false, message: "Auction is closed" });
-    }
+    // } else {
+    //   res.status(401).json({ success: false, message: "Auction is closed" });
+    // }
   } catch (err) {
     res.status(401).json({ success: false, message: "Auction is closed" });
   }
