@@ -12,7 +12,7 @@ connectDB();
 //   "0 0 12 * * *",
 const auctionCron = async () => {
   try {
-    let auctionData = await AuctionModel.find();
+    let auctionData = await AuctionModel.find({ status: "active" });
     if (auctionData.length) {
       console.log(auctionData.length);
       for (let i = 0; i < auctionData.length; i++) {
