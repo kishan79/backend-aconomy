@@ -1033,7 +1033,7 @@ exports.sendRedeemRequest = asyncHandler(async (req, res, next) => {
       _id: assetId,
     });
     if (data.nftOwnerAddress === wallet_address) {
-      if (data.validationState === "validated") {
+      if (data.validationState === "validated" || data.validationExpired) {
         if (
           data.redeemRequest === "false" ||
           data.redeemRequest === "redeemed" ||
@@ -1165,7 +1165,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
       _id: assetId,
     });
     if (data.nftOwnerAddress === wallet_address) {
-      if (data.validationState === "validated") {
+      if (data.validationState === "validated" || data.validationExpired) {
         if (data.redeemRequest === "accepted") {
           let nftData = await NftModel.findOneAndUpdate(
             { _id: assetId },

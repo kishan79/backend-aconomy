@@ -711,17 +711,19 @@ exports.cancelAuction = asyncHandler(async (req, res, next) => {
                     statusText: "Auction Cancelled",
                   });
                   if (nftData) {
-                    for (let i = 0; i < doc.bids.length; i++) {
-                      if (doc.bids[i].status === "none") {
-                        let notification = await NotificationModel.create({
-                          nft: doc.asset,
-                          category: "bid-rejected",
-                          user: doc.bids[i].bidder,
-                          amount: doc.bids[i].amount,
-                          bidId: doc.bids[i].bidId,
-                          auctionId: doc._id,
-                          saleId: doc.saleId,
-                        });
+                    if (auctionData.status === "active") {
+                      for (let i = 0; i < doc.bids.length; i++) {
+                        if (doc.bids[i].status === "none") {
+                          let notification = await NotificationModel.create({
+                            nft: doc.asset,
+                            category: "bid-rejected",
+                            user: doc.bids[i].bidder,
+                            amount: doc.bids[i].amount,
+                            bidId: doc.bids[i].bidId,
+                            auctionId: doc._id,
+                            saleId: doc.saleId,
+                          });
+                        }
                       }
                     }
                     await mixpanel.track("Auction cancelled", {
@@ -844,17 +846,19 @@ exports.acceptBid = asyncHandler(async (req, res, next) => {
               saleId: auctionData.saleId,
             });
             if (notification) {
-              for (let i = 0; i < data.bids.length; i++) {
-                if (data.bids[i].status === "none") {
-                  let notification2 = await NotificationModel.create({
-                    nft: data.asset,
-                    category: "bid-rejected",
-                    user: data.bids[i].bidder,
-                    amount: data.bids[i].amount,
-                    bidId: data.bids[i].bidId,
-                    auctionId: auctionData._id,
-                    saleId: auctionData.saleId,
-                  });
+              if (auctionData.status === "active") {
+                for (let i = 0; i < data.bids.length; i++) {
+                  if (data.bids[i].status === "none") {
+                    let notification2 = await NotificationModel.create({
+                      nft: data.asset,
+                      category: "bid-rejected",
+                      user: data.bids[i].bidder,
+                      amount: data.bids[i].amount,
+                      bidId: data.bids[i].bidId,
+                      auctionId: auctionData._id,
+                      saleId: auctionData.saleId,
+                    });
+                  }
                 }
               }
               await mixpanel.track("Auction bid accepted", {
