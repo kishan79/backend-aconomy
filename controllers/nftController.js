@@ -59,7 +59,8 @@ exports.fetchNft = asyncHandler(async (req, res, next) => {
 
       let auctionData = await AuctionModel.find({
         asset: nftId,
-        status: "active",
+        // status: "active",
+        cancelled: false,
       });
       let highestBid = null;
       if (auctionData.length) {
