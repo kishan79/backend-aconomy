@@ -372,7 +372,7 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
               //   tokenId: nftData.tokenId,
               //   bidId: bid[0].bidId
               // });
-              if (activity) {
+              // if (activity) {
                 await mixpanel.track("Reject lend offer", {
                   distinct_id: id,
                   asset: assetId,
@@ -383,11 +383,11 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
                   success: true,
                   message: "Offer rejected successfully",
                 });
-              }
+              // }
             } else {
               res.status(401).json({
                 success: false,
-                message: "Failed to accept the offer",
+                message: "Failed to reject the offer",
               });
             }
           } else {
@@ -602,7 +602,7 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
         // },
       ])
       .select(
-        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration lendBorrowOffer"
       );
 
     if (sortby) {

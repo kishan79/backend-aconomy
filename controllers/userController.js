@@ -471,7 +471,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: userSelectQuery },
         // { path: "nftCreator", select: userSelectQuery },
-        // { path: "validator", select: validatorSelectQuery },
+        { path: "validator", select: "_id name kybEventType" },
       ])
       .select(
         "_id name nftOwner nftOwnerType mediaLinks assetType nftContractAddress tokenId"
