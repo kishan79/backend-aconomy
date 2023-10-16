@@ -347,7 +347,9 @@ exports.getJournals = asyncHandler(async (req, res, next) => {
 
 exports.getTopAssetOwners = asyncHandler(async (req, res, next) => {
   try {
-    let query = UserModel.find().select("_id name profileImage kycEventType").lean();
+    let query = UserModel.find({ name: { $ne: "" } })
+      .select("_id name profileImage kycEventType")
+      .lean();
 
     const results = await query;
 
