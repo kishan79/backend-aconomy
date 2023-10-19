@@ -19,6 +19,7 @@ exports.fetchNotifications = asyncHandler(async (req, res, next) => {
     };
     if (role === "user") {
       queryStr["user"] = id;
+      queryStr["category"] = { $ne: "asset-validation-extend-request" };
     } else {
       queryStr["validator"] = id;
     }
