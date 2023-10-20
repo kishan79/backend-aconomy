@@ -63,6 +63,11 @@ router
   .route("/paybackLoan/:assetId")
   .post(protect, authorize("user"), lendborrowController.paybackLoan);
 
+router
+  .route("/lendborrowbyAsset/:assetId")
+  .get(lendborrowController.fetchLastestlendborrowByAsset);
+module.exports = router;
+
 router.route("/").get(lendborrowController.fetchBorrowNfts);
 
 module.exports = router;

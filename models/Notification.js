@@ -37,6 +37,10 @@ const NotificationSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Auction",
     },
+    lendborrowId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "LendBorrow"
+    },
     saleId: Number,
     tokenId: Number,
     swapId: Number,

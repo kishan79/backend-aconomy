@@ -1,5 +1,6 @@
 const asyncHandler = require("../middlewares/async");
 const NftModel = require("../models/NFT");
+const LendBorrowModel = require("../models/LendBorrow");
 const UserActivityModel = require("../models/UserActivity");
 const NotificationModel = require("../models/Notification");
 const { addDays, isBefore } = require("date-fns");
@@ -21,51 +22,66 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     const { price, apy, duration, expiration, nftId, contractAddress } =
       req.body;
-    let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.state === "none") {
-        let data = await NftModel.findOneAndUpdate(
-          { _id: assetId },
+    let data = await NftModel.findOne({ _id: assetId });
+    if (data.nftOwnerAddress === wallet_address) {
+      if (data.state === "none") {
+        LendBorrowModel.create(
           {
-            state: "lendborrow",
-            lendBorrowOffer: {
-              price,
-              apy,
-              duration,
-              expiration,
-              bidid: null,
-              nftId,
-              nftContractAddress: contractAddress,
-              createdAt: new Date(),
-            },
+            asset: assetId,
+            nftId,
+            nftContractAddress: contractAddress,
+            price,
+            apy,
+            duration,
+            expiration,
+            borrower: id,
+            borrowerAddress: wallet_address,
+          },
+          async (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                let nftData = await NftModel.findOneAndUpdate(
+                  {
+                    _id: assetId,
+                  },
+                  {
+                    state: "lendborrow",
+                  }
+                );
+                if (nftData) {
+                  let activity = await UserActivityModel.create({
+                    userAddress: wallet_address,
+                    user: id,
+                    asset: nftData._id,
+                    assetName: nftData.name,
+                    assetCollection: nftData.nftCollection,
+                    statusText: "Proposed an offer",
+                  });
+                  await mixpanel.track("Propose asset borrow offer", {
+                    distinct_id: id,
+                    asset: assetId,
+                    asset_name: nftData.name,
+                    asset_type: nftData.assetType[0],
+                    borrow_price: price,
+                    asset_token: nftData.valueOfAsset.unit,
+                    ip: remoteIp,
+                  });
+                  res.status(201).json({
+                    success: true,
+                    message: "Offer proposed successfully",
+                  });
+                } else {
+                  res.status(401).json({
+                    success: false,
+                    message: "Failed to propose an offer",
+                  });
+                }
+              }
+            }
           }
         );
-        if (data) {
-          let activity = await UserActivityModel.create({
-            userAddress: wallet_address,
-            user: id,
-            asset: nftData._id,
-            assetName: nftData.name,
-            assetCollection: nftData.nftCollection,
-            statusText: "Proposed an offer",
-          });
-          await mixpanel.track("Propose asset borrow offer", {
-            distinct_id: id,
-            asset: assetId,
-            asset_name: nftData.name,
-            asset_type: nftData.assetType[0],
-            borrow_price: price,
-            asset_token: nftData.valueOfAsset.unit,
-            ip: remoteIp,
-          });
-          res
-            .status(201)
-            .json({ success: true, message: "Offer proposed successfully" });
-        } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Failed to propose an offer" });
-        }
       } else {
         res.status(401).json({ success: false, message: "Action forbidden" });
       }
@@ -85,64 +101,83 @@ exports.removefromBorrow = asyncHandler(async (req, res, next) => {
     const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
-    let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.state === "lendborrow") {
-        let data = await NftModel.findOneAndUpdate(
-          { _id: assetId },
-          {
-            state: "none",
-            lendBorrowOffer: {},
-          }
-        );
-        if (data) {
-          for (let i = 0; i < nftData.lendBorrowOffers.length; i++) {
-            if (nftData.lendBorrowOffers[i].status === "none") {
-              let notification2 = await NotificationModel.create({
-                nft: nftData._id,
-                category: "lend-offer-reject",
-                user: nftData.lendBorrowOffers[i].bidder,
-                tokenId: nftData.tokenId,
-                bidId: nftData.lendBorrowOffers[i].bidId,
-              });
+    let lendborrowData = await LendBorrowModel.findOne({
+      asset: assetId,
+      cancelled: false,
+    });
+    if (lendborrowData) {
+      let data = await NftModel.findOne({ _id: assetId });
+      if (data.nftOwnerAddress === wallet_address) {
+        if (data.state === "lendborrow") {
+          LendBorrowModel.findOneAndUpdate(
+            {
+              _id: lendborrowData._id,
+            },
+            { cancelled: true, status: "inactive" },
+            null,
+            async (err, doc) => {
+              if (err) {
+                res.status(401).json({ success: false });
+              } else {
+                if (!!doc) {
+                  let nftData = await NftModel.findOneAndUpdate(
+                    { _id: assetId },
+                    {
+                      state: "none",
+                    }
+                  );
+                  if (nftData) {
+                    for (let i = 0; i < lendborrowData.offers.length; i++) {
+                      if (lendborrowData.offers[i].status === "none") {
+                        let notification2 = await NotificationModel.create({
+                          nft: nftData._id,
+                          category: "lend-offer-reject",
+                          user: lendborrowData.offers[i].lender,
+                          tokenId: nftData.tokenId,
+                          bidId: lendborrowData.offers[i].bidId,
+                        });
+                      }
+                    }
+                    // let activity = await UserActivityModel.create({
+                    //   userAddress: wallet_address,
+                    //   user: id,
+                    //   asset: nftData._id,
+                    //   assetName: nftData.name,
+                    //   assetCollection: nftData.nftCollection,
+                    //   statusText: "Remove an offer",
+                    // });
+                    await mixpanel.track("Removed from borrow", {
+                      distinct_id: id,
+                      asset: assetId,
+                      asset_name: nftData.name,
+                      borrow_price: lendborrowData.price,
+                      asset_type: nftData.assetType[0],
+                      asset_token: nftData.valueOfAsset.unit,
+                      ip: remoteIp,
+                    });
+                    res.status(201).json({
+                      success: true,
+                      message: "Offer removed from borrow successfully",
+                    });
+                  } else {
+                    res.status(401).json({
+                      success: false,
+                      message: "Failed to remove from borrow",
+                    });
+                  }
+                }
+              }
             }
-          }
-          // let activity = await UserActivityModel.create({
-          //   userAddress: wallet_address,
-          //   user: id,
-          //   asset: nftData._id,
-          //   assetName: nftData.name,
-          //   assetCollection: nftData.nftCollection,
-          //   statusText: "Remove an offer",
-          // });
-          await mixpanel.track("Removed from borrow", {
-            distinct_id: id,
-            asset: assetId,
-            asset_name: nftData.name,
-            borrow_price: Object.keys(data.lendBorrowOffer).length
-              ? data.lendBorrowOffer.price
-              : null,
-            asset_type: nftData.assetType[0],
-            asset_token: nftData.valueOfAsset.unit,
-            ip: remoteIp,
-          });
-          res.status(201).json({
-            success: true,
-            message: "Offer removed from borrow successfully",
-          });
+          );
         } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Failed to remove from borrow" });
+          res.status(401).json({ success: false, message: "Action forbidden" });
         }
       } else {
-        res.status(401).json({ success: false, message: "Action forbidden" });
+        res.status(401).json({
+          success: false,
+          message: "Only asset owner can remove from borrow",
+        });
       }
-    } else {
-      res.status(401).json({
-        success: false,
-        message: "Only asset owner can remove from borrow",
-      });
     }
   } catch (err) {
     res.status(401).json({ success: false });
@@ -155,59 +190,70 @@ exports.makeOffer = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     const { wallet_address, id } = req.user;
     const { price, apy, duration, expiration, bidId, erc20Address } = req.body;
-    let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress !== wallet_address) {
-      if (nftData.state === "lendborrow") {
-        let data = await NftModel.findOneAndUpdate(
-          { _id: assetId },
+    let data = await NftModel.findOne({ _id: assetId });
+    if (data.nftOwnerAddress !== wallet_address) {
+      if (data.state === "lendborrow") {
+        LendBorrowModel.findOneAndUpdate(
+          {
+            asset: assetId,
+            cancelled: false,
+          },
           {
             $push: {
-              lendBorrowOffers: {
+              offers: {
                 price,
                 apy,
                 duration,
                 expiration,
                 bidId,
                 expireOn: addDays(new Date(), expiration),
-                bidder: id,
-                bidderAddress: wallet_address,
+                lender: id,
+                lenderAddress: wallet_address,
                 erc20Address,
               },
             },
+          },
+          null,
+          async (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
+            } else {
+              if (!!doc) {
+                let activity = await UserActivityModel.create({
+                  userAddress: wallet_address,
+                  user: id,
+                  asset: data._id,
+                  assetName: data.name,
+                  assetCollection: data.nftCollection,
+                  statusText: "Made an offer",
+                });
+                let notification = await NotificationModel.create({
+                  nft: data._id,
+                  category: "lend-make-offer",
+                  user: data.nftOwner,
+                  amount: price,
+                });
+                if (notification) {
+                  await mixpanel.track("Made offer for lend", {
+                    distinct_id: id,
+                    asset: assetId,
+                    lend_amount: price,
+                    asset_token: data.valueOfAsset.unit,
+                    ip: remoteIp,
+                  });
+                  res.status(201).json({
+                    success: true,
+                    message: "Offer made successfully",
+                  });
+                }
+              } else {
+                res
+                  .status(401)
+                  .json({ success: false, message: "Failed to make an offer" });
+              }
+            }
           }
         );
-        if (data) {
-          let activity = await UserActivityModel.create({
-            userAddress: wallet_address,
-            user: id,
-            asset: nftData._id,
-            assetName: nftData.name,
-            assetCollection: nftData.nftCollection,
-            statusText: "Made an offer",
-          });
-          let notification = await NotificationModel.create({
-            nft: nftData._id,
-            category: "lend-make-offer",
-            user: nftData.nftOwner,
-            amount: price,
-          });
-          if (notification) {
-            await mixpanel.track("Made offer for lend", {
-              distinct_id: id,
-              asset: assetId,
-              lend_amount: price,
-              asset_token: data.valueOfAsset.unit,
-              ip: remoteIp,
-            });
-            res
-              .status(201)
-              .json({ success: true, message: "Offer made successfully" });
-          }
-        } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Failed to make an offer" });
-        }
       } else {
         res.status(401).json({ success: false, message: "Action forbidden" });
       }
@@ -227,95 +273,79 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
     const { assetId } = req.params;
     const { bidId } = req.body;
     const { wallet_address, id } = req.user;
+    let lendborrowData = await LendBorrowModel.findOne({
+      asset: assetId,
+      cancelled: false,
+    });
     let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.state === "lendborrow") {
-        let bid = nftData.lendBorrowOffers.filter(
-          (item) => item.bidId === bidId
-        );
-        if (isBefore(new Date(), bid[0].expireOn)) {
-          let data = await NftModel.findOneAndUpdate(
-            { _id: assetId, "lendBorrowOffers.bidId": bidId },
-            {
-              $set: {
-                "lendBorrowOffers.$.status": "accepted",
-                lendBorrowOffer: {
-                  price: bid[0].price,
-                  apy: bid[0].apy,
-                  duration: bid[0].duration,
-                  expiration: bid[0].expiration,
-                  bidId: bid[0].bidId,
-                  bidderAddress: bid[0].bidderAddress,
-                  bidder: bid[0].bidder,
-                  nftId: nftData.lendBorrowOffer.nftId,
-                  nftContractAddress:
-                    nftData.lendBorrowOffer.nftContractAddress,
-                  createdAt: bid[0].createdAt,
-                },
-                borrowState: "active",
-              },
-              $push: {
-                history: {
-                  action: "Accepted an offer",
-                  user: id,
-                },
-              },
+    if (lendborrowData.borrowerAddress === wallet_address) {
+      let offer = lendborrowData.offers.filter((item) => item.bidId === bidId);
+      if (
+        isBefore(new Date(), offer[0].expireOn) &&
+        offer[0].status === "none"
+      ) {
+        let data = await LendBorrowModel.findOneAndUpdate(
+          {
+            _id: lendborrowData._id,
+            "offers.bidId": bidId,
+          },
+          {
+            $set: {
+              "offers.$.status": "accepted",
+              // status: "inactive",
             },
-            {
-              new: true,
-            }
-          );
-          if (data) {
-            // let activity = await UserActivityModel.create({
-            //   userAddress: wallet_address,
-            //   user: id,
-            //   asset: nftData._id,
-            //   assetName: nftData.name,
-            //   assetCollection: nftData.nftCollection,
-            //   statusText: "Accepted an offer",
-            // });
-            let notification = await NotificationModel.create({
-              nft: nftData._id,
-              category: "lend-offer-accept",
-              user: bid[0].bidder,
-            });
-            if (notification) {
-              for (let i = 0; i < data.lendBorrowOffers.length; i++) {
-                if (data.lendBorrowOffers[i].status === "none") {
-                  let notification2 = await NotificationModel.create({
-                    nft: nftData._id,
-                    category: "lend-offer-declined",
-                    user: data.lendBorrowOffers[i].bidder,
-                    tokenId: nftData.tokenId,
-                    bidId: data.lendBorrowOffers[i].bidId,
-                  });
-                }
+            cancelled: true,
+          },
+          { new: true }
+        );
+        if (data) {
+          // let activity = await UserActivityModel.create({
+          //   userAddress: wallet_address,
+          //   user: id,
+          //   asset: nftData._id,
+          //   assetName: nftData.name,
+          //   assetCollection: nftData.nftCollection,
+          //   statusText: "Accepted an offer",
+          // });
+          let notification = await NotificationModel.create({
+            nft: nftData._id,
+            category: "lend-offer-accept",
+            user: bid[0].bidder,
+          });
+          if (notification) {
+            for (let i = 0; i < lendborrowData.offers.length; i++) {
+              if (lendborrowData.offers[i].status === "none") {
+                let notification2 = await NotificationModel.create({
+                  nft: nftData._id,
+                  category: "lend-offer-declined",
+                  user: lendborrowData.offers[i].lender,
+                  tokenId: nftData.tokenId,
+                  bidId: lendborrowData.offers[i].bidId,
+                });
               }
-              await mixpanel.track("Accept lend offer", {
-                distinct_id: id,
-                asset: assetId,
-                bidId,
-                bidder: bid[0].bidder,
-                lend_amount: bid[0].price,
-                asset_type: data.assetType[0],
-                asset_token: data.valueOfAsset.unit,
-                ip: remoteIp,
-              });
-              res.status(201).json({
-                success: true,
-                message: "Offer accepted successfully",
-              });
             }
-          } else {
-            res
-              .status(401)
-              .json({ success: false, message: "Failed to accept the offer" });
+            await mixpanel.track("Accept lend offer", {
+              distinct_id: id,
+              asset: assetId,
+              bidId,
+              bidder: bid[0].bidder,
+              lend_amount: bid[0].price,
+              asset_type: data.assetType[0],
+              asset_token: data.valueOfAsset.unit,
+              ip: remoteIp,
+            });
+            res.status(201).json({
+              success: true,
+              message: "Offer accepted successfully",
+            });
           }
         } else {
-          res.status(401).json({ success: false, message: "Bid is expired" });
+          res
+            .status(401)
+            .json({ success: false, message: "Failed to accept the offer" });
         }
       } else {
-        res.status(401).json({ success: false, message: "Action forbidden" });
+        res.status(401).json({ success: false, message: "Offer is expired" });
       }
     } else {
       res.status(401).json({
@@ -335,76 +365,72 @@ exports.rejectOffer = asyncHandler(async (req, res, next) => {
     const { bidId } = req.body;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress === wallet_address) {
-      if (nftData.state === "lendborrow") {
-        let bid = nftData.lendBorrowOffers.filter(
+    let lendborrowData = await LendBorrowModel.findOne({
+      asset: assetId,
+      status: "active",
+    });
+    if (lendborrowData.status === "active") {
+      if (lendborrowData.borrowerAddress === wallet_address) {
+        let offer = lendborrowData.offers.filter(
           (item) => item.bidId === bidId
         );
-        if (bid[0].status !== "rejected") {
-          if (isBefore(new Date(), bid[0].expireOn)) {
-            let data = await NftModel.findOneAndUpdate(
-              { _id: assetId, "lendBorrowOffers.bidId": bidId },
-              {
-                $set: {
-                  "lendBorrowOffers.$.status": "rejected",
-                },
-                $push: {
-                  history: {
-                    action: "Rejected an offer",
-                    user: id,
-                  },
-                },
-              }
-            );
-            if (data) {
-              // let activity = await UserActivityModel.create({
-              //   userAddress: wallet_address,
-              //   user: id,
-              //   asset: nftData._id,
-              //   assetName: nftData.name,
-              //   assetCollection: nftData.nftCollection,
-              //   statusText: "Rejected an offer",
-              // });
-              // let notification = await NotificationModel.create({
-              //   nft: nftData._id,
-              //   category: "lend-offer-reject",
-              //   user: bid[0].bidder,
-              //   tokenId: nftData.tokenId,
-              //   bidId: bid[0].bidId
-              // });
-              // if (activity) {
-                await mixpanel.track("Reject lend offer", {
-                  distinct_id: id,
-                  asset: assetId,
-                  bidId,
-                  ip: remoteIp,
-                });
-                res.status(201).json({
-                  success: true,
-                  message: "Offer rejected successfully",
-                });
-              // }
-            } else {
-              res.status(401).json({
-                success: false,
-                message: "Failed to reject the offer",
-              });
-            }
-          } else {
+        let data = await LendBorrowModel.findOneAndUpdate(
+          // { "bids.bidId": bidId },
+          { _id: lendborrowData._id, "offers.bidId": bidId },
+          {
+            $set: {
+              "offers.$.status": "rejected",
+            },
+          },
+          {
+            new: true,
           }
+        );
+        if (data) {
+          // let activity = await UserActivityModel.create({
+          //   userAddress: wallet_address,
+          //   user: id,
+          //   asset: nftData._id,
+          //   assetName: nftData.name,
+          //   assetCollection: nftData.nftCollection,
+          //   statusText: "Rejected an offer",
+          // });
+          let notification = await NotificationModel.create({
+            nft: nftData._id,
+            category: "lend-offer-reject",
+            user: offer[0].lender,
+            tokenId: nftData.tokenId,
+            bidId: offer[0].bidId,
+            lendborrowId: lendborrowData._id,
+          });
+          // if (activity) {
+          await mixpanel.track("Reject lend offer", {
+            distinct_id: id,
+            asset: assetId,
+            bidId,
+            ip: remoteIp,
+          });
+          res.status(201).json({
+            success: true,
+            message: "Offer rejected successfully",
+          });
+          // }
         } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Offer already rejected" });
+          res.status(401).json({
+            success: false,
+            message: "Failed to reject the offer",
+          });
         }
       } else {
-        res.status(401).json({ success: false, message: "Action forbidden" });
+        res.status(401).json({
+          success: false,
+          message: "Only asset owner can reject an offer",
+        });
       }
     } else {
-      res.status(401).json({
-        success: false,
-        message: "Only asset owner can reject an offer",
-      });
+      res
+        .status(401)
+        .json({ success: false, message: "Lend & Borrow is closed" });
     }
   } catch (err) {
     res.status(401).json({ success: false });
@@ -415,76 +441,69 @@ exports.withdrawOffer = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
     const { assetId } = req.params;
-    const { bidId } = req.body;
+    const { lendborrowId, bidId } = req.body;
     const { wallet_address, id } = req.user;
-    let nftData = await NftModel.findOne({ _id: assetId });
-    if (nftData.nftOwnerAddress !== wallet_address) {
-      if (nftData.state === "lendborrow" || nftData.state === "none") {
-        let bid = nftData.lendBorrowOffers.filter(
-          (item) => item.bidId === bidId
-        );
-        if (
-          bid[0].status === "none" ||
-          bid[0].status === "rejected" ||
-          bid[0].status === "expired"
-        ) {
-          let data = await NftModel.findOneAndUpdate(
-            { _id: assetId, "lendBorrowOffers.bidId": bidId },
+    // let nftData = await NftModel.findOne({ _id: assetId });
+    let lendborrowData = await LendBorrowModel.findOne({
+      _id: lendborrowId,
+    });
+    let offer = lendborrowData.offers.filter((item) => item.bidId === bidId);
+    if (lendborrowData.borrowerAddress !== wallet_address) {
+      if (
+        offer[0].lenderAddress === wallet_address &&
+        offer[0].status !== "accepted"
+      ) {
+        if (offer[0].status !== "accepted" && offer[0].status !== "withdrawn") {
+          let data = await LendBorrowModel.findOneAndUpdate(
             {
-              $set: {
-                "lendBorrowOffers.$.status": "withdrawn",
-              },
+              _id: lendborrowId,
+              "offers.bidId": bidId,
             },
             {
-              new: true,
+              $set: {
+                "offers.$.status": "withdrawn",
+              },
             }
           );
           if (data) {
-            // let activity = await UserActivityModel.create({
-            //   userAddress: wallet_address,
-            //   user: id,
-            //   asset: nftData._id,
-            //   assetName: nftData.name,
-            //   assetCollection: nftData.nftCollection,
-            //   statusText: "Withdrawn an offer",
-            // });
-            let notification = await NotificationModel.create({
-              nft: nftData._id,
-              category: "lend-offer-withdraw",
-              user: bid[0].bidder,
+            let activity = await UserActivityModel.create({
+              userAddress: wallet_address,
+              user: id,
+              asset: data.asset,
+              // assetName: data.name,
+              statusText: "Bid withdrawn",
             });
-            if (notification) {
-              await mixpanel.track("Withdrawn lend offer", {
-                distinct_id: id,
-                asset: assetId,
-                bidId,
-                bidder: bid[0].bidder,
-                lend_amount: bid[0].price,
-                asset_type: data.assetType[0],
-                asset_token: data.valueOfAsset.unit,
-                ip: remoteIp,
-              });
-              res.status(201).json({
-                success: true,
-                message: "Offer withdrawn successfully",
-              });
-            }
+            await mixpanel.track("Auction bid withdrawn", {
+              distinct_id: id,
+              asset: data.asset,
+              bidId,
+              auctionId,
+              ip: remoteIp,
+            });
+            res
+              .status(201)
+              .json({ success: true, message: "Offer successfully withdrawn" });
           } else {
             res
               .status(401)
-              .json({ success: false, message: "Failed to accept the offer" });
+              .json({ success: false, message: "Offer failed to withdraw" });
           }
         } else {
-          res.status(401).json({ success: false, message: "" });
+          res.status(401).json({
+            success: false,
+            message: "Offer already accepted or withdrawn",
+          });
         }
       } else {
-        res.status(401).json({ success: false, message: "Action forbidden" });
+        res.status(401).json({
+          success: false,
+          message: "Lender can't withdrawn the accepted bid",
+        });
       }
     } else {
-      res.status(401).json({
-        success: false,
-        message: "Asset owner can withdraw an offer",
-      });
+      res
+        .status(401)
+        .json({ success: false, message: "Borrower can't withdraw bid" });
     }
   } catch (err) {
     res.status(401).json({ success: false });
@@ -494,50 +513,74 @@ exports.withdrawOffer = asyncHandler(async (req, res, next) => {
 exports.paybackLoan = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
-    const { assetId } = req.params;
+    const { assetId, bidId } = req.params;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.state === "lendborrow") {
       if (nftData.nftOwnerAddress === wallet_address) {
-        let data = await NftModel.findOneAndUpdate(
-          { _id: assetId },
+        LendBorrowModel.findOneAndUpdate(
           {
-            lendBorrowOffers: [],
-            state: "none",
-            borrowState: "none",
+            asset: assetId,
+            cancelled: false,
+            "offers.bidId": bidId,
+          },
+          {
+            $set: {
+              "offers.$.status": "repaid",
+            },
+            status: "inactive",
+            cancelled: true,
+          },
+          null,
+          async (err, doc) => {
+            if (err) {
+              res.status(401).json({ success: false });
+            } else {
+              let offer = doc.offers.filter((item) => item.bidId === bidId);
+              if (!!doc) {
+                let data = await NftModel.findByIdAndUpdate(
+                  {
+                    _id: assetId,
+                  },
+                  { state: "none" }
+                );
+                if (data) {
+                  // let activity = await UserActivityModel.create({
+                  //   userAddress: wallet_address,
+                  //   user: id,
+                  //   asset: nftData._id,
+                  //   assetName: nftData.name,
+                  //   assetCollection: nftData.nftCollection,
+                  //   statusText: "Loan paid back",
+                  // });
+                  let notification = await NotificationModel.create({
+                    nft: nftData._id,
+                    category: "lend-borrow-loan-repaid",
+                    user: offer.lender,
+                    amount: offer.price,
+                  });
+                  if (notification) {
+                    await mixpanel.track("Borrowed loan paid back", {
+                      distinct_id: id,
+                      asset: assetId,
+                      amount: offer.price,
+                      ip: remoteIp,
+                    });
+                    res.status(201).json({
+                      success: true,
+                      message: "Loan paid successfully",
+                    });
+                  }
+                } else {
+                  res.status(401).json({
+                    success: false,
+                    message: "Failed to payback the loan",
+                  });
+                }
+              }
+            }
           }
         );
-        if (data) {
-          // let activity = await UserActivityModel.create({
-          //   userAddress: wallet_address,
-          //   user: id,
-          //   asset: nftData._id,
-          //   assetName: nftData.name,
-          //   assetCollection: nftData.nftCollection,
-          //   statusText: "Loan paid back",
-          // });
-          let notification = await NotificationModel.create({
-            nft: nftData._id,
-            category: "lend-borrow-loan-repaid",
-            user: nftData.lendBorrowOffer.bidder,
-            amount: nftData.lendBorrowOffer.price,
-          });
-          if (notification) {
-            await mixpanel.track("Borrowed loan paid back", {
-              distinct_id: id,
-              asset: assetId,
-              amount: nftData.lendBorrowOffer.price,
-              ip: remoteIp,
-            });
-            res
-              .status(201)
-              .json({ success: true, message: "Loan paid successfully" });
-          }
-        } else {
-          res
-            .status(401)
-            .json({ success: false, message: "Failed to payback the loan" });
-        }
       } else {
         res.status(401).json({
           success: false,
@@ -553,7 +596,6 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
 });
 
 exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
-  6;
   try {
     let query;
 
@@ -561,7 +603,6 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       state: "lendborrow",
-      borrowState: "none",
     };
 
     if (search) {
@@ -649,5 +690,35 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
       data: [],
       message: "Failed to execute",
     });
+  }
+});
+
+exports.fetchLastestlendborrowByAsset = asyncHandler(async (req, res, next) => {
+  try {
+    const { assetId } = req.params;
+    let data = await LendBorrowModel.findOne({
+      asset: assetId,
+      // status: "active",
+      cancelled: false,
+    }).populate([
+      // {
+      //   path: "auctionOwner",
+      //   select: userSelectQuery,
+      // },
+      {
+        path: "offers.lender",
+        select: "_id profileImage name wallet_address",
+      },
+    ]);
+    if (data) {
+      res.status(200).json({ success: true, data });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "No asset found with requested assetId",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
   }
 });
