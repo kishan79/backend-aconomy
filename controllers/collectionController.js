@@ -171,7 +171,9 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
           };
           res.status(200).json({ success: true, data: dataObj });
         }
-      }).select(collectionSelectQuery);
+      })
+        .select(collectionSelectQuery)
+        .populate({ path: "collectionOwner", select: "_id name profileImage" });
     } else {
       res.status(400).json({ success: false });
     }
