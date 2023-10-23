@@ -243,7 +243,7 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
         }
       );
     } else {
-      res.status(400).json({ success: false });
+      res.status(400).json({ err: zohoData, success: false });
     }
   } catch (err) {
     res.status(400).json({ success: false });
