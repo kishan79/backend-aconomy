@@ -513,7 +513,8 @@ exports.withdrawOffer = asyncHandler(async (req, res, next) => {
 exports.paybackLoan = asyncHandler(async (req, res, next) => {
   try {
     const remoteIp = getRemoteIp(req);
-    const { assetId, bidId } = req.params;
+    const { assetId } = req.params;
+    const { bidId } = req.body;
     const { wallet_address, id } = req.user;
     let nftData = await NftModel.findOne({ _id: assetId });
     if (nftData.state === "lendborrow") {
