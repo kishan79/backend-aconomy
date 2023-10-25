@@ -531,7 +531,7 @@ exports.sendValidationRequest = asyncHandler(async (req, res, next) => {
     const { asset, validator, validatorAddress } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findOne({
-      assetOwnerAddress: wallet_address,
+      // assetOwnerAddress: wallet_address,
       asset,
     });
     if (!data) {

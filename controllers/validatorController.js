@@ -1341,59 +1341,123 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
     const remoteIp = getRemoteIp(req);
     const { requestId } = req.params;
     const { wallet_address, id } = req.user;
-    NFTValidationModel.findOneAndUpdate(
-      { _id: requestId },
-      { requestState: "unvalidated" },
-      null,
-      async (err, doc) => {
-        if (err) {
-          res.status(200).json({ success: false, data: {} });
-        } else {
-          if (!!doc) {
-            let nftData = await NftModel.findOneAndUpdate(
-              { _id: doc.asset },
-              {
-                // validator: null,
-                // validatorAddress: null,
-                // validationId: null,
-                validationState: "unvalidated",
+    let nftValidationData = await NFTValidationModel.findOne({
+      _id: requestId,
+    });
+    if (nftValidationData) {
+      if (
+        nftValidationData.requestState === "unvalidated" &&
+        nftValidationData.validationExpired
+      ) {
+        NFTValidationModel.findOneAndUpdate(
+          { _id: requestId },
+          { requestState: "unvalidated" },
+          null,
+          async (err, doc) => {
+            if (err) {
+              res.status(200).json({ success: false, data: {} });
+            } else {
+              if (!!doc) {
+                let nftData = await NftModel.findOneAndUpdate(
+                  { _id: doc.asset },
+                  {
+                    // validator: null,
+                    // validatorAddress: null,
+                    // validationId: null,
+                    validationState: "unvalidated",
+                  }
+                );
+                // let activity = await UserActivityModel.create({
+                //   userAddress: doc.assetOwnerAddress,
+                //   user: doc.assetOwner,
+                //   asset: doc.asset,
+                //   assetName: doc.assetName,
+                //   statusText: `Validation request rejected by validator ${wallet_address}`,
+                // });
+                // if (activity) {
+                let notification = await NotificationModel.create({
+                  nft: doc.asset,
+                  category: "asset-validation-reject",
+                  user: doc.assetOwner,
+                  validator: id,
+                });
+                if (notification) {
+                  await mixpanel.track("Reject validation request", {
+                    distinct_id: id,
+                    asset: doc.asset,
+                    ip: remoteIp,
+                  });
+                  res.status(200).json({
+                    success: true,
+                    message: "Validation request rejected",
+                  });
+                }
+                // }
+              } else {
+                res.status(400).json({
+                  success: false,
+                  message: "Wrong inputs",
+                });
               }
-            );
-            // let activity = await UserActivityModel.create({
-            //   userAddress: doc.assetOwnerAddress,
-            //   user: doc.assetOwner,
-            //   asset: doc.asset,
-            //   assetName: doc.assetName,
-            //   statusText: `Validation request rejected by validator ${wallet_address}`,
-            // });
-            // if (activity) {
-            let notification = await NotificationModel.create({
-              nft: doc.asset,
-              category: "asset-validation-reject",
-              user: doc.assetOwner,
-              validator: id,
-            });
-            if (notification) {
-              await mixpanel.track("Reject validation request", {
-                distinct_id: id,
-                asset: doc.asset,
-                ip: remoteIp,
-              });
-              res.status(200).json({
-                success: true,
-                message: "Validation request rejected",
-              });
             }
-            // }
-          } else {
-            res.status(400).json({
-              success: false,
-              message: "Wrong inputs",
-            });
           }
-        }
+        );
+      } else {
+        NFTValidationModel.findOneAndDelete(
+          { _id: requestId },
+          async (err, doc) => {
+            if (err) {
+              res.status(200).json({ success: false, data: {} });
+            } else {
+              if (!!doc) {
+                let nftData = await NftModel.findOneAndUpdate(
+                  { _id: doc.asset },
+                  {
+                    // validator: null,
+                    // validatorAddress: null,
+                    // validationId: null,
+                    validationState: "unvalidated",
+                  }
+                );
+                // let activity = await UserActivityModel.create({
+                //   userAddress: doc.assetOwnerAddress,
+                //   user: doc.assetOwner,
+                //   asset: doc.asset,
+                //   assetName: doc.assetName,
+                //   statusText: `Validation request rejected by validator ${wallet_address}`,
+                // });
+                // if (activity) {
+                let notification = await NotificationModel.create({
+                  nft: doc.asset,
+                  category: "asset-validation-reject",
+                  user: doc.assetOwner,
+                  validator: id,
+                });
+                if (notification) {
+                  await mixpanel.track("Reject validation request", {
+                    distinct_id: id,
+                    asset: doc.asset,
+                    ip: remoteIp,
+                  });
+                  res.status(200).json({
+                    success: true,
+                    message: "Validation request rejected",
+                  });
+                }
+                // }
+              } else {
+                res.status(400).json({
+                  success: false,
+                  message: "Wrong inputs",
+                });
+              }
+            }
+          }
+        )
       }
-    );
+    } else {
+      res.status(400).json({ success: false });
+    }
   } catch (err) {
     res.status(400).json({ success: false });
   }
