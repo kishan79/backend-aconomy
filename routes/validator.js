@@ -6,7 +6,7 @@ const validate = require("../middlewares/validateReqSchema");
 const {
   validatorValidSignature,
   validatorOnBoardReqSchema,
-  validatorScheduleMeetingReqSchema
+  validatorScheduleMeetingReqSchema,
 } = require("../utils/validateReq");
 const { protect, authorize, validateOwner } = require("../middlewares/auth");
 const { validatorSelectQuery } = require("../utils/selectQuery");
@@ -150,4 +150,11 @@ router
 router
   .route("/burnednfts")
   .get(protect, authorize("validator"), validatorController.fetchBurnedNfts);
+router
+  .route("/checkEmail")
+  .post(
+    protect,
+    authorize("validator"),
+    validatorController.checkEmailAvailability
+  );
 module.exports = router;

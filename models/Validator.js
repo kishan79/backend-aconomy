@@ -11,7 +11,7 @@ const ValidatorSchema = new mongoose.Schema(
     username: String,
     bio: String,
     assetType: [String],
-    email: String,
+    email: { type: String, unique: true },
     role: {
       type: String,
       default: "validator",

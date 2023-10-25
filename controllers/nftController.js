@@ -158,6 +158,7 @@ exports.createNft = asyncHandler(async (req, res, next) => {
             });
             res.status(201).json({
               success: true,
+              _id: doc._id,
               message: "NFT successfully created",
             });
           } else {

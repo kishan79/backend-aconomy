@@ -25,6 +25,7 @@ const UserActivityModel = require("../models/UserActivity");
 const fetch = require("node-fetch");
 const mixpanel = require("../services/mixpanel");
 const { getRemoteIp } = require("../utils/utils");
+const FormData = require("form-data");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
   try {
@@ -600,38 +601,32 @@ exports.fetchValidatorByAddress = asyncHandler(async (req, res, next) => {
 });
 
 const generateFWUpsertBody = (body, v_email, wallet_address) => {
-  const {
-    name,
-    username,
-    assetType,
-    socialLinks,
-    bio,
-    profileImage,
-    bannerImage,
-    email,
-  } = body;
+  let formdata = new FormData();
+  const { name, username, assetType, socialLinks, bio } = body;
+  formdata.append("SingleLine", name);
+  formdata.append("SingleLine1", username);
+  formdata.append("Checkbox", JSON.stringify(assetType));
+  formdata.append("Email", v_email);
+  formdata.append("SingleLine2", wallet_address);
 
-  return JSON.stringify({
-    unique_identifier: {
-      emails: v_email,
-    },
-    contact: {
-      first_name: name,
-      emails: email,
-      custom_field: {
-        cf_wallet_address: wallet_address,
-        cf_asset_type: assetType,
-        cf_user_name: username,
-        cf_profile_image: profileImage,
-        cf_banner_image: bannerImage,
-        cf_your_website: socialLinks.website ? socialLinks.website : "",
-        cf_discord: socialLinks.discord ? socialLinks.discord : "",
-        cf_twitter_handle: socialLinks.twitter ? socialLinks.twitter : "",
-        cf_linkedin_handle: socialLinks.linkedin ? socialLinks.linkedin : "",
-        cf_bio: bio,
-      },
-    },
-  });
+  if (bio.length) {
+    formdata.append("MultiLine", bio);
+  }
+
+  if (socialLinks.website) {
+    formdata.append("Website", socialLinks.website);
+  }
+  if (socialLinks.twitter) {
+    formdata.append("Website1", socialLinks.twitter);
+  }
+  if (socialLinks.discord) {
+    formdata.append("Website2", socialLinks.discord);
+  }
+  if (socialLinks.linkedin) {
+    formdata.append("Website3", socialLinks.linkedin);
+  }
+
+  return formdata;
 };
 
 exports.updateValidator = asyncHandler(async (req, res, next) => {
@@ -647,21 +642,18 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
         if (err) {
           res
             .status(400)
-            .json({ success: false, message: "Profile failed to update" });
+            .json({ success: false, err, message: "Profile failed to update" });
         } else {
           if (!!doc) {
-            let freshworkData = await fetch(
-              `${process.env.FRESHWORK_URL}/crm/sales/api/contacts/upsert`,
+            let zohoData = await fetch(
+              "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/formperma/XXwzW8UW3rdMNFs1xgk-6zD615SQp-iS444BVJwf7k8/htmlRecords/submit",
               {
                 method: "POST",
                 body: generateFWUpsertBody(req.body, doc.email, wallet_address),
-                headers: {
-                  Authorization: `Token token=${process.env.FRESHWORK_API_TOKEN}`,
-                  "Content-Type": "application/json",
-                },
               }
             );
-            if (freshworkData) {
+
+            if (zohoData && zohoData.status === 200) {
               await mixpanel.people(doc._id, {
                 name: req.name,
                 username: req.username,
@@ -682,7 +674,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
                 message: "Profile successfully updated",
               });
             } else {
-              res.status(400).json({ success: false });
+              res.status(400).json({ err: zohoData, success: false });
             }
           } else {
             res
@@ -1900,5 +1892,32 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
       data: [],
       message: "Failed to execute",
     });
+  }
+});
+
+exports.checkEmailAvailability = asyncHandler(async (req, res, next) => {
+  try {
+    const {wallet_address} = req.user;
+    console.log(wallet_address);
+    const { email } = req.body;
+    if (email === "") {
+      res.status(200).json({ success: false, message: "Invalid email" });
+    } else {
+      ValidatorModel.findOne({ email }, (err, validatorData) => {
+        if (err) {
+          res.status(400).json({ success: false });
+        } else {
+          if (validatorData) {
+            res.status(200).json({ success: false, message: "Email is taken" });
+          } else {
+            res
+              .status(200)
+              .json({ success: true, message: "Email is available" });
+          }
+        }
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
   }
 });
