@@ -96,6 +96,10 @@ const NftSchema = new mongoose.Schema(
       value: Number,
       unit: String,
     },
+    proposedValueOfAsset: {
+      value: Number,
+      unit: String,
+    },
     description: String,
     fundBalance: {
       type: Number,

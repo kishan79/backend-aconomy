@@ -161,13 +161,13 @@ exports.validateSignature = asyncHandler(async (req, res, next) => {
   }
 });
 
-const generateFWBody = (body, v_email, wallet_address) => {
+const generateFWBody = (doc, wallet_address) => {
   let formdata = new FormData();
-  const { name, username, assetType, socialLinks, bio } = body;
+  const { name, username, email, assetType, socialLinks, bio } = doc;
   formdata.append("SingleLine", name);
   formdata.append("SingleLine1", username);
   formdata.append("Checkbox", JSON.stringify(assetType));
-  formdata.append("Email", v_email);
+  formdata.append("Email", email);
   formdata.append("SingleLine2", wallet_address);
 
   if (bio.length) {
@@ -206,7 +206,7 @@ exports.onboardValidator = asyncHandler(async (req, res, next) => {
             "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/formperma/XXwzW8UW3rdMNFs1xgk-6zD615SQp-iS444BVJwf7k8/htmlRecords/submit",
             {
               method: "POST",
-              body: generateFWBody(req.body, docs.email, wallet_address),
+              body: generateFWBody(docs, wallet_address),
             }
           );
           if (zohoData && zohoData.status === 200) {
@@ -625,7 +625,8 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
     ValidatorModel.findOneAndUpdate(
       { wallet_address },
       { ...req.body },
-      null,
+      // null,
+      { new: true },
       async (err, doc) => {
         if (err) {
           res
@@ -637,7 +638,7 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
               "https://forms.zohopublic.in/aconomy/form/ValidatorLogin1/formperma/XXwzW8UW3rdMNFs1xgk-6zD615SQp-iS444BVJwf7k8/htmlRecords/submit",
               {
                 method: "POST",
-                body: generateFWUpsertBody(req.body, wallet_address),
+                body: generateFWUpsertBody(doc, wallet_address),
               }
             );
 
@@ -794,6 +795,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
       validationCommission,
       contractAddress,
       collateral_percent,
+      proposedValueOfAsset,
     } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findById(requestId);
@@ -836,6 +838,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validationCommission,
                       validationDate: new Date(),
                       validationCount: 1,
+                      proposedValueOfAsset,
                       erc20ContractAddress: !!contractAddress
                         ? contractAddress
                         : "",
@@ -937,6 +940,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validationCommission,
                       validationDate: new Date(),
                       validationCount: 1,
+                      proposedValueOfAsset,
                       erc20ContractAddress: !!contractAddress
                         ? contractAddress
                         : "",
@@ -1097,6 +1101,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
       validationDuration,
       validationRoyality,
       validationDocuments,
+      proposedValueOfAsset,
     } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findById(requestId);
@@ -1133,6 +1138,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                       requestExpiresOn: addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationCount: data.validationCount + 1,
+                      proposedValueOfAsset,
                       validationExpired: false,
                       validationDate: new Date(),
                       fundBalance: data.fundBalance + validationAmount,
@@ -1208,6 +1214,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                       requestExpiresOn: addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationCount: data.validationCount + 1,
+                      proposedValueOfAsset,
                       validationExpired: false,
                       validationDate: new Date(),
                       fundBalance: data.fundBalance + validationAmount,
@@ -1453,7 +1460,7 @@ exports.rejectValidationRequest = asyncHandler(async (req, res, next) => {
               }
             }
           }
-        )
+        );
       }
     } else {
       res.status(400).json({ success: false });
