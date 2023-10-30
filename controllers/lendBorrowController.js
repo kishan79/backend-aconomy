@@ -313,14 +313,14 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
             user: bid[0].bidder,
           });
           if (notification) {
-            for (let i = 0; i < lendborrowData.offers.length; i++) {
-              if (lendborrowData.offers[i].status === "none") {
+            for (let i = 0; i < data.offers.length; i++) {
+              if (data.offers[i].status === "none") {
                 let notification2 = await NotificationModel.create({
                   nft: nftData._id,
                   category: "lend-offer-declined",
-                  user: lendborrowData.offers[i].lender,
+                  user: data.offers[i].lender,
                   tokenId: nftData.tokenId,
-                  bidId: lendborrowData.offers[i].bidId,
+                  bidId: data.offers[i].bidId,
                 });
               }
             }
@@ -328,10 +328,10 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
               distinct_id: id,
               asset: assetId,
               bidId,
-              bidder: bid[0].bidder,
-              lend_amount: bid[0].price,
-              asset_type: data.assetType[0],
-              asset_token: data.valueOfAsset.unit,
+              bidder: offer[0].lender,
+              lend_amount: offer[0].price,
+              asset_type: nftData.assetType[0],
+              asset_token: nftData.valueOfAsset.unit,
               ip: remoteIp,
             });
             res.status(201).json({
