@@ -1192,7 +1192,7 @@ exports.redeemAsset = asyncHandler(async (req, res, next) => {
           if (nftData) {
             let validationData = await NFTValidationModel.findOneAndDelete(
               {
-                assetOwnerAddress: wallet_address,
+                // assetOwnerAddress: wallet_address,
                 asset: assetId,
               }
               // {
@@ -1293,7 +1293,7 @@ exports.withdrawFunds = asyncHandler(async (req, res, next) => {
         if (data) {
           let validationData = await NFTValidationModel.findOneAndUpdate(
             {
-              assetOwnerAddress: wallet_address,
+              // assetOwnerAddress: wallet_address,
               asset: assetId,
             },
             {
@@ -1392,7 +1392,7 @@ exports.repayFunds = asyncHandler(async (req, res, next) => {
           if (data) {
             let validationData = await NFTValidationModel.findOneAndUpdate(
               {
-                assetOwnerAddress: wallet_address,
+                // assetOwnerAddress: wallet_address,
                 asset: assetId,
               },
               {
