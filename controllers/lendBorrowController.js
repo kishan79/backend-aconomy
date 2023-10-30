@@ -310,7 +310,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
           let notification = await NotificationModel.create({
             nft: nftData._id,
             category: "lend-offer-accept",
-            user: bid[0].bidder,
+            user: offer[0].lender,
           });
           if (notification) {
             for (let i = 0; i < data.offers.length; i++) {
@@ -321,6 +321,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                   user: data.offers[i].lender,
                   tokenId: nftData.tokenId,
                   bidId: data.offers[i].bidId,
+                  lendborrowId: data._id,
                 });
               }
             }
