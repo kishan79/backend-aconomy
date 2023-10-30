@@ -14,7 +14,10 @@ connectDB();
 //   async function () {
 const validationCron = async () => {
   try {
-    let nftData = await NftModel.find({ validationState: "validated" });
+    let nftData = await NftModel.find({
+      validationState: "validated",
+      validationDuration: { $ne: 0 },
+    });
     if (nftData.length) {
       console.log(nftData.length);
       for (let i = 0; i < nftData.length; i++) {

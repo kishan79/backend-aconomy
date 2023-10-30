@@ -807,9 +807,13 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
             {
               validationType,
               validationAmount,
-              validationDuration,
+              validationDuration:
+                validationDuration === "infinity" ? 0 : validationDuration,
               validationRoyality,
-              requestExpiresOn: addDays(new Date(), validationDuration),
+              requestExpiresOn:
+                validationDuration === "infinity"
+                  ? null
+                  : addDays(new Date(), validationDuration),
               requestState: "validated",
               validationExpired: false,
               validationCommission,
@@ -830,9 +834,15 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validatorAddress: wallet_address,
                       validationType,
                       validationAmount,
-                      validationDuration,
+                      validationDuration:
+                        validationDuration === "infinity"
+                          ? 0
+                          : validationDuration,
                       validationRoyality,
-                      requestExpiresOn: addDays(new Date(), validationDuration),
+                      requestExpiresOn:
+                        validationDuration === "infinity"
+                          ? null
+                          : addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationExpired: false,
                       validationCommission,
@@ -908,10 +918,14 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
             {
               validationType,
               validationAmount,
-              validationDuration,
+              validationDuration:
+                validationDuration === "infinity" ? 0 : validationDuration,
               validationRoyality,
               validationDocuments,
-              requestExpiresOn: addDays(new Date(), validationDuration),
+              requestExpiresOn:
+                validationDuration === "infinity"
+                  ? null
+                  : addDays(new Date(), validationDuration),
               requestState: "validated",
               validationExpired: false,
               validationCommission,
@@ -931,10 +945,16 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validatorAddress: wallet_address,
                       validationType,
                       validationAmount,
-                      validationDuration,
+                      validationDuration:
+                        validationDuration === "infinity"
+                          ? 0
+                          : validationDuration,
                       validationRoyality,
                       validationDocuments,
-                      requestExpiresOn: addDays(new Date(), validationDuration),
+                      requestExpiresOn:
+                        validationDuration === "infinity"
+                          ? null
+                          : addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationExpired: false,
                       validationCommission,
@@ -1113,9 +1133,13 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
             {
               validationType,
               validationAmount: data.validationAmount + validationAmount,
-              validationDuration,
+              validationDuration:
+                validationDuration === "infinity" ? 0 : validationDuration,
               validationRoyality,
-              requestExpiresOn: addDays(new Date(), validationDuration),
+              requestExpiresOn:
+                validationDuration === "infinity"
+                  ? null
+                  : addDays(new Date(), validationDuration),
               requestState: "validated",
               validationCount: data.validationCount + 1,
               validationExpired: false,
@@ -1133,9 +1157,15 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                       validationType,
                       validationAmount:
                         data.validationAmount + validationAmount,
-                      validationDuration,
+                      validationDuration:
+                        validationDuration === "infinity"
+                          ? 0
+                          : validationDuration,
                       validationRoyality,
-                      requestExpiresOn: addDays(new Date(), validationDuration),
+                      requestExpiresOn:
+                        validationDuration === "infinity"
+                          ? null
+                          : addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationCount: data.validationCount + 1,
                       proposedValueOfAsset,
@@ -1190,9 +1220,13 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
             {
               validationType,
               validationAmount: data.validationAmount + validationAmount,
-              validationDuration,
+              validationDuration:
+                validationDuration === "infinity" ? 0 : validationDuration,
               validationRoyality,
-              requestExpiresOn: addDays(new Date(), validationDuration),
+              requestExpiresOn:
+                validationDuration === "infinity"
+                  ? null
+                  : addDays(new Date(), validationDuration),
               requestState: "validated",
               validationCount: data.validationCount + 1,
               validationExpired: false,
@@ -1209,9 +1243,15 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                       validationType,
                       validationAmount:
                         data.validationAmount + validationAmount,
-                      validationDuration,
+                      validationDuration:
+                        validationDuration === "infinity"
+                          ? 0
+                          : validationDuration,
                       validationRoyality,
-                      requestExpiresOn: addDays(new Date(), validationDuration),
+                      requestExpiresOn:
+                        validationDuration === "infinity"
+                          ? null
+                          : addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationCount: data.validationCount + 1,
                       proposedValueOfAsset,
