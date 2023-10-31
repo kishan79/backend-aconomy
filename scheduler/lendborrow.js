@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const dotenv = require("dotenv");
 const connectDB = require("../config/db");
 const NftModel = require("../models/NFT");
+const LendBorrowModel = require("../models/LendBorrow");
 const NotificationModel = require("../models/Notification");
 const { isBefore, subDays, format } = require("date-fns");
 
@@ -10,64 +11,61 @@ connectDB();
 
 // cron.schedule(
 //   "0 0 13 * * *",
-const lendbrorrowCron = async () => {
+const lendborrowCron = async () => {
   try {
-    let nftData = await NftModel.find({ state: "lendborrow" });
-    if (nftData.length) {
-      console.log(nftData.length);
-      for (let i = 0; i < nftData.length; i++) {
-        if (nftData[i].lendBorrowOffers.length) {
-          for (let j = 0; j < nftData[i].lendBorrowOffers.length; j++) {
-            if (nftData[i].lendBorrowOffers[j].status === "none") {
-              if (
-                isBefore(
-                  new Date(nftData[i].lendBorrowOffers[j].expireOn),
-                  new Date()
-                )
-              ) {
-                let data = await NftModel.findOneAndUpdate(
-                  {
-                    _id: nftData[i]._id,
-                    "lendBorrowOffers.bidId":
-                      nftData[i].lendBorrowOffers[j].bidId,
+    let lendborrowData = await LendBorrowModel.find({ status: "active" });
+    if (lendborrowData.length) {
+      console.log(lendborrowData.length);
+      for (let i = 0; i < lendborrowData.length; i++) {
+        for (let j = 0; j < lendborrowData[i].offers.length; j++) {
+          if (lendborrowData[i].offers[j].status === "none") {
+            if (
+              isBefore(
+                new Date(lendborrowData[i].offers[j].expireOn),
+                new Date()
+              )
+            ) {
+              let data = await LendBorrowModel.findOneAndUpdate(
+                {
+                  _id: lendborrowData[i]._id,
+                  "offers.bidId": lendborrowData[i].offers[j].bidId,
+                },
+                {
+                  $set: {
+                    "offers.$.status": "expired",
                   },
-                  {
-                    $set: {
-                      "lendBorrowOffers.$.status": "expired",
-                    },
-                  }
-                );
-                if (data) {
-                  let notification = await NotificationModel.create({
-                    nft: nftData[i]._id,
-                    category: "lend-offer-expire",
-                    user: nftData[i].lendBorrowOffers[j].bidder,
-                  });
-                  if (notification) {
-                    console.log(
-                      `Lend/Borrow :- Data Updated for tokenid ${nftData[i].tokenId}`
-                    );
-                  }
                 }
-              }
-            }
-            if (nftData[i].lendBorrowOffers[j].status === "accepted") {
-              if (
-                format(
-                  subDays(new Date(nftData[i].lendBorrowOffers[j].expireOn), 5),
-                  "ddMMyyyy"
-                ) === format(new Date(), "ddMMyyyy")
-              ) {
+              );
+              if (data) {
                 let notification = await NotificationModel.create({
-                  nft: nftData[i]._id,
-                  category: "lend-borrow-repay-soon",
-                  user: nftData[i].nftOwner,
+                  nft: lendborrowData[i].asset,
+                  category: "lend-offer-expire",
+                  user: lendborrowData[i].offers[j].lender,
                 });
                 if (notification) {
                   console.log(
-                    `Lend/Borrow :- Notification sent for token id ${nftData[i].tokenId}`
+                    `Lend/Borrow :- Data Updated for tokenid ${lendborrowData[i].asset}`
                   );
                 }
+              }
+            }
+          }
+          if (lendborrowData[i].offers[j].status === "accepted") {
+            if (
+              format(
+                subDays(new Date(lendborrowData[i].offers[j].expireOn), 5),
+                "ddMMyyyy"
+              ) === format(new Date(), "ddMMyyyy")
+            ) {
+              let notification = await NotificationModel.create({
+                nft: lendborrowData[i].asset,
+                category: "lend-borrow-repay-soon",
+                user: lendborrowData[i].borrower,
+              });
+              if (notification) {
+                console.log(
+                  `Lend/Borrow :- Notification sent for token id ${lendborrowData[i].asset}`
+                );
               }
             }
           }
@@ -82,7 +80,7 @@ const lendbrorrowCron = async () => {
   }
 };
 setTimeout(() => {
-  lendbrorrowCron();
+  lendborrowCron();
 }, 5000);
 //   { timezone: "Asia/Kolkata" }
 // );
