@@ -126,4 +126,8 @@ router
 router
   .route("/burnednfts")
   .get(protect, authorize("user"), userController.fetchBurnedNfts);
+router
+  .route("/checkEmail")
+  .post(protect, authorize("user"), userController.checkEmailAvailability);
+router.route("/:wallet_address").get(userController.getUserbyWalletAddress);
 module.exports = router;

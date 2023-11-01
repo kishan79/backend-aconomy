@@ -181,7 +181,7 @@ const NftSchema = new mongoose.Schema(
       ],
       default: "none",
     },
-    lendBorrowOffers: [OfferSchema],
+    // lendBorrowOffers: [OfferSchema],
     lendBorrowOffer: {
       nftId: Number,
       nftContractAddress: String,
@@ -189,12 +189,12 @@ const NftSchema = new mongoose.Schema(
       apy: Number,
       duration: Number,
       expiration: Number,
-      bidId: Number,
-      bidderAddress: String,
-      bidder: {
-        type: mongoose.Schema.ObjectId,
-        ref: "User",
-      },
+      // bidId: Number,
+      // bidderAddress: String,
+      // bidder: {
+      //   type: mongoose.Schema.ObjectId,
+      //   ref: "User",
+      // },
       createdAt: Date,
     },
     borrowState: {

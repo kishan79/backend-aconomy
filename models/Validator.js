@@ -8,7 +8,7 @@ const ValidatorSchema = new mongoose.Schema(
     profileImage: String,
     bannerImage: String,
     name: String,
-    username: String,
+    username: { type: String, unique: true },
     bio: String,
     assetType: [String],
     email: { type: String, unique: true },

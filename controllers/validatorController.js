@@ -1996,8 +1996,6 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
 
 exports.checkEmailAvailability = asyncHandler(async (req, res, next) => {
   try {
-    const { wallet_address } = req.user;
-    console.log(wallet_address);
     const { email } = req.body;
     if (email === "") {
       res.status(200).json({ success: false, message: "Invalid email" });

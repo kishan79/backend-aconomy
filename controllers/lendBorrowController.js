@@ -48,6 +48,14 @@ exports.proposeOffer = asyncHandler(async (req, res, next) => {
                   },
                   {
                     state: "lendborrow",
+                    lendBorrowOffer: {
+                      nftId,
+                      nftContractAddress: contractAddress,
+                      price,
+                      apy,
+                      duration,
+                      expiration,
+                    },
                   }
                 );
                 if (nftData) {
@@ -544,7 +552,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
                   {
                     _id: assetId,
                   },
-                  { state: "none" }
+                  { state: "none", lendBorrowOffer: null }
                 );
                 if (data) {
                   // let activity = await UserActivityModel.create({
@@ -645,7 +653,7 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
         // },
       ])
       .select(
-        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration lendBorrowOffer"
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state lendBorrowOffer"
       );
 
     if (sortby) {

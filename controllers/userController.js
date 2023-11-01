@@ -2043,3 +2043,61 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+exports.checkEmailAvailability = asyncHandler(async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (email === "") {
+      res.status(200).json({ success: false, message: "Invalid email" });
+    } else {
+      UserModel.findOne({ email }, (err, userData) => {
+        if (err) {
+          res.status(400).json({ success: false });
+        } else {
+          if (userData) {
+            res.status(200).json({ success: false, message: "Email is taken" });
+          } else {
+            res
+              .status(200)
+              .json({ success: true, message: "Email is available" });
+          }
+        }
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.getUserbyWalletAddress = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.params;
+    console.log(wallet_address);
+    if (wallet_address === "") {
+      res
+        .status(200)
+        .json({ success: false, message: "Invalid wallet address" });
+    } else {
+      let user = await UserModel.findOne({ wallet_address }).select(
+        "-__v -wallet_address -createdAt -updatedAt -signatureMessage -termOfService -favouriteNFT"
+      );
+      let validator = await ValidatorModel.findOne({ wallet_address }).select(
+        "-signatureMessage -favouriteNFT -__v -createdAt -updatedAt -whitelisted -email -wallet_address -document"
+      );
+      if (user || validator) {
+        if (user) {
+          res.status(200).json({ success: true, data: user });
+        }
+        if (validator) {
+          res.status(200).json({ success: true, data: validator });
+        }
+      } else {
+        res
+          .status(200)
+          .json({ success: false, message: "Invalid wallet address" });
+      }
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
