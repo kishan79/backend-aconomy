@@ -307,46 +307,60 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
           { new: true }
         );
         if (data) {
-          // let activity = await UserActivityModel.create({
-          //   userAddress: wallet_address,
-          //   user: id,
-          //   asset: nftData._id,
-          //   assetName: nftData.name,
-          //   assetCollection: nftData.nftCollection,
-          //   statusText: "Accepted an offer",
-          // });
-          let notification = await NotificationModel.create({
-            nft: nftData._id,
-            category: "lend-offer-accept",
-            user: offer[0].lender,
-          });
-          if (notification) {
-            for (let i = 0; i < data.offers.length; i++) {
-              if (data.offers[i].status === "none") {
-                let notification2 = await NotificationModel.create({
-                  nft: nftData._id,
-                  category: "lend-offer-declined",
-                  user: data.offers[i].lender,
-                  tokenId: nftData.tokenId,
-                  bidId: data.offers[i].bidId,
-                  lendborrowId: data._id,
-                });
-              }
+          let nftData2 = await NftModel.findByIdAndUpdate(
+            {
+              _id: assetId,
+            },
+            {
+              borrowState: "active",
             }
-            await mixpanel.track("Accept lend offer", {
-              distinct_id: id,
-              asset: assetId,
-              bidId,
-              bidder: offer[0].lender,
-              lend_amount: offer[0].price,
-              asset_type: nftData.assetType[0],
-              asset_token: nftData.valueOfAsset.unit,
-              ip: remoteIp,
+          );
+          if (nftData2) {
+            // let activity = await UserActivityModel.create({
+            //   userAddress: wallet_address,
+            //   user: id,
+            //   asset: nftData._id,
+            //   assetName: nftData.name,
+            //   assetCollection: nftData.nftCollection,
+            //   statusText: "Accepted an offer",
+            // });
+            let notification = await NotificationModel.create({
+              nft: nftData._id,
+              category: "lend-offer-accept",
+              user: offer[0].lender,
             });
-            res.status(201).json({
-              success: true,
-              message: "Offer accepted successfully",
-            });
+            if (notification) {
+              for (let i = 0; i < data.offers.length; i++) {
+                if (data.offers[i].status === "none") {
+                  let notification2 = await NotificationModel.create({
+                    nft: nftData._id,
+                    category: "lend-offer-declined",
+                    user: data.offers[i].lender,
+                    tokenId: nftData.tokenId,
+                    bidId: data.offers[i].bidId,
+                    lendborrowId: data._id,
+                  });
+                }
+              }
+              await mixpanel.track("Accept lend offer", {
+                distinct_id: id,
+                asset: assetId,
+                bidId,
+                bidder: offer[0].lender,
+                lend_amount: offer[0].price,
+                asset_type: nftData.assetType[0],
+                asset_token: nftData.valueOfAsset.unit,
+                ip: remoteIp,
+              });
+              res.status(201).json({
+                success: true,
+                message: "Offer accepted successfully",
+              });
+            }
+          } else {
+            res
+              .status(401)
+              .json({ success: false, message: "Failed to accept the offer" });
           }
         } else {
           res
@@ -552,7 +566,7 @@ exports.paybackLoan = asyncHandler(async (req, res, next) => {
                   {
                     _id: assetId,
                   },
-                  { state: "none", lendBorrowOffer: null }
+                  { state: "none", borrowState: "none", lendBorrowOffer: null }
                 );
                 if (data) {
                   // let activity = await UserActivityModel.create({
