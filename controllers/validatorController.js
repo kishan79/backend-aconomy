@@ -323,6 +323,7 @@ exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -426,6 +427,7 @@ exports.fetchValidators = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -769,6 +771,7 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1370,6 +1373,7 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1599,6 +1603,7 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1667,6 +1672,7 @@ exports.fetchAllRedeemRequests = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1981,6 +1987,7 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,

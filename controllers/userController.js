@@ -436,6 +436,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -511,6 +512,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -747,6 +749,7 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -862,6 +865,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
       }
       return res.status(200).json({
         success: true,
+        totalCount: total,
         count: results.length,
         pagination,
         data: dataArr,
@@ -872,6 +876,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       data: results,
     });
   } catch (err) {
@@ -1545,6 +1550,7 @@ exports.fetchNftForBorrow = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1620,6 +1626,7 @@ exports.fetchUserPoolLendings = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1695,6 +1702,7 @@ exports.fetchUserPoolBorrowings = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1797,6 +1805,7 @@ exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -1938,7 +1947,13 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
       }
       res
         .status(200)
-        .json({ success: true, count: data.length, pagination, data });
+        .json({
+          success: true,
+          totalCount: total,
+          count: data.length,
+          pagination,
+          data,
+        });
     } else {
       res.status(200).json({ success: true, data: [] });
     }
@@ -2031,6 +2046,7 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,

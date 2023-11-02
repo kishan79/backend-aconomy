@@ -334,6 +334,7 @@ exports.fetchAllCollectionNfts = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
@@ -461,6 +462,7 @@ exports.fetchCollectionActivities = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: results,
