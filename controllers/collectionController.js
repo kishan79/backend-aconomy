@@ -293,7 +293,7 @@ exports.fetchAllCollectionNfts = asyncHandler(async (req, res, next) => {
 
     query = NftModel.find(queryStr)
       .select(
-        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration lendBorrowOffer"
       )
       .populate([
         { path: "nftOwner", select: userSelectQuery },

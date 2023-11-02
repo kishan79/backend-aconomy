@@ -399,7 +399,7 @@ exports.fetchUserAssetNFTs = asyncHandler(async (req, res, next) => {
         { path: "validator", select: validatorSelectQuery },
       ])
       .select(
-        "name mediaLinks state validationState nftOwner nftOwnerType validator listingPrice listingDate listingDuration"
+        "name mediaLinks state validationState nftOwner nftOwnerType validator listingPrice listingDate listingDuration lendBorrowOffer"
       );
 
     if (sortby) {
@@ -1496,7 +1496,7 @@ exports.fetchNftForBorrow = asyncHandler(async (req, res, next) => {
 
     query = NftModel.find(queryStr)
       .select(
-        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state lendBorrowOffer"
       )
       .populate([
         // {

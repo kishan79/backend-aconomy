@@ -302,7 +302,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
               "offers.$.status": "accepted",
               // status: "inactive",
             },
-            cancelled: true,
+            // cancelled: true,
           },
           { new: true }
         );

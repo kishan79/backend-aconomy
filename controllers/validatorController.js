@@ -1566,7 +1566,7 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
         // },
       ])
       .select(
-        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration"
+        "_id name validationState nftOwner nftOwnerType validator mediaLinks state listingPrice listingDate listingDuration lendBorrowOffer"
       );
 
     if (sortby) {
