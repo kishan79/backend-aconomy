@@ -112,6 +112,7 @@ exports.fetchCollections = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      totalCount: total,
       count: results.length,
       pagination,
       data: dataArr,
