@@ -313,6 +313,18 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
             },
             {
               borrowState: "active",
+              $set: {
+                "lendBorrowOffer.accepted": {
+                  lender: offer[0].lender,
+                  lenderAddress: offer[0].lenderAddress,
+                  price: offer[0].price,
+                  apy: offer[0].apy,
+                  duration: offer[0].duration,
+                  bidId: offer[0].bidId,
+                  expireOn: offer[0].expireOn,
+                  status: "accepted",
+                },
+              },
             }
           );
           if (nftData2) {

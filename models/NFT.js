@@ -189,6 +189,7 @@ const NftSchema = new mongoose.Schema(
       apy: Number,
       duration: Number,
       expiration: Number,
+      accepted: {},
       // bidId: Number,
       // bidderAddress: String,
       // bidder: {
