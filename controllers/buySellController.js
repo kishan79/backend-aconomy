@@ -443,7 +443,7 @@ exports.placeBid = asyncHandler(async (req, res, next) => {
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
       // status: "active",
-      cancelled: false
+      cancelled: false,
     });
     let data = await NftModel.findOne({ _id: assetId });
     if (data.nftOwnerAddress !== wallet_address) {
@@ -911,7 +911,8 @@ exports.rejectBid = asyncHandler(async (req, res, next) => {
     const { wallet_address, id } = req.user;
     let auctionData = await AuctionModel.findOne({
       asset: assetId,
-      status: "active",
+      // status: "active",
+      cancelled: false,
     });
     if (auctionData.status === "active") {
       if (auctionData.auctionOwnerAddress === wallet_address) {
