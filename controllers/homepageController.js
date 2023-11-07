@@ -325,7 +325,7 @@ exports.newsLetter = asyncHandler(async (req, res, next) => {
 exports.getJournals = asyncHandler(async (req, res, next) => {
   try {
     let data = await fetch(
-      `https://api.webflow.com/v2/collections/64e1df12eba14476ccc34376/items`,
+      `https://api.webflow.com/v2/collections/65433e8ab51d75b0641b2da4/items`,
       {
         method: "GET",
         headers: {
