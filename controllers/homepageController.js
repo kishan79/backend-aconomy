@@ -131,7 +131,7 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
     let query;
 
     let queryStr = {
-      state: "sale",
+      // state: "sale",
     };
 
     query = NftModel.find(queryStr)
