@@ -132,6 +132,7 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
 
     let queryStr = {
       // state: "sale",
+      validationState: "validated",
     };
 
     query = NftModel.find(queryStr)
@@ -270,6 +271,7 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
     const { category } = req.query;
     let queryStr = {
       state: { $ne: "none" },
+      validationState: "validated",
     };
 
     if (category && category !== "All") {
