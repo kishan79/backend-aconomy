@@ -449,7 +449,7 @@ exports.fetchValidatorlist = asyncHandler(async (req, res, next) => {
 
     let queryStr = {};
 
-    query = ValidatorModel.find(queryStr).select(validatorSelectQuery);
+    query = ValidatorModel.find(queryStr).select("-signatureMessage -__v");
 
     if (sortby) {
       const sortBy = sortby.split(",").join(" ");
