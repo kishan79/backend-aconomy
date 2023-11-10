@@ -1346,6 +1346,15 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
             select: "name",
           },
         },
+        {
+          path: "asset",
+          select: nftActivitySelectQuery,
+          populate: {
+            path: "previousOwner",
+            model: "User",
+            select: "name",
+          },
+        },
       ]);
 
     if (sortby) {
