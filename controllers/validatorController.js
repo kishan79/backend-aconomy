@@ -1335,8 +1335,17 @@ exports.fetchActivites = asyncHandler(async (req, res, next) => {
     query = ValidatorActivityModel.find(queryStr)
       .select("_id assetName validator statusText asset createdAt")
       .populate([
-        { path: "asset", select: nftActivitySelectQuery },
+        // { path: "asset", select: nftActivitySelectQuery },
         { path: "validator", select: validatorSelectQuery },
+        {
+          path: "asset",
+          select: nftActivitySelectQuery,
+          populate: {
+            path: "nftOwner",
+            model: "User",
+            select: "name",
+          },
+        },
       ]);
 
     if (sortby) {
