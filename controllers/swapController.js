@@ -118,7 +118,7 @@ exports.requestForSwap = asyncHandler(async (req, res, next) => {
       if (nftData.state === "swap") {
         let swapNftData = await NftModel.findOneAndUpdate(
           { _id: swapAsset },
-          { swapState: "requested" }
+          { swapState: "requested", swapRequestNftId: assetId }
         );
         if (swapNftData && swapNftData.nftOwnerAddress === wallet_address) {
           let swapData = await SwapModel.findOneAndUpdate(
@@ -268,7 +268,7 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                           let reverseSwapState =
                             await NftModel.findOneAndUpdate(
                               { _id: swapNft.offers[i].asset },
-                              { swapState: "none" }
+                              { swapState: "none", swapRequestNftId: null }
                             );
                           let notification2 = await NotificationModel.create({
                             nft: swapNft.offers[i].asset,
@@ -364,10 +364,10 @@ exports.rejectSwapRequest = asyncHandler(async (req, res, next) => {
       );
       if (data) {
         let offer = data.offers.filter((obj) => obj.swapId === swapId);
-        // let swapNft = await NftModel.findByIdAndUpdate(
-        //   { _id: offer[0].asset },
-        //   { swapState: "none" }
-        // );
+        let swapNft = await NftModel.findByIdAndUpdate(
+          { _id: offer[0].asset },
+          { swapState: "none", swapRequestNftId: null }
+        );
         let notification = await NotificationModel.create({
           nft: offer[0].asset,
           swapnft: assetId,
@@ -437,7 +437,7 @@ exports.cancelSwapRequest = asyncHandler(async (req, res, next) => {
           if (data) {
             let swapNft = await NftModel.findByIdAndUpdate(
               { _id: request[0].asset },
-              { swapState: "none" }
+              { swapState: "none", swapRequestNftId: null }
             );
             if (swapNft) {
               await mixpanel.track("Swap request cancelled", {

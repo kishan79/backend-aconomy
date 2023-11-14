@@ -208,6 +208,10 @@ const NftSchema = new mongoose.Schema(
       enum: ["none", "requested"],
       default: "none",
     },
+    swapRequestNftId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Nft",
+    },
     history: [HistorySchema],
   },
   { timestamps: true }
