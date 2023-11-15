@@ -1945,15 +1945,13 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
           limit,
         };
       }
-      res
-        .status(200)
-        .json({
-          success: true,
-          totalCount: total,
-          count: data.length,
-          pagination,
-          data,
-        });
+      res.status(200).json({
+        success: true,
+        totalCount: total,
+        count: data.length,
+        pagination,
+        data,
+      });
     } else {
       res.status(200).json({ success: true, data: [] });
     }
@@ -2112,6 +2110,45 @@ exports.getUserbyWalletAddress = asyncHandler(async (req, res, next) => {
           .status(200)
           .json({ success: false, message: "Invalid wallet address" });
       }
+    }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.checkWalletAddress = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.body;
+    if (wallet_address === "") {
+      res
+        .status(200)
+        .json({ success: false, message: "Invalid wallet address" });
+    } else {
+      UserModel.findOne({ wallet_address }, (err, userData) => {
+        if (err) {
+          res.status(400).json({ success: false });
+        } else {
+          if (userData) {
+            res.status(200).json({ success: true, message: "User exists" });
+          } else {
+            ValidatorModel.findOne({ wallet_address }, (err, validatorData) => {
+              if (err) {
+                res.status(400).json({ success: false });
+              } else {
+                if (validatorData) {
+                  res
+                    .status(200)
+                    .json({ success: true, message: "User exists" });
+                } else {
+                  res
+                    .status(200)
+                    .json({ success: false, message: "User doesn't exists" });
+                }
+              }
+            });
+          }
+        }
+      });
     }
   } catch (err) {
     res.status(400).json({ success: false });

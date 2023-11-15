@@ -99,6 +99,13 @@ router
     userController.checkUsernameAvailability
   );
 router
+  .route("/checkWalletAddress")
+  .post(
+    protect,
+    authorize("user", "validator"),
+    userController.checkWalletAddress
+  );
+router
   .route("/sendRedeemRequest/:assetId")
   .post(protect, authorize("user"), userController.sendRedeemRequest);
 router
