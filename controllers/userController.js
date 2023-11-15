@@ -2118,37 +2118,56 @@ exports.getUserbyWalletAddress = asyncHandler(async (req, res, next) => {
 
 exports.checkWalletAddress = asyncHandler(async (req, res, next) => {
   try {
-    const { wallet_address } = req.body;
-    if (wallet_address === "") {
+    const { wallet } = req.body;
+    const { wallet_address } = req.user;
+    if (wallet === "") {
       res
         .status(200)
         .json({ success: false, message: "Invalid wallet address" });
     } else {
-      UserModel.findOne({ wallet_address }, (err, userData) => {
-        if (err) {
-          res.status(400).json({ success: false });
-        } else {
-          if (userData) {
-            res.status(200).json({ success: true, message: "User exists" });
+      if (wallet.toLowerCase() !== wallet_address.toLowerCase()) {
+        UserModel.findOne({ wallet_address: wallet }, (err, userData) => {
+          if (err) {
+            res.status(400).json({ success: false });
           } else {
-            ValidatorModel.findOne({ wallet_address }, (err, validatorData) => {
-              if (err) {
-                res.status(400).json({ success: false });
-              } else {
-                if (validatorData) {
-                  res
-                    .status(200)
-                    .json({ success: true, message: "User exists" });
-                } else {
-                  res
-                    .status(200)
-                    .json({ success: false, message: "User doesn't exists" });
+            if (userData) {
+              res
+                .status(200)
+                .json({ success: true, userData, message: "User exists" });
+            } else {
+              ValidatorModel.findOne(
+                { wallet_address: wallet },
+                (err, validatorData) => {
+                  if (err) {
+                    res.status(400).json({ success: false });
+                  } else {
+                    if (validatorData) {
+                      res
+                        .status(200)
+                        .json({
+                          success: true,
+                          validatorData,
+                          message: "User exists",
+                        });
+                    } else {
+                      res
+                        .status(200)
+                        .json({
+                          success: false,
+                          message: "User doesn't exists",
+                        });
+                    }
+                  }
                 }
-              }
-            });
+              );
+            }
           }
-        }
-      });
+        });
+      } else {
+        res
+          .status(400)
+          .json({ success: false, message: "Same wallet address as user" });
+      }
     }
   } catch (err) {
     res.status(400).json({ success: false });
