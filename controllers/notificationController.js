@@ -26,7 +26,7 @@ exports.fetchNotifications = asyncHandler(async (req, res, next) => {
 
     query = NotificationModel.find(queryStr)
       .select(
-        "_id category createdAt nft swapnft pool read user user2 validator amount swapId swapRequestId bidId saleId auctionId action tokenId"
+        "_id category createdAt nft swapnft pool read user user2 validator amount swapId swapRequestId bidId saleId auctionId action tokenId lendborrowId lendborrowNftId"
       )
       .populate([
         { path: "nft", select: nftSelectQuery },
