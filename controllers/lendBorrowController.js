@@ -513,7 +513,7 @@ exports.withdrawOffer = asyncHandler(async (req, res, next) => {
               distinct_id: id,
               asset: data.asset,
               bidId,
-              auctionId,
+              lendborrowId,
               ip: remoteIp,
             });
             res
