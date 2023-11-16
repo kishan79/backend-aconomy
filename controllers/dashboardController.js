@@ -35,7 +35,7 @@ exports.globalSearch = asyncHandler(async (req, res, next) => {
           },
           { whitelisted: true },
         ],
-      }).select("_id name username profileImage kybEventType");
+      }).select("_id name username profileImage kybEventType whitelisted");
 
       const poolData = await PoolModel.find({
         name: { $regex: q, $options: "i" },

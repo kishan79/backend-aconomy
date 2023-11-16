@@ -472,7 +472,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: userSelectQuery },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name kybEventType" },
+        { path: "validator", select: "_id name kybEventType whitelisted" },
       ])
       .select(
         "_id name nftOwner nftOwnerType mediaLinks assetType nftContractAddress tokenId"
@@ -1505,7 +1505,7 @@ exports.fetchNftForBorrow = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType" },
+        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,
@@ -1760,7 +1760,7 @@ exports.fetchUserNFTonSale = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType" },
+        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,
@@ -1872,7 +1872,7 @@ exports.getFavouriteNFTs = asyncHandler(async (req, res, next) => {
           {
             path: "validator",
             model: "Validator",
-            select: "_id name profileImage kybEventType",
+            select: "_id name profileImage kybEventType whitelisted",
           },
         ],
       },

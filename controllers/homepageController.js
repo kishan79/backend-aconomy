@@ -21,7 +21,7 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       .limit(1)
       .populate([
         { path: "nftOwner", select: "name profileImage kycEventType" },
-        { path: "validator", select: "name profileImage kybEventType" },
+        { path: "validator", select: "name profileImage kybEventType whitelisted" },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice validationState"
@@ -69,7 +69,7 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       ];
     }
     let validatorData = await ValidatorModel.find({ whitelisted: true })
-      .select("name username address profileImage bannerImage bio kybEventType")
+      .select("name username address profileImage bannerImage bio kybEventType whitelisted")
       .sort({ createdAt: -1 })
       .limit(1)
       .lean();
@@ -138,7 +138,7 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
     query = NftModel.find(queryStr)
       .populate([
         { path: "nftOwner", select: "name profileImage kycEventType" },
-        { path: "validator", select: "name profileImage kybEventType" },
+        { path: "validator", select: "name profileImage kybEventType whitelisted" },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
@@ -175,7 +175,7 @@ exports.getTopValidators = asyncHandler(async (req, res, next) => {
 
     query = ValidatorModel.find(queryStr)
       .select(
-        "_id name username wallet_address address profileImage bannerImage kybEventType"
+        "_id name username wallet_address address profileImage bannerImage kybEventType whitelisted"
       )
       .lean();
 
@@ -281,7 +281,7 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
     let data = await NftModel.find(queryStr)
       .populate([
         { path: "nftOwner", select: "name profileImage kycEventType" },
-        { path: "validator", select: "name profileImage kybEventType" },
+        { path: "validator", select: "name profileImage kybEventType whitelisted" },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"

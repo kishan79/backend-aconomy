@@ -1176,7 +1176,7 @@ exports.fetchAllListedNfts = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType" },
+        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,
@@ -1275,7 +1275,7 @@ exports.fetchAllAuctionListedNfts = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType" },
+        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,

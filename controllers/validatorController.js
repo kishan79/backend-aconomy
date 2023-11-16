@@ -263,7 +263,7 @@ exports.fetchAllValidators = asyncHandler(async (req, res, next) => {
 
     query = ValidatorModel.find(queryStr)
       .select(
-        "_id name username address profileImage bannerImage wallet_address kybEventType"
+        "_id name username address profileImage bannerImage wallet_address kybEventType whitelisted"
       )
       .lean();
 
@@ -1573,7 +1573,7 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType" },
+        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,
@@ -1960,7 +1960,7 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType" },
+        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,
