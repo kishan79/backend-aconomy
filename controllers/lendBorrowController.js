@@ -351,6 +351,7 @@ exports.acceptOffer = asyncHandler(async (req, res, next) => {
                     tokenId: nftData.tokenId,
                     bidId: data.offers[i].bidId,
                     lendborrowId: data._id,
+                    lendborrowNftId: data.nftId,
                   });
                 }
               }
@@ -668,7 +669,10 @@ exports.fetchBorrowNfts = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
+        {
+          path: "validator",
+          select: "_id name profileImage kybEventType whitelisted",
+        },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,

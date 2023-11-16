@@ -41,6 +41,7 @@ const NotificationSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "LendBorrow"
     },
+    lendborrowNftId: Number,
     saleId: Number,
     tokenId: Number,
     swapId: Number,

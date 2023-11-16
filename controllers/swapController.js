@@ -268,7 +268,10 @@ exports.acceptSwapRequest = asyncHandler(async (req, res, next) => {
                           let reverseSwapState =
                             await NftModel.findOneAndUpdate(
                               { _id: swapNft.offers[i].asset },
-                              { swapState: "none", swapRequestNftId: null }
+                              { 
+                                // swapState: "none", 
+                                swapRequestNftId: null 
+                              }
                             );
                           let notification2 = await NotificationModel.create({
                             nft: swapNft.offers[i].asset,
