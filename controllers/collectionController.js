@@ -141,7 +141,7 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
             .select(
               "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
             )
-            .populate({ path: "nftOwner", select: "_id name wallet_address" })
+            .populate({ path: "nftOwner", select: "_id name wallet_address profileImage" })
             .lean();
           let floor_price,
             tvl = 0,
