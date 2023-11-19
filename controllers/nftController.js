@@ -214,7 +214,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
             asset: data._id,
             assetName: data.name,
             assetCollection: data.nftCollection,
-            statusText: "NFT Recieved",
+            statusText: "NFT Received",
           },
         ]);
         let notification = await NotificationModel.create({

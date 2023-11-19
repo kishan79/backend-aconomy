@@ -33,13 +33,13 @@ exports.fixPriceListNft = asyncHandler(async (req, res, next) => {
             listingDuration: duration,
             saleId,
             nftContractAddress: contractAddress,
-            // $push: {
-            //   history: {
-            //     action: "Listed",
-            //     user: id,
-            //     amount: price,
-            //   },
-            // },
+            $push: {
+              history: {
+                action: "Listed on sale",
+                user: id,
+                amount: price,
+              },
+            },
           },
           null,
           async (err, doc) => {
@@ -106,13 +106,13 @@ exports.buyNft = asyncHandler(async (req, res, next) => {
             listingDate: null,
             listingDuration: null,
             isOneTimeCommissionGiven: true,
-            // $push: {
-            //   history: {
-            //     action: "bought",
-            //     user: id,
-            //     amount: data.listingPrice,
-            //   },
-            // },
+            $push: {
+              history: {
+                action: "Bought",
+                user: id,
+                amount: data.listingPrice,
+              },
+            },
           },
           null,
           async (err, doc) => {
@@ -381,7 +381,7 @@ exports.listNftForAuction = asyncHandler(async (req, res, next) => {
                     nftContractAddress: contractAddress,
                     $push: {
                       history: {
-                        action: "NFT Listed on Auction",
+                        action: "Listed on Auction",
                         user: id,
                         amount: price,
                       },
