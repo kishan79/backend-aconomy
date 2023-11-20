@@ -141,7 +141,10 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
             .select(
               "_id validationAmount validationState state nftOwner nftOwnerType nftOwnerAddress tokenId"
             )
-            .populate({ path: "nftOwner", select: "_id name wallet_address profileImage" })
+            .populate({
+              path: "nftOwner",
+              select: "_id name wallet_address profileImage",
+            })
             .lean();
           let floor_price,
             tvl = 0,
@@ -155,8 +158,10 @@ exports.fetchCollection = asyncHandler(async (req, res, next) => {
               listed += 1;
             }
             owners.push({
+              _id: data[i].nftOwner._id,
               name: data[i].nftOwner.name,
               wallet_address: data[i].nftOwner.wallet_address,
+              profileImage: data[i].nftOwner.profileImage,
             });
           }
           let dataObj = {
