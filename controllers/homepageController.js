@@ -21,7 +21,10 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       .limit(1)
       .populate([
         { path: "nftOwner", select: "name profileImage kycEventType" },
-        { path: "validator", select: "name profileImage kybEventType whitelisted" },
+        {
+          path: "validator",
+          select: "name profileImage kybEventType whitelisted",
+        },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice validationState"
@@ -69,7 +72,9 @@ exports.getCarouselData = asyncHandler(async (req, res, next) => {
       ];
     }
     let validatorData = await ValidatorModel.find({ whitelisted: true })
-      .select("name username address profileImage bannerImage bio kybEventType whitelisted")
+      .select(
+        "name username address profileImage bannerImage bio kybEventType whitelisted"
+      )
       .sort({ createdAt: -1 })
       .limit(1)
       .lean();
@@ -138,7 +143,10 @@ exports.getLatestNfts = asyncHandler(async (req, res, next) => {
     query = NftModel.find(queryStr)
       .populate([
         { path: "nftOwner", select: "name profileImage kycEventType" },
-        { path: "validator", select: "name profileImage kybEventType whitelisted" },
+        {
+          path: "validator",
+          select: "name profileImage kybEventType whitelisted",
+        },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
@@ -281,7 +289,10 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
     let data = await NftModel.find(queryStr)
       .populate([
         { path: "nftOwner", select: "name profileImage kycEventType" },
-        { path: "validator", select: "name profileImage kybEventType whitelisted" },
+        {
+          path: "validator",
+          select: "name profileImage kybEventType whitelisted",
+        },
       ])
       .select(
         "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
@@ -347,38 +358,80 @@ exports.getJournals = asyncHandler(async (req, res, next) => {
   }
 });
 
+// exports.getTopAssetOwners = asyncHandler(async (req, res, next) => {
+//   try {
+//     let query = UserModel.find({ name: { $ne: "" } })
+//       .select("_id name profileImage kycEventType")
+//       .lean();
+
+//     const results = await query;
+
+//     for (let i = 0; i < results.length; i++) {
+//       let data = await NftModel.find({
+//         nftOwner: results[i]._id,
+//         validationState: "validated",
+//       }).select("validationAmount");
+
+//       if (data) {
+//         let tvl = 0;
+//         for (let j = 0; j < data.length; j++) {
+//           tvl += data[j].validationAmount;
+//         }
+//         results[i] = {
+//           ...results[i],
+//           tvl,
+//         };
+//       }
+//     }
+
+//     results.sort((a, b) => b.tvl - a.tvl);
+//     data = results.splice(0, 8);
+
+//     return res.status(200).json({
+//       success: true,
+//       data,
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       success: false,
+//       data: [],
+//       message: "Failed to execute",
+//     });
+//   }
+// });
+
 exports.getTopAssetOwners = asyncHandler(async (req, res, next) => {
   try {
     let query = UserModel.find({ name: { $ne: "" } })
-      .select("_id name profileImage kycEventType")
+      .sort({ tvl: -1 }).limit(8)
+      .select("_id name profileImage kycEventType tvl")
       .lean();
 
     const results = await query;
 
-    for (let i = 0; i < results.length; i++) {
-      let data = await NftModel.find({
-        nftOwner: results[i]._id,
-        validationState: "validated",
-      }).select("validationAmount");
+    // for (let i = 0; i < results.length; i++) {
+    //   let data = await NftModel.find({
+    //     nftOwner: results[i]._id,
+    //     validationState: "validated",
+    //   }).select("validationAmount");
 
-      if (data) {
-        let tvl = 0;
-        for (let j = 0; j < data.length; j++) {
-          tvl += data[j].validationAmount;
-        }
-        results[i] = {
-          ...results[i],
-          tvl,
-        };
-      }
-    }
+    //   if (data) {
+    //     let tvl = 0;
+    //     for (let j = 0; j < data.length; j++) {
+    //       tvl += data[j].validationAmount;
+    //     }
+    //     results[i] = {
+    //       ...results[i],
+    //       tvl,
+    //     };
+    //   }
+    // }
 
-    results.sort((a, b) => b.tvl - a.tvl);
-    data = results.splice(0, 8);
+    // results.sort((a, b) => b.tvl - a.tvl);
 
     return res.status(200).json({
       success: true,
-      data,
+      data: results,
     });
   } catch (err) {
     res.status(400).json({

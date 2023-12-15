@@ -896,10 +896,23 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
-                            res.status(201).json({
-                              success: true,
-                              message: "Asset validated successfully",
-                            });
+                            let ownerData = await UserModel.findOneAndUpdate(
+                              {
+                                wallet_address: data.assetOwnerAddress,
+                              },
+                              { $inc: { tvl: validationAmount } }
+                            );
+                            if (ownerData) {
+                              res.status(201).json({
+                                success: true,
+                                message: "Asset validated successfully",
+                              });
+                            } else {
+                              res.status(401).json({
+                                success: false,
+                                message: "Asset owner tvl not updated",
+                              });
+                            }
                           }
                         }
                       } else {
@@ -1007,10 +1020,23 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
-                            res.status(201).json({
-                              success: true,
-                              message: "Asset validated successfully",
-                            });
+                            let ownerData = await UserModel.findOneAndUpdate(
+                              {
+                                wallet_address: data.assetOwnerAddress,
+                              },
+                              { $inc: { tvl: validationAmount } }
+                            );
+                            if (ownerData) {
+                              res.status(201).json({
+                                success: true,
+                                message: "Asset validated successfully",
+                              });
+                            } else {
+                              res.status(401).json({
+                                success: false,
+                                message: "Asset owner tvl not updated",
+                              });
+                            }
                           }
                         }
                       } else {
@@ -1199,10 +1225,27 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                             asset: data.asset,
                             ip: remoteIp,
                           });
-                          res.status(201).json({
-                            success: true,
-                            message: "Asset revalidated successfully",
-                          });
+                          let ownerData = await UserModel.findOneAndUpdate(
+                            {
+                              wallet_address: data.assetOwnerAddress,
+                            },
+                            {
+                              $inc: {
+                                tvl: data.validationAmount + validationAmount,
+                              },
+                            }
+                          );
+                          if (ownerData) {
+                            res.status(201).json({
+                              success: true,
+                              message: "Asset revalidated successfully",
+                            });
+                          } else {
+                            res.status(401).json({
+                              success: false,
+                              message: "Asset owner tvl not updated",
+                            });
+                          }
                         }
                       } else {
                         res.status(401).json({ success: false });
@@ -1284,10 +1327,27 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                             asset: data.asset,
                             ip: remoteIp,
                           });
-                          res.status(201).json({
-                            success: true,
-                            message: "Asset revalidated successfully",
-                          });
+                          let ownerData = await UserModel.findOneAndUpdate(
+                            {
+                              wallet_address: data.assetOwnerAddress,
+                            },
+                            {
+                              $inc: {
+                                tvl: data.validationAmount + validationAmount,
+                              },
+                            }
+                          );
+                          if (ownerData) {
+                            res.status(201).json({
+                              success: true,
+                              message: "Asset revalidated successfully",
+                            });
+                          } else {
+                            res.status(401).json({
+                              success: false,
+                              message: "Asset owner tvl not updated",
+                            });
+                          }
                         }
                       } else {
                         res.status(401).json({ success: false });
@@ -1573,7 +1633,10 @@ exports.fetchValidatedAssets = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
+        {
+          path: "validator",
+          select: "_id name profileImage kybEventType whitelisted",
+        },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,
@@ -1960,7 +2023,10 @@ exports.fetchBurnedNfts = asyncHandler(async (req, res, next) => {
         // },
         { path: "nftOwner", select: "_id name profileImage kycEventType" },
         // { path: "nftCreator", select: userSelectQuery },
-        { path: "validator", select: "_id name profileImage kybEventType whitelisted" },
+        {
+          path: "validator",
+          select: "_id name profileImage kybEventType whitelisted",
+        },
         // {
         //   path: "history.user",
         //   select: userHistorySelectQuery,

@@ -41,6 +41,10 @@ const UserSchema = new mongoose.Schema(
     verification_url: String,
     kycEventType: String,
     reviewStatus: String,
+    tvl: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

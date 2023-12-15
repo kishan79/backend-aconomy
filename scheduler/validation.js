@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const dotenv = require("dotenv");
 const connectDB = require("../config/db");
 const NftModel = require("../models/NFT");
+const UserModel = require("../models/User");
 const NFTValidationModel = require("../models/NFTValidation");
 const NotificationModel = require("../models/Notification");
 const { isBefore, subDays, format } = require("date-fns");
@@ -50,9 +51,17 @@ const validationCron = async () => {
                       user: nftData[i].nftOwner,
                     });
                     if (notification) {
-                      console.log(
-                        `Data Updated for tokenid ${nftData[i].tokenId}`
+                      let ownerData = await UserModel.findOneAndUpdate(
+                        {
+                          wallet_address: data.assetOwnerAddress,
+                        },
+                        { tvl: 0 }
                       );
+                      if (ownerData) {
+                        console.log(
+                          `Data Updated for tokenid ${nftData[i].tokenId}`
+                        );
+                      }
                     }
                   }
                 }
