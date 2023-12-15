@@ -55,7 +55,7 @@ const validationCron = async () => {
                         {
                           wallet_address: data.assetOwnerAddress,
                         },
-                        { tvl: 0 }
+                        { $inc: { tvl: -data.validationAmount } }
                       );
                       if (ownerData) {
                         console.log(
