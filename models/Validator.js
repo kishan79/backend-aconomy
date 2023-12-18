@@ -39,6 +39,7 @@ const ValidatorSchema = new mongoose.Schema(
       twitter: String,
       discord: String,
       linkedin: String,
+      instagram: String,
     },
     favouriteNFT: [{ type: mongoose.Schema.ObjectId, ref: "Nft" }],
     // applicantType: String,
