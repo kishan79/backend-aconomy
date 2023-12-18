@@ -498,6 +498,56 @@ exports.fetchValidatorlist = asyncHandler(async (req, res, next) => {
   }
 });
 
+// exports.fetchValidatorById = asyncHandler(async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     ValidatorModel.findById(id)
+//       .select(validatorSelectQuery)
+//       .lean()
+//       .exec(async (err, validator) => {
+//         if (err) {
+//           res.status(400).json({ success: false, data: {} });
+//         } else {
+//           if (validator) {
+//             let data = await NftModel.find({
+//               validator: validator._id,
+//               validationState: "validated",
+//             }).select("validationAmount validationDuration");
+
+//             if (data) {
+//               let tv = 0,
+//                 totalTime = 0;
+//               for (let j = 0; j < data.length; j++) {
+//                 tv += data[j].validationAmount;
+//                 totalTime += data[j].validationDuration;
+//               }
+//               validator = {
+//                 ...validator,
+//                 totalAssets: data.length,
+//                 totalValidation: data.length ? Math.round(tv / data.length) : 0,
+//                 averageTime: data.length
+//                   ? Math.round(totalTime / data.length)
+//                   : 0,
+//               };
+//             } else {
+//               validator = {
+//                 ...validator,
+//                 totalAssets: 0,
+//                 totalValidation: 0,
+//                 averageTime: 0,
+//               };
+//             }
+//             res.status(200).json({ success: true, data: validator });
+//           } else {
+//             res.status(200).json({ success: true, data: validator });
+//           }
+//         }
+//       });
+//   } catch (err) {
+//     res.status(400).json({ success: false });
+//   }
+// });
+
 exports.fetchValidatorById = asyncHandler(async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -510,34 +560,33 @@ exports.fetchValidatorById = asyncHandler(async (req, res, next) => {
         } else {
           if (validator) {
             let data = await NftModel.find({
-              validator: validator._id,
-              validationState: "validated",
-            }).select("validationAmount validationDuration");
+              // validator: validator._id,
+              // validationState: "validated",
+              $or: [
+                { validatorAddress: validator.wallet_address },
+                { nftOwnerType: "Validator" },
+              ],
+            }).select("validationAmount validationDuration validationState");
 
-            if (data) {
-              let tv = 0,
-                totalTime = 0;
-              for (let j = 0; j < data.length; j++) {
-                tv += data[j].validationAmount;
-                totalTime += data[j].validationDuration;
+            let validatedAssets = 0,
+              tvl = 0;
+            for (let i = 0; i < data.length; i++) {
+              if (data[i].validationState === "validated") {
+                validatedAssets += 1;
+                tvl += data[i].validationAmount;
               }
-              validator = {
-                ...validator,
-                totalAssets: data.length,
-                totalValidation: data.length ? Math.round(tv / data.length) : 0,
-                averageTime: data.length
-                  ? Math.round(totalTime / data.length)
-                  : 0,
-              };
-            } else {
-              validator = {
-                ...validator,
-                totalAssets: 0,
-                totalValidation: 0,
-                averageTime: 0,
-              };
             }
-            res.status(200).json({ success: true, data: validator });
+            res
+              .status(200)
+              .json({
+                success: true,
+                data: {
+                  ...validator,
+                  totalAssets: data.length,
+                  validatedAssets,
+                  tvl,
+                },
+              });
           } else {
             res.status(200).json({ success: true, data: validator });
           }
