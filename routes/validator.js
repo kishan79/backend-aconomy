@@ -98,6 +98,14 @@ router
   .post(protect, authorize("validator"), validatorController.reValidateAsset);
 
 router
+  .route("/mintAndValidateAsset")
+  .post(
+    protect,
+    authorize("validator"),
+    validatorController.mintAndValidateNFT
+  );
+
+router
   .route("/addfunds/:assetId")
   .post(protect, authorize("validator"), validatorController.addMoreFunds);
 

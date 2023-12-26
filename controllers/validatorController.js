@@ -24,7 +24,7 @@ const {
 const UserActivityModel = require("../models/UserActivity");
 const fetch = require("node-fetch");
 const mixpanel = require("../services/mixpanel");
-const { getRemoteIp } = require("../utils/utils");
+const { getRemoteIp, Role } = require("../utils/utils");
 const FormData = require("form-data");
 
 exports.generateNonce = asyncHandler(async (req, res, next) => {
@@ -576,17 +576,15 @@ exports.fetchValidatorById = asyncHandler(async (req, res, next) => {
                 tvl += data[i].validationAmount;
               }
             }
-            res
-              .status(200)
-              .json({
-                success: true,
-                data: {
-                  ...validator,
-                  totalAssets: data.length,
-                  validatedAssets,
-                  tvl,
-                },
-              });
+            res.status(200).json({
+              success: true,
+              data: {
+                ...validator,
+                totalAssets: data.length,
+                validatedAssets,
+                tvl,
+              },
+            });
           } else {
             res.status(200).json({ success: true, data: validator });
           }
@@ -2154,6 +2152,167 @@ exports.checkEmailAvailability = asyncHandler(async (req, res, next) => {
         }
       });
     }
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
+  try {
+    const { id, wallet_address, role } = req.user;
+    const {
+      validationType,
+      validationAmount,
+      validationDuration,
+      validationRoyality,
+      validationDocuments,
+      validationCommission,
+      contractAddress,
+      collateral_percent,
+      proposedValueOfAsset,
+    } = req.body;
+    NftModel.create(
+      {
+        ...req.body,
+        nftOwner: id,
+        nftOwnerType: Role[role],
+        nftOwnerAddress: wallet_address,
+        nftCreator: id,
+        nftCreatorAddress: wallet_address,
+        validationState: "pending",
+        validator: id,
+        validatorAddress: wallet_address,
+        history: [
+          {
+            action: "Created",
+            validator: id,
+          },
+        ],
+      },
+      async (err, docData) => {
+        if (err) {
+          res.status(401).json({ success: false });
+        } else {
+          if (!!doc) {
+            let validationData = await NFTValidationModel.create({
+              asset: docData._id,
+              validator: id,
+              validatorAddress: wallet_address,
+              assetOwnerAddress: wallet_address,
+              assetOwner: id,
+              assetName: docData.name,
+              validationType,
+              validationAmount,
+              validationDuration:
+                validationDuration === "infinity" ? 0 : validationDuration,
+              validationRoyality,
+              validationDocuments,
+              requestExpiresOn:
+                validationDuration === "infinity"
+                  ? null
+                  : addDays(new Date(), validationDuration),
+              requestState: "validated",
+              validationExpired: false,
+              validationCommission,
+              validationCount: 1,
+              erc20ContractAddress: !!contractAddress ? contractAddress : "",
+              fundBalance: validationAmount,
+            });
+            if (validationData) {
+              NftModel.findOneAndUpdate(
+                { _id: validationData.asset },
+                {
+                  validator: id,
+                  validatorAddress: wallet_address,
+                  validationType,
+                  validationAmount,
+                  validationDuration:
+                    validationDuration === "infinity" ? 0 : validationDuration,
+                  validationRoyality,
+                  validationDocuments,
+                  requestExpiresOn:
+                    validationDuration === "infinity"
+                      ? null
+                      : addDays(new Date(), validationDuration),
+                  validationState: "validated",
+                  validationExpired: false,
+                  validationCommission,
+                  validationDate: new Date(),
+                  validationCount: 1,
+                  proposedValueOfAsset,
+                  erc20ContractAddress: !!contractAddress
+                    ? contractAddress
+                    : "",
+                  fundBalance: validationAmount,
+                  $push: {
+                    history: {
+                      action: "validated",
+                      validator: id,
+                    },
+                  },
+                },
+                async (err, item) => {
+                  if (!!item) {
+                    let activity = await ValidatorActivityModel.create({
+                      validatorAddress: wallet_address,
+                      validator: id,
+                      asset: validationData.asset,
+                      assetOwner: validationData.assetOwnerAddress,
+                      assetName: validationData.assetName,
+                      statusText: "Asset validated",
+                    });
+                    if (activity) {
+                      await mixpanel.track("Asset validated", {
+                        distinct_id: id,
+                        asset: validationData.asset,
+                        validated_by: id,
+                        validation_type: validationType,
+                        collatoral_percentage: collateral_percent,
+                        collateral_amount: validationAmount,
+                        validation_duration: validationDuration,
+                        validator_royality: validationRoyality,
+                        one_time_commission: validationCommission,
+                        asset_type: item.assetType[0],
+                        asset_token: item.valueOfAsset.unit,
+                        ip: remoteIp,
+                      });
+                      let ownerData = await UserModel.findOneAndUpdate(
+                        {
+                          wallet_address: validationData.assetOwnerAddress,
+                        },
+                        { $inc: { tvl: validationAmount } }
+                      );
+                      if (ownerData) {
+                        res.status(201).json({
+                          success: true,
+                          message: "Asset validated successfully",
+                        });
+                      } else {
+                        res.status(401).json({
+                          success: false,
+                          message: "Asset owner tvl not updated",
+                        });
+                      }
+                    }
+                  } else {
+                    res.status(401).json({ success: false });
+                  }
+                }
+              );
+            } else {
+              res.status(400).json({
+                success: false,
+                message: "Validation data creation failed",
+              });
+            }
+          } else {
+            res
+              .status(400)
+              .json({ success: false, message: "Failed to create NFT" });
+          }
+        }
+      }
+    );
   } catch (err) {
     res.status(400).json({ success: false });
   }

@@ -14,9 +14,8 @@ const {
   userHistorySelectQuery,
   validatorHistorySelectQuery,
 } = require("../utils/selectQuery");
-const { Role } = require("../utils/utils");
+const { Role, getRemoteIp } = require("../utils/utils");
 const mixpanel = require("../services/mixpanel");
-const { getRemoteIp } = require("../utils/utils");
 
 exports.fetchNfts = asyncHandler(async (req, res, next) => {
   try {
@@ -199,41 +198,60 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
         }
       );
       if (data) {
-        let activity = await UserActivityModel.insertMany([
+        let validationData = await NFTValidationModel.findOneAndUpdate(
           {
-            userAddress: wallet_address,
-            user: id,
-            asset: data._id,
-            assetName: data.name,
-            assetCollection: data.nftCollection,
-            statusText: "NFT Transfered",
+            asset: assetId,
           },
           {
-            userAddress: userData.wallet_address,
+            assetOwnerAddress: userData.wallet_address,
+            assetOwner: userData._id,
+          }
+        );
+        if (validationData) {
+          let activity = await UserActivityModel.insertMany([
+            {
+              userAddress: wallet_address,
+              user: id,
+              asset: data._id,
+              assetName: data.name,
+              assetCollection: data.nftCollection,
+              statusText: "NFT Transfered",
+            },
+            {
+              userAddress: userData.wallet_address,
+              user: userData._id,
+              asset: data._id,
+              assetName: data.name,
+              assetCollection: data.nftCollection,
+              statusText: "NFT Received",
+            },
+          ]);
+          let notification = await NotificationModel.create({
+            nft: data._id,
+            category: "asset-transfer",
             user: userData._id,
-            asset: data._id,
-            assetName: data.name,
-            assetCollection: data.nftCollection,
-            statusText: "NFT Received",
-          },
-        ]);
-        let notification = await NotificationModel.create({
-          nft: data._id,
-          category: "asset-transfer",
-          user: userData._id,
-          user2: id,
-        });
-        if (notification) {
-          await mixpanel.track("Asset transferred", {
-            distinct_id: id,
-            asset: data._id,
-            asset_type: data.assetType[0],
-            to: userData._id,
-            ip: remoteIp,
+            user2: id,
           });
-          res
-            .status(201)
-            .json({ success: true, message: "Asset transferred successfully" });
+          if (notification) {
+            await mixpanel.track("Asset transferred", {
+              distinct_id: id,
+              asset: data._id,
+              asset_type: data.assetType[0],
+              to: userData._id,
+              ip: remoteIp,
+            });
+            res
+              .status(201)
+              .json({
+                success: true,
+                message: "Asset transferred successfully",
+              });
+          }
+        } else {
+          res.status(401).json({
+            success: false,
+            message: "Failed to update validation data",
+          });
         }
       } else {
         res
