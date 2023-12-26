@@ -2159,6 +2159,7 @@ exports.checkEmailAvailability = asyncHandler(async (req, res, next) => {
 
 exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
   try {
+    const remoteIp = getRemoteIp(req);
     const { id, wallet_address, role } = req.user;
     const {
       validationType,
@@ -2193,7 +2194,7 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
         if (err) {
           res.status(401).json({ success: false });
         } else {
-          if (!!doc) {
+          if (!!docData) {
             let validationData = await NFTValidationModel.create({
               asset: docData._id,
               validator: id,
@@ -2276,23 +2277,10 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
                         asset_token: item.valueOfAsset.unit,
                         ip: remoteIp,
                       });
-                      let ownerData = await UserModel.findOneAndUpdate(
-                        {
-                          wallet_address: validationData.assetOwnerAddress,
-                        },
-                        { $inc: { tvl: validationAmount } }
-                      );
-                      if (ownerData) {
-                        res.status(201).json({
-                          success: true,
-                          message: "Asset validated successfully",
-                        });
-                      } else {
-                        res.status(401).json({
-                          success: false,
-                          message: "Asset owner tvl not updated",
-                        });
-                      }
+                      res.status(201).json({
+                        success: true,
+                        message: "Asset minted & validated successfully",
+                      });
                     }
                   } else {
                     res.status(401).json({ success: false });
