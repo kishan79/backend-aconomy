@@ -168,4 +168,7 @@ router
 router
   .route("/dashboard")
   .get(protect, authorize("validator"), validatorController.dashboard);
+router
+  .route("/mintAsset")
+  .post(protect, authorize("validator"), validatorController.mintNFT);
 module.exports = router;

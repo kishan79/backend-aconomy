@@ -2183,7 +2183,8 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
         validationState: "pending",
         validator: id,
         validatorAddress: wallet_address,
-        validationDuration: validationDuration === "infinity" ? 0 : validationDuration,
+        validationDuration:
+          validationDuration === "infinity" ? 0 : validationDuration,
         history: [
           {
             action: "Created",
@@ -2289,6 +2290,67 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
                   }
                 }
               );
+            } else {
+              res.status(400).json({
+                success: false,
+                message: "Validation data creation failed",
+              });
+            }
+          } else {
+            res
+              .status(400)
+              .json({ success: false, message: "Failed to create NFT" });
+          }
+        }
+      }
+    );
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+});
+
+exports.mintNFT = asyncHandler(async (req, res, next) => {
+  try {
+    const remoteIp = getRemoteIp(req);
+    const { id, wallet_address, role } = req.user;
+    NftModel.create(
+      {
+        ...req.body,
+        nftOwner: id,
+        nftOwnerType: Role[role],
+        nftOwnerAddress: wallet_address,
+        nftCreator: id,
+        nftCreatorAddress: wallet_address,
+        validationState: "pending",
+        validator: id,
+        validatorAddress: wallet_address,
+        history: [
+          {
+            action: "Created",
+            validator: id,
+          },
+        ],
+      },
+      async (err, docData) => {
+        if (err) {
+          res.status(401).json({ success: false });
+        } else {
+          if (!!docData) {
+            let validationData = await NFTValidationModel.create({
+              asset: docData._id,
+              validator: id,
+              validatorAddress: wallet_address,
+              assetOwnerAddress: wallet_address,
+              assetOwner: id,
+              assetName: docData.name,
+              requestState: "pending",
+            });
+            if (validationData) {
+              res.status(201).json({
+                success: true,
+                _id: validationData.asset,
+                message: "Asset minted successfully",
+              });
             } else {
               res.status(400).json({
                 success: false,
