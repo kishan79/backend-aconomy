@@ -44,7 +44,11 @@ router
 router.route("/:nftId").get(nftController.fetchNft);
 router
   .route("/transfer/:assetId")
-  .post(protect, authorize("user"), nftController.transferNft);
-router.route("/delete/:assetId").post(protect, authorize("user"), nftController.deleteNft);
-router.route("/burn/:assetId").post(protect, authorize("user"), nftController.burnNft)
+  .post(protect, authorize("user", "validator"), nftController.transferNft);
+router
+  .route("/delete/:assetId")
+  .post(protect, authorize("user"), nftController.deleteNft);
+router
+  .route("/burn/:assetId")
+  .post(protect, authorize("user"), nftController.burnNft);
 module.exports = router;
