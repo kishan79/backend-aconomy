@@ -165,4 +165,7 @@ router
     authorize("validator"),
     validatorController.checkEmailAvailability
   );
+router
+  .route("/dashboard")
+  .get(protect, authorize("validator"), validatorController.dashboard);
 module.exports = router;

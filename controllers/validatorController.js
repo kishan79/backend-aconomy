@@ -2305,3 +2305,71 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
     res.status(400).json({ success: false });
   }
 });
+
+exports.dashboard = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address, id } = req.user;
+    let dataObj = {};
+    const validationRequestCount = await NFTValidationModel.countDocuments({
+      validatorAddress: wallet_address,
+      requestState: "pending",
+    });
+    let data = await NftModel.find({
+      validator: id,
+      validationState: "validated",
+    }).select("validationAmount validationDuration");
+
+    let redeemRequestCount = await NftModel.countDocuments({
+      validatorAddress: wallet_address,
+      redeemRequest: "true",
+    });
+
+    if (data) {
+      let tv = 0,
+        totalTime = 0;
+      for (let j = 0; j < data.length; j++) {
+        tv += data[j].validationAmount;
+        totalTime += data[j].validationDuration;
+      }
+
+      let validationRequests = await NFTValidationModel.find({
+        validatorAddress: wallet_address,
+        requestState: "pending",
+      })
+        .limit(10)
+        .populate([
+          { path: "assetOwner", select: "_id username" },
+          { path: "asset", select: "_id assetType" },
+        ])
+        .select("assetName assetOwner asset updatedAt");
+
+      let redeemRequests = await NftModel.find({
+        validatorAddress: wallet_address,
+        redeemRequest: "true",
+      })
+        .limit(10)
+        .populate([{ path: "nftOwner", select: "_id username" }])
+        .select("name nftOwner nftOwnerType assetType updatedAt");
+
+      let arr = [...validationRequests, ...redeemRequests];
+
+      arr.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+      dataObj = {
+        tvl: data.length ? Math.round(tv / data.length) : 0,
+        pinft: data.length,
+        validationRequest: validationRequestCount,
+        redeemRequest: redeemRequestCount,
+        recentRequest: arr
+      };
+    }
+    res.status(200).json({
+      success: true,
+      data: dataObj,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+    });
+  }
+});
