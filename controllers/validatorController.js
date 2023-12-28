@@ -2183,6 +2183,7 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
         validationState: "pending",
         validator: id,
         validatorAddress: wallet_address,
+        validationDuration: validationDuration === "infinity" ? 0 : validationDuration,
         history: [
           {
             action: "Created",
