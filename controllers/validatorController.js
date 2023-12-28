@@ -2279,6 +2279,7 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
                       });
                       res.status(201).json({
                         success: true,
+                        _id: validationData.asset,
                         message: "Asset minted & validated successfully",
                       });
                     }
@@ -2360,7 +2361,7 @@ exports.dashboard = asyncHandler(async (req, res, next) => {
         pinft: data.length,
         validationRequest: validationRequestCount,
         redeemRequest: redeemRequestCount,
-        recentRequest: arr
+        recentRequest: arr,
       };
     }
     res.status(200).json({
