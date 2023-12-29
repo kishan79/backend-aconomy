@@ -2349,6 +2349,7 @@ exports.mintNFT = asyncHandler(async (req, res, next) => {
               res.status(201).json({
                 success: true,
                 _id: validationData.asset,
+                requestId: validationData._id,
                 message: "Asset minted successfully",
               });
             } else {
