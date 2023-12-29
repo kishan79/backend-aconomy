@@ -943,21 +943,30 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
-                            let ownerData = await UserModel.findOneAndUpdate(
-                              {
-                                wallet_address: data.assetOwnerAddress,
-                              },
-                              { $inc: { tvl: validationAmount } }
-                            );
-                            if (ownerData) {
+                            if (
+                              data.assetOwnerAddress !== data.validatorAddress
+                            ) {
+                              let ownerData = await UserModel.findOneAndUpdate(
+                                {
+                                  wallet_address: data.assetOwnerAddress,
+                                },
+                                { $inc: { tvl: validationAmount } }
+                              );
+                              if (ownerData) {
+                                res.status(201).json({
+                                  success: true,
+                                  message: "Asset validated successfully",
+                                });
+                              } else {
+                                res.status(401).json({
+                                  success: false,
+                                  message: "Asset owner tvl not updated",
+                                });
+                              }
+                            } else {
                               res.status(201).json({
                                 success: true,
                                 message: "Asset validated successfully",
-                              });
-                            } else {
-                              res.status(401).json({
-                                success: false,
-                                message: "Asset owner tvl not updated",
                               });
                             }
                           }
@@ -1067,21 +1076,30 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                               asset_token: item.valueOfAsset.unit,
                               ip: remoteIp,
                             });
-                            let ownerData = await UserModel.findOneAndUpdate(
-                              {
-                                wallet_address: data.assetOwnerAddress,
-                              },
-                              { $inc: { tvl: validationAmount } }
-                            );
-                            if (ownerData) {
+                            if (
+                              data.assetOwnerAddress !== data.validatorAddress
+                            ) {
+                              let ownerData = await UserModel.findOneAndUpdate(
+                                {
+                                  wallet_address: data.assetOwnerAddress,
+                                },
+                                { $inc: { tvl: validationAmount } }
+                              );
+                              if (ownerData) {
+                                res.status(201).json({
+                                  success: true,
+                                  message: "Asset validated successfully",
+                                });
+                              } else {
+                                res.status(401).json({
+                                  success: false,
+                                  message: "Asset owner tvl not updated",
+                                });
+                              }
+                            } else {
                               res.status(201).json({
                                 success: true,
                                 message: "Asset validated successfully",
-                              });
-                            } else {
-                              res.status(401).json({
-                                success: false,
-                                message: "Asset owner tvl not updated",
                               });
                             }
                           }
