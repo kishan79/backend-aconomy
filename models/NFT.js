@@ -150,7 +150,11 @@ const NftSchema = new mongoose.Schema(
     validatorAddress: String,
     nftCreator: {
       type: mongoose.Schema.ObjectId,
-      ref: "User",
+      refPath: "nftCreatorType",
+    },
+    nftCreatorType:{
+      type: String,
+      enum: ["User", "Validator"]
     },
     nftCreatorAddress: String,
     previousOwner: {

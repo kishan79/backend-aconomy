@@ -2197,6 +2197,7 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
         nftOwnerType: Role[role],
         nftOwnerAddress: wallet_address,
         nftCreator: id,
+        nftCreatorType: Role[role],
         nftCreatorAddress: wallet_address,
         validationState: "pending",
         validator: id,
@@ -2338,6 +2339,7 @@ exports.mintNFT = asyncHandler(async (req, res, next) => {
         nftOwnerType: Role[role],
         nftOwnerAddress: wallet_address,
         nftCreator: id,
+        nftCreatorType: Role[role],
         nftCreatorAddress: wallet_address,
         validationState: "pending",
         validator: id,
@@ -2364,6 +2366,10 @@ exports.mintNFT = asyncHandler(async (req, res, next) => {
               requestState: "pending",
             });
             if (validationData) {
+              let data = await NftModel.findOneAndUpdate(
+                { _id: docData._id },
+                { validationId: validationData._id }
+              );
               res.status(201).json({
                 success: true,
                 _id: validationData.asset,

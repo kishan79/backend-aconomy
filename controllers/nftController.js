@@ -123,6 +123,7 @@ exports.createNft = asyncHandler(async (req, res, next) => {
         nftOwnerType: Role[role],
         nftOwnerAddress: wallet_address,
         nftCreator: id,
+        nftCreatorType: Role[role],
         nftCreatorAddress: wallet_address,
         history: [
           {
