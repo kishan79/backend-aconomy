@@ -66,12 +66,20 @@ const validationCron = async () => {
                   }
                 }
               }
-
+              let currentDate = format(new Date(), "ddMMyyyy");
               if (
+                format(
+                  subDays(new Date(data.requestExpiresOn), 30),
+                  "ddMMyyyy"
+                ) === currentDate ||
                 format(
                   subDays(new Date(data.requestExpiresOn), 7),
                   "ddMMyyyy"
-                ) === format(new Date(), "ddMMyyyy")
+                ) === currentDate ||
+                format(
+                  subDays(new Date(data.requestExpiresOn), 1),
+                  "ddMMyyyy"
+                ) === currentDate
               ) {
                 let notification = await NotificationModel.create({
                   nft: nftData[i]._id,
