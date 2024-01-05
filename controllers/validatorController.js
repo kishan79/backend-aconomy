@@ -771,6 +771,7 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
     let queryStr = {
       validatorAddress: req.user.wallet_address,
       requestState: "pending",
+      assetOwnerAddress: { $ne: req.user.wallet_address },
     };
 
     if (search) {
@@ -831,6 +832,81 @@ exports.fetchAllValidationRequest = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+exports.fetchAllValidationRequestDashboard = asyncHandler(
+  async (req, res, next) => {
+    try {
+      let query;
+
+      const { sortby, search } = req.query;
+
+      let queryStr = {
+        validatorAddress: req.user.wallet_address,
+        requestState: "pending",
+      };
+
+      if (search) {
+        queryStr = {
+          ...queryStr,
+          assetName: { $regex: search, $options: "i" },
+        };
+      }
+
+      query = NFTValidationModel.find(queryStr)
+        .populate([
+          { path: "asset", select: "name mediaLinks assetType _id" },
+          { path: "assetOwner", select: "name profileImage bannerImage _id" },
+        ])
+        .select("_id assetName asset assetOwner createdAt updatedAt");
+
+      if (sortby) {
+        const sortBy = sortby.split(",").join(" ");
+        query = query.sort(sortBy);
+      } else {
+        query = query.sort("-updatedAt");
+      }
+
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 30;
+      const startIndex = (page - 1) * limit;
+      const endIndex = page * limit;
+      const total = await NFTValidationModel.countDocuments(queryStr);
+      query = query.skip(startIndex).limit(limit);
+
+      const results = await query;
+
+      const pagination = {};
+
+      if (endIndex < total) {
+        pagination.next = {
+          page: page + 1,
+          limit,
+        };
+      }
+
+      if (startIndex > 0) {
+        pagination.prev = {
+          page: page - 1,
+          limit,
+        };
+      }
+
+      return res.status(200).json({
+        success: true,
+        totalCount: total,
+        count: results.length,
+        pagination,
+        data: results,
+      });
+    } catch (err) {
+      res.status(400).json({
+        success: false,
+        data: [],
+        message: "Failed to execute",
+      });
+    }
+  }
+);
 
 exports.validateAsset = asyncHandler(async (req, res, next) => {
   try {

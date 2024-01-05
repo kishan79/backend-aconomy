@@ -82,6 +82,14 @@ router
   );
 
 router
+  .route("/validationRequestsDashboard")
+  .get(
+    protect,
+    authorize("validator"),
+    validatorController.fetchAllValidationRequestDashboard
+  );
+
+router
   .route("/rejectValidationRequest/:requestId")
   .delete(
     protect,
