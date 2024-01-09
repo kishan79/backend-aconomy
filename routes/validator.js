@@ -65,6 +65,15 @@ router
   );
 
 router
+  .route("/profile/:wallet_address/hideIntro")
+  .put(
+    protect,
+    authorize("validator"),
+    validateOwner,
+    validatorController.updateValidatorIntro
+  );
+
+router
   .route("/meeting")
   .put(
     protect,

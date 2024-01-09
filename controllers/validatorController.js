@@ -729,6 +729,42 @@ exports.updateValidator = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.updateValidatorIntro = asyncHandler(async (req, res, next) => {
+  try {
+    const { wallet_address } = req.params;
+    const { hideIntro, hideLearnBasics } = req.body;
+    ValidatorModel.findOneAndUpdate(
+      { wallet_address },
+      {
+        hideIntro,
+        hideLearnBasics,
+      },
+      // null,
+      { new: true },
+      async (err, doc) => {
+        if (err) {
+          res
+            .status(400)
+            .json({ success: false, err, message: "Section failed to hide" });
+        } else {
+          if (!!doc) {
+            res.status(201).json({
+              success: true,
+              message: "Sections successfully hidden",
+            });
+          } else {
+            res
+              .status(400)
+              .json({ success: false, message: "Wrong wallet address" });
+          }
+        }
+      }
+    );
+  } catch (err) {
+    res.status(400).json({ success: false, message: "Section failed to hide" });
+  }
+});
+
 exports.scheduleMeeting = asyncHandler(async (req, res, next) => {
   try {
     const { wallet_address } = req.user;

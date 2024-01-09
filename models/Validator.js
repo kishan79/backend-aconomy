@@ -53,6 +53,14 @@ const ValidatorSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    hideIntro: {
+      type: Boolean,
+      default: false,
+    },
+    hideLearnBasics: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

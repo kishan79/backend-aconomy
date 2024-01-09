@@ -179,7 +179,7 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
     const remoteIp = getRemoteIp(req);
     const { receiver_address } = req.body;
     const { assetId } = req.params;
-    const { wallet_address, id } = req.user;
+    const { wallet_address, id, role } = req.user;
     let userData = await UserModel.findOne({
       wallet_address: receiver_address,
     });
@@ -227,12 +227,21 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
               statusText: "NFT Received",
             },
           ]);
-          let notification = await NotificationModel.create({
-            nft: data._id,
-            category: "asset-transfer",
-            user: userData._id,
-            user2: id,
-          });
+          if (role === "validator") {
+            let notification = await NotificationModel.create({
+              nft: data._id,
+              category: "asset-transfer-validator",
+              user: userData._id,
+              validator: id,
+            });
+          } else {
+            let notification = await NotificationModel.create({
+              nft: data._id,
+              category: "asset-transfer",
+              user: userData._id,
+              user2: id,
+            });
+          }
           if (notification) {
             await mixpanel.track("Asset transferred", {
               distinct_id: id,
@@ -241,12 +250,10 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
               to: userData._id,
               ip: remoteIp,
             });
-            res
-              .status(201)
-              .json({
-                success: true,
-                message: "Asset transferred successfully",
-              });
+            res.status(201).json({
+              success: true,
+              message: "Asset transferred successfully",
+            });
           }
         } else {
           res.status(401).json({
