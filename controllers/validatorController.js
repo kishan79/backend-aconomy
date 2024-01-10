@@ -2460,7 +2460,7 @@ exports.mintNFT = asyncHandler(async (req, res, next) => {
 
 exports.dashboard = asyncHandler(async (req, res, next) => {
   try {
-    const { wallet_address, id } = req.user;
+    const { wallet_address, id, hideIntro, hideLearnBasics } = req.user;
     let dataObj = {};
     const validationRequestCount = await NFTValidationModel.countDocuments({
       validatorAddress: wallet_address,
@@ -2513,6 +2513,8 @@ exports.dashboard = asyncHandler(async (req, res, next) => {
         validationRequest: validationRequestCount,
         redeemRequest: redeemRequestCount,
         recentRequest: arr,
+        hideIntro,
+        hideLearnBasics,
       };
     }
     res.status(200).json({
