@@ -3,6 +3,7 @@ const UserModel = require("../models/User");
 const ValidatorModel = require("../models/Validator");
 const NFTValidationModel = require("../models/NFTValidation");
 const UserActivityModel = require("../models/UserActivity");
+const ValidatorActivityModel = require('../models/ValidatorActivity');
 const NotificationModel = require("../models/Notification");
 const AuctionModel = require("../models/Auction");
 const asyncHandler = require("../middlewares/async");
@@ -221,17 +222,10 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
               },
             ]);
             let activity2 = await ValidatorActivityModel.create({
-              // validatorAddress: wallet_address,
-              // validator: id,
-              // asset: data.asset,
-              // assetOwner: data.assetOwnerAddress,
-              // assetName: data.assetName,
-              // statusText: "Asset validated",
               validatorAddress: wallet_address,
               validator: id,
               asset: data._id,
               assetName: data.name,
-              assetCollection: data.nftCollection,
               statusText: "NFT Transfered",
             });
             let notification = await NotificationModel.create({
