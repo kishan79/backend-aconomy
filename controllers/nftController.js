@@ -209,51 +209,88 @@ exports.transferNft = asyncHandler(async (req, res, next) => {
           }
         );
         if (validationData) {
-          let activity = await UserActivityModel.insertMany([
-            {
-              userAddress: wallet_address,
-              user: id,
+          if (role === "validator") {
+            let activity = await UserActivityModel.create([
+              {
+                userAddress: userData.wallet_address,
+                user: userData._id,
+                asset: data._id,
+                assetName: data.name,
+                assetCollection: data.nftCollection,
+                statusText: "NFT Received",
+              },
+            ]);
+            let activity2 = await ValidatorActivityModel.create({
+              // validatorAddress: wallet_address,
+              // validator: id,
+              // asset: data.asset,
+              // assetOwner: data.assetOwnerAddress,
+              // assetName: data.assetName,
+              // statusText: "Asset validated",
+              validatorAddress: wallet_address,
+              validator: id,
               asset: data._id,
               assetName: data.name,
               assetCollection: data.nftCollection,
               statusText: "NFT Transfered",
-            },
-            {
-              userAddress: userData.wallet_address,
-              user: userData._id,
-              asset: data._id,
-              assetName: data.name,
-              assetCollection: data.nftCollection,
-              statusText: "NFT Received",
-            },
-          ]);
-          if (role === "validator") {
+            });
             let notification = await NotificationModel.create({
               nft: data._id,
               category: "asset-transfer-validator",
               user: userData._id,
               validator: id,
             });
+            if (notification) {
+              await mixpanel.track("Asset transferred", {
+                distinct_id: id,
+                asset: data._id,
+                asset_type: data.assetType[0],
+                to: userData._id,
+                ip: remoteIp,
+              });
+              res.status(201).json({
+                success: true,
+                message: "Asset transferred successfully",
+              });
+            }
           } else {
+            let activity = await UserActivityModel.insertMany([
+              {
+                userAddress: wallet_address,
+                user: id,
+                asset: data._id,
+                assetName: data.name,
+                assetCollection: data.nftCollection,
+                statusText: "NFT Transfered",
+              },
+              {
+                userAddress: userData.wallet_address,
+                user: userData._id,
+                asset: data._id,
+                assetName: data.name,
+                assetCollection: data.nftCollection,
+                statusText: "NFT Received",
+              },
+            ]);
             let notification = await NotificationModel.create({
               nft: data._id,
               category: "asset-transfer",
               user: userData._id,
               user2: id,
             });
-          }
-          if (notification) {
-            await mixpanel.track("Asset transferred", {
-              distinct_id: id,
-              asset: data._id,
-              asset_type: data.assetType[0],
-              to: userData._id,
-              ip: remoteIp,
-            });
-            res.status(201).json({
-              success: true,
-              message: "Asset transferred successfully",
-            });
+            if (notification) {
+              await mixpanel.track("Asset transferred", {
+                distinct_id: id,
+                asset: data._id,
+                asset_type: data.assetType[0],
+                to: userData._id,
+                ip: remoteIp,
+              });
+              res.status(201).json({
+                success: true,
+                message: "Asset transferred successfully",
+              });
+            }
           }
         } else {
           res.status(401).json({
