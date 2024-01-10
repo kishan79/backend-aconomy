@@ -278,7 +278,7 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
   try {
     const { category } = req.query;
     let queryStr = {
-      state: { $ne: "none" },
+      // state: { $ne: "none" },
       validationState: "validated",
     };
 
