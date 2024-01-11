@@ -286,19 +286,81 @@ exports.getFeaturedAssetClass = asyncHandler(async (req, res, next) => {
       queryStr = { ...queryStr, assetType: { $in: ASSET_TYPES[category] } };
     }
 
-    let data = await NftModel.find(queryStr)
-      .populate([
-        { path: "nftOwner", select: "name profileImage kycEventType" },
-        {
-          path: "validator",
-          select: "name profileImage kybEventType whitelisted",
+    // let data = await NftModel.find(queryStr)
+    //   .populate([
+    //     { path: "nftOwner", select: "name profileImage kycEventType" },
+    //     {
+    //       path: "validator",
+    //       select: "name profileImage kybEventType whitelisted",
+    //     },
+    //   ])
+    //   .select(
+    //     "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
+    //   )
+    //   .sort("-createdAt")
+    //   .limit(12);
+
+    let data = await NftModel.aggregate([
+      {
+        $match: {
+          ...queryStr,
         },
-      ])
-      .select(
-        "name nftOwner nftOwnerType mediaLinks validator listingPrice state validationState"
-      )
-      .sort("-createdAt")
-      .limit(12);
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "nftOwner",
+          foreignField: "_id",
+          as: "nftOwner",
+          pipeline: [
+            { $project: { name: 1, profileImage: 1, kycEventType: 1 } },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "validators",
+          localField: "validator",
+          foreignField: "_id",
+          as: "validator",
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                profileImage: 1,
+                kybEventType: 1,
+                whitelisted: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          sortField: {
+            $cond: {
+              if: { $eq: ["$state", "none"] },
+              then: 1,
+              else: 0,
+            },
+          },
+        },
+      },
+      { $sort: { sortField: 1 } },
+      {
+        $project: {
+          name: 1,
+          nftOwner: 1,
+          nftOwnerType: 1,
+          mediaLinks: 1,
+          validator: 1,
+          listingDate: 1,
+          state: 1,
+          validationState: 1,
+        },
+      },
+      { $limit: 12 },
+    ]);
     return res.status(200).json({
       success: true,
       data,
@@ -403,7 +465,8 @@ exports.getJournals = asyncHandler(async (req, res, next) => {
 exports.getTopAssetOwners = asyncHandler(async (req, res, next) => {
   try {
     let query = UserModel.find({ name: { $ne: "" } })
-      .sort({ tvl: -1 }).limit(8)
+      .sort({ tvl: -1 })
+      .limit(8)
       .select("_id name profileImage kycEventType tvl")
       .lean();
 
