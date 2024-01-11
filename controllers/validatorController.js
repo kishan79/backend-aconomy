@@ -2502,9 +2502,8 @@ exports.dashboard = asyncHandler(async (req, res, next) => {
         .limit(10)
         .populate([
           { path: "nftOwner", select: "_id username" },
-          { path: "asset", select: "-_id mediaLinks" },
         ])
-        .select("name nftOwner nftOwnerType assetType updatedAt");
+        .select("name mediaLinks nftOwner nftOwnerType assetType updatedAt");
 
       let arr = [...validationRequests, ...redeemRequests];
 
