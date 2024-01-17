@@ -475,7 +475,7 @@ exports.fetchUsersValidatedAssetNFTs = asyncHandler(async (req, res, next) => {
         { path: "validator", select: "_id name kybEventType whitelisted" },
       ])
       .select(
-        "_id name nftOwner nftOwnerType mediaLinks assetType nftContractAddress tokenId"
+        "_id name nftOwner nftOwnerType nftCreatorType mediaLinks assetType nftContractAddress tokenId"
       );
 
     if (sortby) {
