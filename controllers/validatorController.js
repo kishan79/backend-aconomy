@@ -957,7 +957,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
       validationCommission,
       contractAddress,
       collateral_percent,
-      proposedValueOfAsset,
+      valueOfAsset,
     } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findById(requestId);
@@ -1000,7 +1000,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validationCommission,
                       validationDate: new Date(),
                       validationCount: 1,
-                      proposedValueOfAsset,
+                      valueOfAsset,
                       erc20ContractAddress: !!contractAddress
                         ? contractAddress
                         : "",
@@ -1124,7 +1124,7 @@ exports.validateAsset = asyncHandler(async (req, res, next) => {
                       validationCommission,
                       validationDate: new Date(),
                       validationCount: 1,
-                      proposedValueOfAsset,
+                      valueOfAsset,
                       erc20ContractAddress: !!contractAddress
                         ? contractAddress
                         : "",
@@ -1307,7 +1307,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
       validationDuration,
       validationRoyality,
       validationDocuments,
-      proposedValueOfAsset,
+      valueOfAsset,
     } = req.body;
     const { wallet_address, id } = req.user;
     const data = await NFTValidationModel.findById(requestId);
@@ -1344,7 +1344,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                       requestExpiresOn: addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationCount: data.validationCount + 1,
-                      proposedValueOfAsset,
+                      valueOfAsset,
                       validationExpired: false,
                       validationDate: new Date(),
                       fundBalance: data.fundBalance + validationAmount,
@@ -1437,7 +1437,7 @@ exports.reValidateAsset = asyncHandler(async (req, res, next) => {
                       requestExpiresOn: addDays(new Date(), validationDuration),
                       validationState: "validated",
                       validationCount: data.validationCount + 1,
-                      proposedValueOfAsset,
+                      valueOfAsset,
                       validationExpired: false,
                       validationDate: new Date(),
                       fundBalance: data.fundBalance + validationAmount,
@@ -2260,7 +2260,7 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
       validationCommission,
       contractAddress,
       collateral_percent,
-      proposedValueOfAsset,
+      valueOfAsset,
     } = req.body;
     NftModel.create(
       {
@@ -2324,7 +2324,7 @@ exports.mintAndValidateNFT = asyncHandler(async (req, res, next) => {
                   validationCommission,
                   validationDate: new Date(),
                   validationCount: 1,
-                  proposedValueOfAsset,
+                  valueOfAsset,
                   erc20ContractAddress: !!contractAddress
                     ? contractAddress
                     : "",
